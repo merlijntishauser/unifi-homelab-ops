@@ -5,9 +5,9 @@ from pydantic import BaseModel
 
 from app.config import (
     clear_runtime_credentials,
+    get_credential_source,
     get_unifi_config,
     set_runtime_credentials,
-    settings,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -58,19 +58,9 @@ async def logout() -> LogoutResponse:
 @router.get("/status")
 async def status() -> AuthStatusResponse:
     config = get_unifi_config()
+    source = get_credential_source()
+
     if config is None:
         return AuthStatusResponse(configured=False, source="none", url="")
-
-    # Determine if the active credentials come from runtime or env
-    env_has_creds = bool(settings.unifi_url and settings.unifi_user and settings.unifi_pass)
-    if env_has_creds and config.url == settings.unifi_url:
-        # Could be env if no runtime override, but runtime takes priority.
-        # We need to check if runtime credentials exist.
-        from app.config import _credentials_lock, _runtime_credentials
-
-        with _credentials_lock:
-            source: Literal["env", "runtime", "none"] = "runtime" if _runtime_credentials is not None else "env"
-    else:
-        source = "runtime"
 
     return AuthStatusResponse(configured=True, source=source, url=config.url)

@@ -1,6 +1,7 @@
 from app.config import (
     UnifiCredentials,
     clear_runtime_credentials,
+    get_credential_source,
     get_unifi_config,
     has_credentials,
     set_runtime_credentials,
@@ -53,3 +54,14 @@ def test_clear_is_idempotent() -> None:
     clear_runtime_credentials()
     clear_runtime_credentials()  # should not raise
     assert get_unifi_config() is None
+
+
+def test_get_credential_source_none() -> None:
+    clear_runtime_credentials()
+    assert get_credential_source() == "none"
+
+
+def test_get_credential_source_runtime() -> None:
+    set_runtime_credentials(url="https://x.com", username="u", password="p")
+    assert get_credential_source() == "runtime"
+    clear_runtime_credentials()

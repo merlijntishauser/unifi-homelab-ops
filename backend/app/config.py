@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from threading import Lock
+from typing import Literal
 
 from pydantic_settings import BaseSettings
 
@@ -75,3 +76,13 @@ def get_unifi_config() -> UnifiCredentials | None:
 def has_credentials() -> bool:
     """Check if any credentials are configured (runtime or env)."""
     return get_unifi_config() is not None
+
+
+def get_credential_source() -> Literal["runtime", "env", "none"]:
+    """Return 'runtime', 'env', or 'none' depending on where credentials come from."""
+    with _credentials_lock:
+        if _runtime_credentials is not None:
+            return "runtime"
+    if settings.unifi_url and settings.unifi_user and settings.unifi_pass:
+        return "env"
+    return "none"

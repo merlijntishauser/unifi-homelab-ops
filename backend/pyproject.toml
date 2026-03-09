@@ -18,6 +18,7 @@ dev = [
     "anyio>=4.0.0",
     "mypy>=1.14.0",
     "ruff>=0.9.0",
+    "radon>=6.0.0",
 ]
 
 [tool.mypy]
@@ -28,7 +29,10 @@ target-version = "py313"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "C90"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

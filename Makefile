@@ -21,7 +21,7 @@ quality:
 	docker compose exec frontend npx tsc --noEmit
 
 complexity:
-	@echo "Complexity analysis placeholder -- not yet implemented"
+	@./scripts/check-complexity.sh
 
 test:
 	docker compose exec api uv run pytest

@@ -23,14 +23,32 @@ interface ZoneGraphProps {
   zonePairs: ZonePair[];
   colorMode: ColorMode;
   onEdgeSelect: (pair: ZonePair) => void;
+  focusZoneId?: string;
 }
 
 function buildElements(
   zones: Zone[],
   zonePairs: ZonePair[],
   onEdgeSelect: (pair: ZonePair) => void,
+  focusZoneId?: string,
 ) {
-  const rawNodes: Node<ZoneNodeData>[] = zones.map((zone) => ({
+  let filteredZones = zones;
+  let filteredPairs = zonePairs;
+
+  if (focusZoneId) {
+    filteredPairs = zonePairs.filter(
+      (p) => p.source_zone_id === focusZoneId || p.destination_zone_id === focusZoneId,
+    );
+    const connectedIds = new Set<string>();
+    connectedIds.add(focusZoneId);
+    for (const p of filteredPairs) {
+      connectedIds.add(p.source_zone_id);
+      connectedIds.add(p.destination_zone_id);
+    }
+    filteredZones = zones.filter((z) => connectedIds.has(z.id));
+  }
+
+  const rawNodes: Node<ZoneNodeData>[] = filteredZones.map((zone) => ({
     id: zone.id,
     type: "zone" as const,
     position: { x: 0, y: 0 },
@@ -40,7 +58,7 @@ function buildElements(
     },
   }));
 
-  const rawEdges: Edge<RuleEdgeData>[] = zonePairs.map((pair) => ({
+  const rawEdges: Edge<RuleEdgeData>[] = filteredPairs.map((pair) => ({
     id: `${pair.source_zone_id}->${pair.destination_zone_id}`,
     source: pair.source_zone_id,
     target: pair.destination_zone_id,
@@ -61,10 +79,11 @@ export default function ZoneGraph({
   zonePairs,
   colorMode,
   onEdgeSelect,
+  focusZoneId,
 }: ZoneGraphProps) {
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(
-    () => buildElements(zones, zonePairs, onEdgeSelect),
-    [zones, zonePairs, onEdgeSelect],
+    () => buildElements(zones, zonePairs, onEdgeSelect, focusZoneId),
+    [zones, zonePairs, onEdgeSelect, focusZoneId],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);

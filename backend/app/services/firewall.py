@@ -1,224 +1,118 @@
 """Firewall data service.
 
-Provides zone, rule, and zone-pair data from the UniFi controller.
+Fetches zone, rule, and zone-pair data from the UniFi controller
+via the unifi-topology library.
 """
+
+from __future__ import annotations
+
+import contextlib
+import logging
+
+from unifi_topology import (
+    Config,
+    FirewallPolicy,
+    FirewallZone,
+    fetch_firewall_policies,
+    fetch_firewall_zones,
+    fetch_networks,
+    normalize_firewall_policies,
+    normalize_firewall_zones,
+)
 
 from app.config import UnifiCredentials
 from app.models import Network, Rule, Zone, ZonePair
 
-# TODO: Replace mock data with real UniFi controller API calls via unifi-topology
-# once that library supports firewall data fetching.
+logger = logging.getLogger(__name__)
 
 
-def _mock_zones() -> list[Zone]:
-    """Return hardcoded zones representing a typical UniFi setup."""
-    return [
-        Zone(
-            id="zone-external",
-            name="External",
-            networks=[
-                Network(id="net-wan", name="WAN", subnet=None),
-            ],
-        ),
-        Zone(
-            id="zone-internal",
-            name="Internal",
-            networks=[
-                Network(id="net-lan", name="LAN", vlan_id=1, subnet="192.168.1.0/24"),
-            ],
-        ),
-        Zone(
-            id="zone-guest",
-            name="Guest",
-            networks=[
-                Network(id="net-guest", name="Guest WiFi", vlan_id=100, subnet="10.0.100.0/24"),
-            ],
-        ),
-        Zone(
-            id="zone-iot",
-            name="IoT",
-            networks=[
-                Network(id="net-iot", name="IoT Devices", vlan_id=200, subnet="10.0.200.0/24"),
-            ],
-        ),
-        Zone(
-            id="zone-vpn",
-            name="VPN",
-            networks=[
-                Network(id="net-vpn", name="VPN Clients", subnet="10.10.0.0/24"),
-            ],
-        ),
-        Zone(
-            id="zone-gateway",
-            name="Gateway",
-            networks=[
-                Network(id="net-gw", name="Gateway", subnet="192.168.1.1/32"),
-            ],
-        ),
-    ]
+def _to_topology_config(credentials: UnifiCredentials) -> Config:
+    """Convert our credentials to a unifi-topology Config."""
+    return Config(
+        url=credentials.url,
+        site=credentials.site,
+        user=credentials.username,
+        password=credentials.password,
+        verify_ssl=credentials.verify_ssl,
+    )
 
 
-def _mock_rules() -> list[Rule]:
-    """Return hardcoded rules representing a typical UniFi firewall config."""
-    return [
-        # LAN -> WAN: allow all
-        Rule(
-            id="rule-1",
-            name="Allow LAN to Internet",
-            description="Allow all traffic from LAN to WAN",
-            enabled=True,
-            action="ALLOW",
-            source_zone_id="zone-internal",
-            destination_zone_id="zone-external",
-            index=100,
-        ),
-        # Guest -> WAN: allow HTTP/HTTPS only
-        Rule(
-            id="rule-2",
-            name="Allow Guest Web Access",
-            description="Allow Guest zone to access web on WAN",
-            enabled=True,
-            action="ALLOW",
-            source_zone_id="zone-guest",
-            destination_zone_id="zone-external",
-            protocol="tcp",
-            port_ranges=["80", "443"],
-            index=200,
-        ),
-        # Guest -> WAN: allow DNS
-        Rule(
-            id="rule-3",
-            name="Allow Guest DNS",
-            description="Allow Guest zone to resolve DNS",
-            enabled=True,
-            action="ALLOW",
-            source_zone_id="zone-guest",
-            destination_zone_id="zone-external",
-            protocol="udp",
-            port_ranges=["53"],
-            index=210,
-        ),
-        # Guest -> WAN: block everything else
-        Rule(
-            id="rule-4",
-            name="Block Guest Other Traffic",
-            description="Block all other Guest traffic to WAN",
-            enabled=True,
-            action="BLOCK",
-            source_zone_id="zone-guest",
-            destination_zone_id="zone-external",
-            index=290,
-        ),
-        # IoT -> LAN: block
-        Rule(
-            id="rule-5",
-            name="Block IoT to LAN",
-            description="Prevent IoT devices from reaching LAN",
-            enabled=True,
-            action="BLOCK",
-            source_zone_id="zone-iot",
-            destination_zone_id="zone-internal",
-            index=300,
-        ),
-        # IoT -> WAN: allow
-        Rule(
-            id="rule-6",
-            name="Allow IoT to Internet",
-            description="Allow IoT devices to reach the internet",
-            enabled=True,
-            action="ALLOW",
-            source_zone_id="zone-iot",
-            destination_zone_id="zone-external",
-            index=310,
-        ),
-        # Guest -> LAN: block
-        Rule(
-            id="rule-7",
-            name="Block Guest to LAN",
-            description="Prevent Guest from reaching LAN",
-            enabled=True,
-            action="BLOCK",
-            source_zone_id="zone-guest",
-            destination_zone_id="zone-internal",
-            index=400,
-        ),
-        # VPN -> LAN: allow
-        Rule(
-            id="rule-8",
-            name="Allow VPN to LAN",
-            description="Allow VPN clients to access LAN resources",
-            enabled=True,
-            action="ALLOW",
-            source_zone_id="zone-vpn",
-            destination_zone_id="zone-internal",
-            index=500,
-        ),
-        # LAN -> IoT: allow
-        Rule(
-            id="rule-9",
-            name="Allow LAN to IoT",
-            description="Allow LAN to manage IoT devices",
-            enabled=True,
-            action="ALLOW",
-            source_zone_id="zone-internal",
-            destination_zone_id="zone-iot",
-            index=600,
-        ),
-        # LAN -> Gateway: allow management (disabled example)
-        Rule(
-            id="rule-10",
-            name="Allow LAN to Gateway SSH",
-            description="Allow SSH access to gateway from LAN",
-            enabled=False,
-            action="ALLOW",
-            source_zone_id="zone-internal",
-            destination_zone_id="zone-gateway",
-            protocol="tcp",
-            port_ranges=["22"],
-            index=700,
-        ),
-        # External -> Internal: block (predefined)
-        Rule(
-            id="rule-predefined-1",
-            name="Block WAN to LAN",
-            description="Default block inbound from WAN",
-            enabled=True,
-            action="BLOCK",
-            source_zone_id="zone-external",
-            destination_zone_id="zone-internal",
-            index=9000,
-            predefined=True,
-        ),
-    ]
+def _build_network_lookup(config: Config) -> dict[str, Network]:
+    """Fetch networks and build a lookup by network ID."""
+    raw_networks = fetch_networks(config)
+    lookup: dict[str, Network] = {}
+    for net in raw_networks:
+        net_id = None
+        net_name = "Unknown"
+        vlan_id = None
+        subnet = None
+
+        if isinstance(net, dict):
+            net_id = net.get("_id") or net.get("id")
+            net_name = net.get("name", "Unknown")
+            vlan_raw = net.get("vlan")
+            vlan_enabled = net.get("vlan_enabled")
+            if vlan_raw is not None and vlan_enabled is not False:
+                with contextlib.suppress(ValueError, TypeError):
+                    vlan_id = int(vlan_raw)
+            subnet_raw = net.get("ip_subnet") or net.get("subnet")
+            subnet = subnet_raw.strip() or None if isinstance(subnet_raw, str) else None
+
+        if net_id is not None:
+            lookup[str(net_id)] = Network(
+                id=str(net_id),
+                name=str(net_name),
+                vlan_id=vlan_id,
+                subnet=str(subnet) if subnet else None,
+            )
+    return lookup
+
+
+def _zone_to_model(zone: FirewallZone, network_lookup: dict[str, Network]) -> Zone:
+    """Convert a FirewallZone to our Zone model."""
+    networks = [network_lookup[nid] for nid in zone.network_ids if nid in network_lookup]
+    return Zone(id=zone.id, name=zone.name, networks=networks)
+
+
+def _policy_to_rule(policy: FirewallPolicy) -> Rule:
+    """Convert a FirewallPolicy to our Rule model."""
+    return Rule(
+        id=policy.id,
+        name=policy.name,
+        description=policy.description,
+        enabled=policy.enabled,
+        action=policy.action,
+        source_zone_id=policy.source_zone_id,
+        destination_zone_id=policy.destination_zone_id,
+        protocol=policy.protocol,
+        port_ranges=list(policy.port_ranges),
+        ip_ranges=list(policy.ip_ranges),
+        index=policy.index,
+        predefined=policy.predefined,
+    )
 
 
 def get_zones(credentials: UnifiCredentials) -> list[Zone]:
-    """Fetch zones from the UniFi controller.
-
-    TODO: Replace with real API call using credentials to connect to the controller.
-    """
-    _ = credentials  # will be used when connecting to real controller
-    return _mock_zones()
+    """Fetch zones from the UniFi controller."""
+    config = _to_topology_config(credentials)
+    raw_zones = fetch_firewall_zones(config, site=credentials.site)
+    zones = normalize_firewall_zones(raw_zones)
+    network_lookup = _build_network_lookup(config)
+    return [_zone_to_model(z, network_lookup) for z in zones]
 
 
 def get_rules(credentials: UnifiCredentials) -> list[Rule]:
-    """Fetch firewall rules from the UniFi controller.
-
-    TODO: Replace with real API call using credentials to connect to the controller.
-    """
-    _ = credentials  # will be used when connecting to real controller
-    return _mock_rules()
+    """Fetch firewall rules from the UniFi controller."""
+    config = _to_topology_config(credentials)
+    raw_policies = fetch_firewall_policies(config, site=credentials.site)
+    policies = normalize_firewall_policies(raw_policies)
+    return [_policy_to_rule(p) for p in policies]
 
 
 def get_zone_pairs(credentials: UnifiCredentials) -> list[ZonePair]:
-    """Build zone pairs with their associated rules.
+    """Build zone pairs with their associated rules."""
+    rules = get_rules(credentials)
 
-    TODO: Replace with real API call using credentials to connect to the controller.
-    """
-    _ = credentials  # will be used when connecting to real controller
-    rules = _mock_rules()
-
-    # Group rules by (source_zone_id, destination_zone_id)
     pairs: dict[tuple[str, str], list[Rule]] = {}
     for rule in rules:
         key = (rule.source_zone_id, rule.destination_zone_id)

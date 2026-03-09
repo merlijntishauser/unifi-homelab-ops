@@ -1,4 +1,10 @@
-.PHONY: up down build quality complexity test
+.PHONY: up down build quality complexity test backend-install frontend-install
+
+backend-install:
+	cd backend && uv sync
+
+frontend-install:
+	cd frontend && npm install
 
 up:
 	docker compose up -d

@@ -16,7 +16,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [models, setModels] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -86,9 +86,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     setTestResult(null);
     try {
       await api.testAiConnection();
-      setTestResult("Connection successful");
-    } catch {
-      setTestResult("Connection failed");
+      setTestResult({ ok: true, message: "Connection successful - provider responded" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Connection failed";
+      setTestResult({ ok: false, message });
     } finally {
       setTesting(false);
     }
@@ -215,7 +216,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
             {/* Error/test messages */}
             {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
-            {testResult && <div className="text-sm text-green-600 dark:text-green-400">{testResult}</div>}
+            {testResult && (
+              <div className={`text-sm ${testResult.ok ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                {testResult.message}
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">

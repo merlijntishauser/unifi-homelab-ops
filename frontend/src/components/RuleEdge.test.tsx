@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import RuleEdgeComponent from "./RuleEdge";
 import type { EdgeProps } from "@xyflow/react";
-import type { RuleEdge } from "./RuleEdge";
+import type { RuleEdge, RuleSummary } from "./RuleEdge";
 
 // Mock @xyflow/react
 vi.mock("@xyflow/react", () => ({
@@ -20,8 +20,6 @@ vi.mock("@xyflow/react", () => ({
       data-path={path}
       data-stroke={style.stroke}
       data-stroke-width={style.strokeWidth}
-      data-stroke-dasharray={style.strokeDasharray ?? "none"}
-      data-opacity={style.opacity}
     />
   ),
   EdgeLabelRenderer: ({ children }: { children: React.ReactNode }) => (
@@ -29,6 +27,22 @@ vi.mock("@xyflow/react", () => ({
   ),
   getSmoothStepPath: () => ["M0,0 L100,100", 50, 50],
 }));
+
+const allowRule: RuleSummary = {
+  name: "Allow HTTP",
+  action: "ALLOW",
+  protocol: "TCP",
+  portRanges: ["80"],
+  enabled: true,
+};
+
+const blockRule: RuleSummary = {
+  name: "Block SSH",
+  action: "BLOCK",
+  protocol: "TCP",
+  portRanges: ["22"],
+  enabled: true,
+};
 
 function makeEdgeProps(
   overrides: Partial<EdgeProps<RuleEdge>> = {},
@@ -44,14 +58,9 @@ function makeEdgeProps(
     sourcePosition: "bottom" as never,
     targetPosition: "top" as never,
     data: {
-      ruleName: "Allow HTTP",
-      ruleIndex: 1,
-      action: "ALLOW",
-      protocol: "TCP",
-      portRanges: ["80"],
-      enabled: true,
-      edgeOffset: 0,
-      totalSiblings: 1,
+      rules: [allowRule],
+      allowCount: 1,
+      blockCount: 0,
       onLabelClick: vi.fn(),
     },
     selected: false,
@@ -60,21 +69,12 @@ function makeEdgeProps(
 }
 
 describe("RuleEdgeComponent", () => {
-  describe("edge coloring by action", () => {
-    it("uses green color for ALLOW action", () => {
+  describe("edge coloring by allow/block ratio", () => {
+    it("uses green color when only allows", () => {
       render(
         <RuleEdgeComponent
           {...makeEdgeProps({
-            data: {
-              ruleName: "Allow",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "TCP",
-              portRanges: [],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
-            },
+            data: { rules: [allowRule], allowCount: 1, blockCount: 0 },
           })}
         />,
       );
@@ -82,20 +82,11 @@ describe("RuleEdgeComponent", () => {
       expect(edge).toHaveAttribute("data-stroke", "#00d68f");
     });
 
-    it("uses red color for BLOCK action", () => {
+    it("uses red color when only blocks", () => {
       render(
         <RuleEdgeComponent
           {...makeEdgeProps({
-            data: {
-              ruleName: "Block",
-              ruleIndex: 1,
-              action: "BLOCK",
-              protocol: "TCP",
-              portRanges: [],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
-            },
+            data: { rules: [blockRule], allowCount: 0, blockCount: 1 },
           })}
         />,
       );
@@ -103,131 +94,74 @@ describe("RuleEdgeComponent", () => {
       expect(edge).toHaveAttribute("data-stroke", "#ff4d5e");
     });
 
-    it("uses red color for REJECT action", () => {
+    it("uses amber color when mixed", () => {
       render(
         <RuleEdgeComponent
           {...makeEdgeProps({
             data: {
-              ruleName: "Reject",
-              ruleIndex: 1,
-              action: "REJECT",
-              protocol: "TCP",
-              portRanges: [],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
+              rules: [allowRule, blockRule],
+              allowCount: 1,
+              blockCount: 1,
             },
           })}
         />,
       );
       const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke", "#ff4d5e");
+      expect(edge).toHaveAttribute("data-stroke", "#ffaa2c");
+    });
+
+    it("uses amber color when both counts are 0", () => {
+      render(
+        <RuleEdgeComponent
+          {...makeEdgeProps({
+            data: { rules: [], allowCount: 0, blockCount: 0 },
+          })}
+        />,
+      );
+      const edge = screen.getByTestId("edge-edge-1");
+      expect(edge).toHaveAttribute("data-stroke", "#ffaa2c");
     });
   });
 
   describe("stroke width", () => {
     it("has strokeWidth 2 when not selected", () => {
-      render(
-        <RuleEdgeComponent {...makeEdgeProps({ selected: false })} />,
-      );
+      render(<RuleEdgeComponent {...makeEdgeProps({ selected: false })} />);
       const edge = screen.getByTestId("edge-edge-1");
       expect(edge).toHaveAttribute("data-stroke-width", "2");
     });
 
     it("has strokeWidth 3 when selected", () => {
-      render(
-        <RuleEdgeComponent {...makeEdgeProps({ selected: true })} />,
-      );
+      render(<RuleEdgeComponent {...makeEdgeProps({ selected: true })} />);
       const edge = screen.getByTestId("edge-edge-1");
       expect(edge).toHaveAttribute("data-stroke-width", "3");
     });
   });
 
-  describe("disabled rules", () => {
-    it("uses dashed stroke for disabled rules", () => {
-      render(
-        <RuleEdgeComponent
-          {...makeEdgeProps({
-            data: {
-              ruleName: "Disabled Rule",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "TCP",
-              portRanges: [],
-              enabled: false,
-              edgeOffset: 0,
-              totalSiblings: 1,
-            },
-          })}
-        />,
-      );
-      const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke-dasharray", "6 3");
-    });
-
-    it("uses reduced opacity for disabled rules", () => {
-      render(
-        <RuleEdgeComponent
-          {...makeEdgeProps({
-            data: {
-              ruleName: "Disabled Rule",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "TCP",
-              portRanges: [],
-              enabled: false,
-              edgeOffset: 0,
-              totalSiblings: 1,
-            },
-          })}
-        />,
-      );
-      const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-opacity", "0.4");
-    });
-
-    it("uses solid stroke for enabled rules", () => {
-      render(<RuleEdgeComponent {...makeEdgeProps()} />);
-      const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke-dasharray", "none");
-    });
-
-    it("uses full opacity for enabled rules", () => {
-      render(<RuleEdgeComponent {...makeEdgeProps()} />);
-      const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-opacity", "1");
-    });
-  });
-
-  describe("label", () => {
-    it("shows rule name", () => {
+  describe("rule list display", () => {
+    it("shows rule names", () => {
       render(<RuleEdgeComponent {...makeEdgeProps()} />);
       expect(screen.getByText("Allow HTTP")).toBeInTheDocument();
     });
 
-    it("shows protocol and port when present", () => {
+    it("shows protocol and port", () => {
       render(<RuleEdgeComponent {...makeEdgeProps()} />);
       expect(screen.getByText("TCP:80")).toBeInTheDocument();
     });
 
-    it("shows protocol and multiple ports", () => {
+    it("shows multiple rules", () => {
       render(
         <RuleEdgeComponent
           {...makeEdgeProps({
             data: {
-              ruleName: "Multi",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "TCP",
-              portRanges: ["80", "443"],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
+              rules: [allowRule, blockRule],
+              allowCount: 1,
+              blockCount: 1,
             },
           })}
         />,
       );
-      expect(screen.getByText("TCP:80,443")).toBeInTheDocument();
+      expect(screen.getByText("Allow HTTP")).toBeInTheDocument();
+      expect(screen.getByText("Block SSH")).toBeInTheDocument();
     });
 
     it("shows only protocol when no ports", () => {
@@ -235,14 +169,11 @@ describe("RuleEdgeComponent", () => {
         <RuleEdgeComponent
           {...makeEdgeProps({
             data: {
-              ruleName: "ICMP Rule",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "ICMP",
-              portRanges: [],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
+              rules: [
+                { name: "ICMP Rule", action: "ALLOW", protocol: "ICMP", portRanges: [], enabled: true },
+              ],
+              allowCount: 1,
+              blockCount: 0,
             },
           })}
         />,
@@ -255,46 +186,141 @@ describe("RuleEdgeComponent", () => {
         <RuleEdgeComponent
           {...makeEdgeProps({
             data: {
-              ruleName: "Any Rule",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "",
-              portRanges: [],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
+              rules: [
+                { name: "Any Rule", action: "ALLOW", protocol: "", portRanges: [], enabled: true },
+              ],
+              allowCount: 1,
+              blockCount: 0,
             },
           })}
         />,
       );
       expect(screen.getByText("Any Rule")).toBeInTheDocument();
-      // Only the rule name span should be present
       const labelRenderer = screen.getByTestId("edge-label-renderer");
-      const spans = labelRenderer.querySelectorAll("span");
-      expect(spans.length).toBe(1);
+      const monoSpans = labelRenderer.querySelectorAll(".font-mono");
+      expect(monoSpans.length).toBe(0);
     });
 
-    it("calls onLabelClick when label is clicked", () => {
+    it("shows 'No active rules' when rules array is empty", () => {
+      render(
+        <RuleEdgeComponent
+          {...makeEdgeProps({
+            data: { rules: [], allowCount: 0, blockCount: 0 },
+          })}
+        />,
+      );
+      expect(screen.getByText("No active rules")).toBeInTheDocument();
+    });
+  });
+
+  describe("overflow indicator", () => {
+    it("shows overflow count when more than 4 rules", () => {
+      const rules: RuleSummary[] = Array.from({ length: 6 }, (_, i) => ({
+        name: `Rule ${i + 1}`,
+        action: "ALLOW",
+        protocol: "TCP",
+        portRanges: [`${80 + i}`],
+        enabled: true,
+      }));
+      render(
+        <RuleEdgeComponent
+          {...makeEdgeProps({
+            data: { rules, allowCount: 6, blockCount: 0 },
+          })}
+        />,
+      );
+      expect(screen.getByText("+2 more")).toBeInTheDocument();
+      expect(screen.getByText("Rule 1")).toBeInTheDocument();
+      expect(screen.getByText("Rule 4")).toBeInTheDocument();
+      expect(screen.queryByText("Rule 5")).not.toBeInTheDocument();
+    });
+
+    it("does not show overflow when 4 or fewer rules", () => {
+      const rules: RuleSummary[] = Array.from({ length: 4 }, (_, i) => ({
+        name: `Rule ${i + 1}`,
+        action: "ALLOW",
+        protocol: "TCP",
+        portRanges: [],
+        enabled: true,
+      }));
+      render(
+        <RuleEdgeComponent
+          {...makeEdgeProps({
+            data: { rules, allowCount: 4, blockCount: 0 },
+          })}
+        />,
+      );
+      expect(screen.queryByText(/more/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("disabled rules", () => {
+    it("renders disabled rules with reduced opacity", () => {
+      render(
+        <RuleEdgeComponent
+          {...makeEdgeProps({
+            data: {
+              rules: [
+                { name: "Disabled Rule", action: "ALLOW", protocol: "TCP", portRanges: [], enabled: false },
+              ],
+              allowCount: 1,
+              blockCount: 0,
+            },
+          })}
+        />,
+      );
+      const row = screen.getByText("Disabled Rule").closest("div");
+      expect(row?.className).toContain("opacity-40");
+    });
+
+    it("renders enabled rules without reduced opacity", () => {
+      render(<RuleEdgeComponent {...makeEdgeProps()} />);
+      const row = screen.getByText("Allow HTTP").closest("div");
+      expect(row?.className).not.toContain("opacity-40");
+    });
+  });
+
+  describe("action dots", () => {
+    it("renders green dot for ALLOW action", () => {
+      render(<RuleEdgeComponent {...makeEdgeProps()} />);
+      const dot = screen.getByText("Allow HTTP").previousElementSibling as HTMLElement;
+      expect(dot.style.background).toBe("rgb(0, 214, 143)");
+    });
+
+    it("renders red dot for BLOCK action", () => {
+      render(
+        <RuleEdgeComponent
+          {...makeEdgeProps({
+            data: {
+              rules: [blockRule],
+              allowCount: 0,
+              blockCount: 1,
+            },
+          })}
+        />,
+      );
+      const dot = screen.getByText("Block SSH").previousElementSibling as HTMLElement;
+      expect(dot.style.background).toBe("rgb(255, 77, 94)");
+    });
+  });
+
+  describe("click handler", () => {
+    it("calls onLabelClick when label card is clicked", () => {
       const onClick = vi.fn();
       render(
         <RuleEdgeComponent
           {...makeEdgeProps({
             data: {
-              ruleName: "Click Me",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "TCP",
-              portRanges: [],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
+              rules: [allowRule],
+              allowCount: 1,
+              blockCount: 0,
               onLabelClick: onClick,
             },
           })}
         />,
       );
 
-      fireEvent.click(screen.getByText("Click Me"));
+      fireEvent.click(screen.getByText("Allow HTTP"));
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
@@ -303,14 +329,9 @@ describe("RuleEdgeComponent", () => {
         <RuleEdgeComponent
           {...makeEdgeProps({
             data: {
-              ruleName: "No Click",
-              ruleIndex: 1,
-              action: "ALLOW",
-              protocol: "TCP",
-              portRanges: [],
-              enabled: true,
-              edgeOffset: 0,
-              totalSiblings: 1,
+              rules: [allowRule],
+              allowCount: 1,
+              blockCount: 0,
               onLabelClick: undefined,
             },
           })}
@@ -318,20 +339,21 @@ describe("RuleEdgeComponent", () => {
       );
 
       expect(() => {
-        fireEvent.click(screen.getByText("No Click"));
+        fireEvent.click(screen.getByText("Allow HTTP"));
       }).not.toThrow();
     });
   });
 
   describe("handles undefined data gracefully", () => {
-    it("defaults to ALLOW color when data is undefined", () => {
+    it("defaults to amber color and empty rules when data is undefined", () => {
       render(
         <RuleEdgeComponent
           {...makeEdgeProps({ data: undefined as never })}
         />,
       );
       const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke", "#00d68f");
+      expect(edge).toHaveAttribute("data-stroke", "#ffaa2c");
+      expect(screen.getByText("No active rules")).toBeInTheDocument();
     });
   });
 });

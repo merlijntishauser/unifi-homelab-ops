@@ -70,7 +70,11 @@ vi.mock("./RuleEdge", () => ({
 }));
 
 vi.mock("../utils/edgeColor", () => ({
-  getActionColor: (action: string) => action === "ALLOW" ? "#00d68f" : "#ff4d5e",
+  getEdgeColor: (a: number, b: number) => {
+    if (a > 0 && b === 0) return "#00d68f";
+    if (b > 0 && a === 0) return "#ff4d5e";
+    return "#ffaa2c";
+  },
 }));
 
 describe("ZoneGraph", () => {
@@ -147,7 +151,7 @@ describe("ZoneGraph", () => {
       <ZoneGraph zones={zones} zonePairs={zonePairs} colorMode="light" onEdgeSelect={onEdgeSelect} />,
     );
 
-    fireEvent.click(screen.getByTestId("edge-z1->z2::r1"));
+    fireEvent.click(screen.getByTestId("edge-z1->z2"));
     expect(onEdgeSelect).toHaveBeenCalledWith(zonePairs[0]);
   });
 
@@ -157,7 +161,7 @@ describe("ZoneGraph", () => {
     );
 
     // Click the edge label button which triggers onLabelClick from buildElements
-    fireEvent.click(screen.getByTestId("edge-label-z1->z2::r1"));
+    fireEvent.click(screen.getByTestId("edge-label-z1->z2"));
     expect(onEdgeSelect).toHaveBeenCalledWith(zonePairs[0]);
   });
 

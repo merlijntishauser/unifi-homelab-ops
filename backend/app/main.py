@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from unifi_topology.adapters.unifi_api import UnifiApiError
 
 from app.database import DEFAULT_DB_PATH, init_db
+from app.routers.analyze import router as analyze_router
 from app.routers.auth import router as auth_router
 from app.routers.rules import router as rules_router
 from app.routers.settings import router as settings_router
@@ -39,6 +40,7 @@ async def unifi_api_error_handler(request: Request, exc: UnifiApiError) -> JSONR
     logger.error("UniFi API error: %s", exc)
     return JSONResponse(status_code=502, content={"detail": str(exc)})
 
+app.include_router(analyze_router)
 app.include_router(auth_router)
 app.include_router(zones_router)
 app.include_router(rules_router)

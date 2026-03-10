@@ -5,34 +5,32 @@ import {
   type EdgeProps,
   type Edge,
 } from "@xyflow/react";
-import { getActionColor } from "../utils/edgeColor";
+import { getActionColor, getEdgeColor } from "../utils/edgeColor";
 
-export interface RuleEdgeData {
-  ruleName: string;
-  ruleIndex: number;
+export interface RuleSummary {
+  name: string;
   action: string;
   protocol: string;
   portRanges: string[];
   enabled: boolean;
-  edgeOffset: number;
-  totalSiblings: number;
+}
+
+export interface RuleEdgeData {
+  rules: RuleSummary[];
+  allowCount: number;
+  blockCount: number;
   onLabelClick?: () => void;
   [key: string]: unknown;
 }
 
 export type RuleEdge = Edge<RuleEdgeData, "rule">;
 
-const EDGE_SPACING = 25;
+const MAX_VISIBLE = 4;
 
 const DATA_DEFAULTS: Omit<RuleEdgeData, "onLabelClick"> = {
-  ruleName: "",
-  ruleIndex: 0,
-  action: "ALLOW",
-  protocol: "",
-  portRanges: [],
-  enabled: true,
-  edgeOffset: 0,
-  totalSiblings: 1,
+  rules: [],
+  allowCount: 0,
+  blockCount: 0,
 };
 
 function resolveData(data: RuleEdgeData | undefined): RuleEdgeData {
@@ -56,19 +54,20 @@ export default function RuleEdgeComponent({
   data,
   selected,
 }: EdgeProps<RuleEdge>) {
-  const { edgeOffset, totalSiblings, action, enabled, ruleName, protocol, portRanges, onLabelClick } = resolveData(data);
-  const xOffset = (edgeOffset - (totalSiblings - 1) / 2) * EDGE_SPACING;
-  const color = getActionColor(action);
-  const portLabel = formatPortLabel(protocol, portRanges);
+  const { rules, allowCount, blockCount, onLabelClick } = resolveData(data);
+  const color = getEdgeColor(allowCount, blockCount);
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
-    sourceX: sourceX + xOffset,
+    sourceX,
     sourceY,
     sourcePosition,
-    targetX: targetX + xOffset,
+    targetX,
     targetY,
     targetPosition,
   });
+
+  const visibleRules = rules.slice(0, MAX_VISIBLE);
+  const overflow = Math.max(0, rules.length - MAX_VISIBLE);
 
   return (
     <>
@@ -78,8 +77,6 @@ export default function RuleEdgeComponent({
         style={{
           stroke: color,
           strokeWidth: selected ? 3 : 2,
-          strokeDasharray: enabled ? undefined : "6 3",
-          opacity: enabled ? 1 : 0.4,
         }}
       />
       <EdgeLabelRenderer>
@@ -88,49 +85,45 @@ export default function RuleEdgeComponent({
             e.stopPropagation();
             onLabelClick?.();
           }}
-          className="nopan nodrag"
+          className="nopan nodrag rounded-lg border border-l-[3px] px-2 py-1.5 cursor-pointer min-w-[120px] max-w-[240px] bg-white dark:bg-noc-raised border-gray-200 dark:border-noc-border shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-xl transition-shadow"
           style={{
             position: "absolute",
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: "all",
-            background: "#13161e",
-            border: `1px solid ${color}40`,
-            borderLeft: `3px solid ${color}`,
-            borderRadius: "6px",
-            padding: "3px 8px",
-            cursor: "pointer",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: "1px",
-            opacity: enabled ? 1 : 0.5,
-            minWidth: "60px",
+            borderLeftColor: color,
           }}
         >
-          <span
-            style={{
-              fontSize: "10px",
-              fontFamily: "var(--font-body)",
-              fontWeight: 500,
-              color: "#e4e8ef",
-              whiteSpace: "nowrap",
-              letterSpacing: "0.01em",
-            }}
-          >
-            {ruleName}
-          </span>
-          {portLabel && (
-            <span
-              style={{
-                fontSize: "9px",
-                fontFamily: "var(--font-mono)",
-                fontWeight: 400,
-                color: "#7b8ba2",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {portLabel}
-            </span>
+          {visibleRules.map((rule, i) => {
+            const portLabel = formatPortLabel(rule.protocol, rule.portRanges);
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-1.5 py-0.5 ${rule.enabled ? "" : "opacity-40"}`}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: getActionColor(rule.action) }}
+                />
+                <span className="text-[11px] font-medium text-gray-700 dark:text-noc-text truncate flex-1 text-left">
+                  {rule.name}
+                </span>
+                {portLabel && (
+                  <span className="text-[9px] font-mono text-gray-500 dark:text-noc-text-secondary bg-gray-100 dark:bg-noc-input px-1 rounded shrink-0">
+                    {portLabel}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+          {overflow > 0 && (
+            <div className="text-[10px] text-gray-400 dark:text-noc-text-dim pt-0.5 text-left">
+              +{overflow} more
+            </div>
+          )}
+          {rules.length === 0 && (
+            <div className="text-[10px] text-gray-400 dark:text-noc-text-dim py-0.5 text-left">
+              No active rules
+            </div>
           )}
         </button>
       </EdgeLabelRenderer>

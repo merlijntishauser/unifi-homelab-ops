@@ -13,9 +13,9 @@ import {
 } from "@xyflow/react";
 import type { Zone, ZonePair } from "../api/types";
 import { getLayoutedElements } from "../utils/layout";
+import { getEdgeColor } from "../utils/edgeColor";
 import ZoneNodeComponent, { type ZoneNodeData } from "./ZoneNode";
 import RuleEdgeComponent, { type RuleEdgeData } from "./RuleEdge";
-import { getActionColor } from "../utils/edgeColor";
 
 const nodeTypes = { zone: ZoneNodeComponent };
 const edgeTypes = { rule: RuleEdgeComponent };
@@ -70,29 +70,31 @@ function buildElements(
     },
   }));
 
-  const rawEdges: Edge<RuleEdgeData>[] = filteredPairs.flatMap((pair) =>
-    pair.rules.map((rule, idx) => ({
-      id: `${pair.source_zone_id}->${pair.destination_zone_id}::${rule.id}`,
+  const rawEdges: Edge<RuleEdgeData>[] = filteredPairs.map((pair) => {
+    const color = getEdgeColor(pair.allow_count, pair.block_count);
+    return {
+      id: `${pair.source_zone_id}->${pair.destination_zone_id}`,
       source: pair.source_zone_id,
       target: pair.destination_zone_id,
       type: "rule" as const,
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: getActionColor(rule.action),
+        color,
       },
       data: {
-        ruleName: rule.name,
-        ruleIndex: rule.index,
-        action: rule.action,
-        protocol: rule.protocol,
-        portRanges: rule.port_ranges,
-        enabled: rule.enabled,
-        edgeOffset: idx,
-        totalSiblings: pair.rules.length,
+        rules: pair.rules.map((r) => ({
+          name: r.name,
+          action: r.action,
+          protocol: r.protocol,
+          portRanges: r.port_ranges,
+          enabled: r.enabled,
+        })),
+        allowCount: pair.allow_count,
+        blockCount: pair.block_count,
         onLabelClick: () => onEdgeSelect(pair),
       },
-    })),
-  );
+    };
+  });
 
   return getLayoutedElements(rawNodes, rawEdges);
 }

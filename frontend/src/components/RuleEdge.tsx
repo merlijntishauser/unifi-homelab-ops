@@ -78,13 +78,18 @@ export default function RuleEdgeComponent({
   let labelPosY: number;
 
   if (edgeOffset !== 0) {
+    // For upward edges, redirect handles into the gap between nodes so both
+    // bidirectional edges take the short path instead of wrapping around.
+    const NODE_H = 100;
+    const sy = isUpward ? sourceY - NODE_H : sourceY;
+    const ty = isUpward ? targetY + NODE_H : targetY;
     // Curved bezier for bidirectional edges: one bows left, the other right
     const cx = (sourceX + targetX) / 2 + edgeOffset * CURVE_STRENGTH;
-    const cy = (sourceY + targetY) / 2;
-    computedPath = `M ${sourceX},${sourceY} Q ${cx},${cy} ${targetX},${targetY}`;
+    const cy = (sy + ty) / 2;
+    computedPath = `M ${sourceX},${sy} Q ${cx},${cy} ${targetX},${ty}`;
     // Label at the apex of the curve (midpoint)
     labelPosX = (sourceX + targetX) / 2 + (edgeOffset * CURVE_STRENGTH) / 2;
-    labelPosY = (sourceY + targetY) / 2;
+    labelPosY = (sy + ty) / 2;
   } else {
     // Standard step path for unidirectional edges
     [computedPath] = getSmoothStepPath({

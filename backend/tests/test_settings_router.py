@@ -1,9 +1,10 @@
 """Tests for settings router."""
 
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ConnectError, Request, Response
 
 from app.database import init_db
 
@@ -108,7 +109,7 @@ async def test_test_connection_no_config(client: AsyncClient) -> None:
 
 
 @pytest.mark.anyio
-async def test_test_connection_with_config(client: AsyncClient) -> None:
+async def test_test_connection_success(client: AsyncClient) -> None:
     await client.put(
         "/api/settings/ai",
         json={
@@ -118,6 +119,95 @@ async def test_test_connection_with_config(client: AsyncClient) -> None:
             "provider_type": "openai",
         },
     )
-    resp = await client.post("/api/settings/ai/test")
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    with patch("httpx.post", return_value=mock_response):
+        resp = await client.post("/api/settings/ai/test")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
+
+
+@pytest.mark.anyio
+async def test_test_connection_provider_error(client: AsyncClient) -> None:
+    await client.put(
+        "/api/settings/ai",
+        json={
+            "base_url": "https://api.openai.com/v1",
+            "api_key": "sk-bad",
+            "model": "gpt-4o",
+            "provider_type": "openai",
+        },
+    )
+    with patch(
+        "httpx.post",
+        side_effect=ConnectError("Connection refused", request=Request("POST", "https://api.openai.com/v1/chat/completions")),
+    ):
+        resp = await client.post("/api/settings/ai/test")
+    assert resp.status_code == 502
+    assert "Connection failed" in resp.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_test_connection_anthropic(client: AsyncClient) -> None:
+    await client.put(
+        "/api/settings/ai",
+        json={
+            "base_url": "https://api.anthropic.com/v1",
+            "api_key": "sk-ant-secret",
+            "model": "claude-sonnet-4-6",
+            "provider_type": "anthropic",
+        },
+    )
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    with patch("httpx.post", return_value=mock_response) as mock_post:
+        resp = await client.post("/api/settings/ai/test")
+    assert resp.status_code == 200
+    # Verify Anthropic-specific headers were used
+    call_kwargs = mock_post.call_args
+    assert "x-api-key" in call_kwargs.kwargs["headers"]
+
+
+@pytest.mark.anyio
+async def test_test_connection_timeout(client: AsyncClient) -> None:
+    import httpx as httpx_lib
+
+    await client.put(
+        "/api/settings/ai",
+        json={
+            "base_url": "https://api.openai.com/v1",
+            "api_key": "sk-secret",
+            "model": "gpt-4o",
+            "provider_type": "openai",
+        },
+    )
+    with patch(
+        "httpx.post",
+        side_effect=httpx_lib.TimeoutException("timed out"),
+    ):
+        resp = await client.post("/api/settings/ai/test")
+    assert resp.status_code == 504
+    assert "timed out" in resp.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_test_connection_http_error(client: AsyncClient) -> None:
+    import httpx as httpx_lib
+
+    await client.put(
+        "/api/settings/ai",
+        json={
+            "base_url": "https://api.openai.com/v1",
+            "api_key": "sk-bad",
+            "model": "gpt-4o",
+            "provider_type": "openai",
+        },
+    )
+    mock_response = Response(401, text="Unauthorized", request=Request("POST", "https://api.openai.com/v1/chat/completions"))
+    with patch(
+        "httpx.post",
+        side_effect=httpx_lib.HTTPStatusError("401", response=mock_response, request=mock_response.request),
+    ):
+        resp = await client.post("/api/settings/ai/test")
+    assert resp.status_code == 502
+    assert "401" in resp.json()["detail"]

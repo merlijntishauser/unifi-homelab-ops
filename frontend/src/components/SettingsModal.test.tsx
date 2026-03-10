@@ -166,7 +166,9 @@ describe("SettingsModal", () => {
     });
 
     expect(mockTestAiConnection).toHaveBeenCalled();
-    expect(screen.getByText("Connection successful")).toBeInTheDocument();
+    const successMsg = screen.getByText("Connection successful - provider responded");
+    expect(successMsg).toBeInTheDocument();
+    expect(successMsg.className).toContain("text-green-600");
   });
 
   it("calls deleteAiConfig on delete", async () => {
@@ -272,7 +274,9 @@ describe("SettingsModal", () => {
       fireEvent.click(screen.getByRole("button", { name: "Test" }));
     });
 
-    expect(screen.getByText("Connection failed")).toBeInTheDocument();
+    const failMsg = screen.getByText(/Connection error/);
+    expect(failMsg).toBeInTheDocument();
+    expect(failMsg.className).toContain("text-red-600");
   });
 
   it("shows error when delete fails", async () => {

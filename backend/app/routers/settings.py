@@ -7,6 +7,7 @@ from app.database import DEFAULT_DB_PATH
 from app.services.ai_settings import (
     delete_ai_config,
     get_ai_config,
+    get_full_ai_config,
     save_ai_config,
 )
 
@@ -61,9 +62,58 @@ async def delete_config() -> dict[str, str]:
 
 @router.post("/ai/test")
 async def test_connection() -> dict[str, str]:
-    config = get_ai_config(DEFAULT_DB_PATH)
-    if config is None or not config["has_key"]:
+    import httpx
+
+    full_config = get_full_ai_config(DEFAULT_DB_PATH)
+    if full_config is None:
         raise HTTPException(status_code=400, detail="No AI provider configured")
+
+    base_url = full_config["base_url"]
+    api_key = full_config["api_key"]
+    model = full_config["model"]
+    provider_type = full_config["provider_type"]
+
+    try:
+        if provider_type == "anthropic":
+            resp = httpx.post(
+                f"{base_url}/messages",
+                headers={
+                    "x-api-key": str(api_key),
+                    "anthropic-version": "2023-06-01",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": str(model),
+                    "max_tokens": 10,
+                    "messages": [{"role": "user", "content": "Say OK"}],
+                },
+                timeout=15.0,
+            )
+        else:
+            resp = httpx.post(
+                f"{base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": str(model),
+                    "messages": [{"role": "user", "content": "Say OK"}],
+                    "max_tokens": 10,
+                },
+                timeout=15.0,
+            )
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Provider returned {e.response.status_code}: {e.response.text[:200]}",
+        ) from e
+    except httpx.ConnectError as e:
+        raise HTTPException(status_code=502, detail=f"Connection failed: {e}") from e
+    except httpx.TimeoutException as e:
+        raise HTTPException(status_code=504, detail="Connection timed out") from e
+
     return {"status": "ok"}
 
 

@@ -29,18 +29,24 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
     }
   }
 
+  const inputClass =
+    "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-3 py-2.5 text-sm text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors font-body";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-noc-bg px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.07)_0%,_transparent_60%)]" />
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 space-y-5"
+        className="relative w-full max-w-md bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-xl shadow-lg dark:shadow-2xl p-8 space-y-5 animate-fade-in"
       >
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 text-center">
+        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-ub-blue/50 to-transparent" />
+
+        <h2 className="text-2xl font-display font-semibold text-gray-900 dark:text-noc-text text-center tracking-tight">
           Connect to UniFi Controller
         </h2>
 
         {error && (
-          <div className="rounded bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
+          <div className="rounded-lg bg-red-50 dark:bg-status-danger-dim border border-red-200 dark:border-status-danger/20 p-3 text-sm text-red-700 dark:text-status-danger">
             {error}
           </div>
         )}
@@ -48,7 +54,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         <div className="space-y-1">
           <label
             htmlFor="url"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
           >
             Controller URL
           </label>
@@ -59,14 +65,14 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://192.168.1.1"
-            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputClass}
           />
         </div>
 
         <div className="space-y-1">
           <label
             htmlFor="username"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
           >
             Username
           </label>
@@ -76,14 +82,14 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             required
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputClass}
           />
         </div>
 
         <div className="space-y-1">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
           >
             Password
           </label>
@@ -93,14 +99,14 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputClass}
           />
         </div>
 
         <div className="space-y-1">
           <label
             htmlFor="site"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
           >
             Site
           </label>
@@ -110,7 +116,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             required
             value={site}
             onChange={(e) => setSite(e.target.value)}
-            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputClass}
           />
         </div>
 
@@ -120,11 +126,11 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             type="checkbox"
             checked={verifySsl}
             onChange={(e) => setVerifySsl(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
           />
           <label
             htmlFor="verifySsl"
-            className="text-sm text-gray-700 dark:text-gray-300"
+            className="text-sm text-gray-700 dark:text-noc-text-secondary"
           >
             Verify SSL
           </label>
@@ -133,7 +139,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-lg bg-ub-blue px-4 py-2.5 text-sm font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {loading ? "Connecting..." : "Connect"}
         </button>

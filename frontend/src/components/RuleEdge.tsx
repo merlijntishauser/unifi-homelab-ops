@@ -17,9 +17,9 @@ export interface RuleEdgeData {
 export type RuleEdge = Edge<RuleEdgeData, "rule">;
 
 function getEdgeColor(allowCount: number, blockCount: number): string {
-  if (allowCount > 0 && blockCount === 0) return "#22c55e";
-  if (blockCount > 0 && allowCount === 0) return "#ef4444";
-  return "#f59e0b";
+  if (allowCount > 0 && blockCount === 0) return "#00d68f";
+  if (blockCount > 0 && allowCount === 0) return "#ff4d5e";
+  return "#ffaa2c";
 }
 
 export default function RuleEdgeComponent({
@@ -68,12 +68,14 @@ export default function RuleEdgeComponent({
             pointerEvents: "all",
             background: color,
             color: "white",
-            fontSize: "11px",
-            fontWeight: 600,
+            fontSize: "10px",
+            fontFamily: "var(--font-mono)",
+            fontWeight: 500,
             padding: "2px 8px",
-            borderRadius: "10px",
+            borderRadius: "6px",
             border: "none",
             cursor: "pointer",
+            letterSpacing: "0.02em",
           }}
         >
           {totalRules} {totalRules === 1 ? "rule" : "rules"}

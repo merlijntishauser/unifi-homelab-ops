@@ -104,33 +104,36 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     }
   }, [onClose]);
 
+  const inputClass =
+    "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-3 py-2 text-sm text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
+        className="bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-xl shadow-xl dark:shadow-2xl w-full max-w-md mx-4 p-6 animate-fade-in"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-label="AI Settings"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Provider Settings</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl cursor-pointer" aria-label="Close settings">
+          <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-noc-text tracking-tight">AI Provider Settings</h2>
+          <button onClick={onClose} className="text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text text-xl cursor-pointer transition-colors" aria-label="Close settings">
             &times;
           </button>
         </div>
 
         {loading ? (
-          <div className="text-sm text-gray-500 dark:text-gray-400">Loading...</div>
+          <div className="text-sm text-gray-500 dark:text-noc-text-secondary">Loading...</div>
         ) : (
           <div className="space-y-4">
             {/* Provider picker */}
             <div>
-              <label htmlFor="settings-provider" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Provider</label>
+              <label htmlFor="settings-provider" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Provider</label>
               <select
                 id="settings-provider"
                 value={selectedPresetId ?? ""}
                 onChange={e => handlePresetChange(e.target.value)}
-                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+                className={inputClass}
               >
                 <option value="">Select a provider...</option>
                 {presets.map(p => (
@@ -143,14 +146,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             {/* Base URL (shown for custom) */}
             {selectedPresetId === "custom" && (
               <div>
-                <label htmlFor="settings-base-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Base URL</label>
+                <label htmlFor="settings-base-url" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Base URL</label>
                 <input
                   id="settings-base-url"
                   type="text"
                   value={baseUrl}
                   onChange={e => setBaseUrl(e.target.value)}
                   placeholder="https://api.example.com/v1"
-                  className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+                  className={inputClass}
                 />
               </div>
             )}
@@ -159,26 +162,26 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             {selectedPresetId && (
               <>
                 <div>
-                  <label htmlFor="settings-api-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
+                  <label htmlFor="settings-api-key" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">API Key</label>
                   <input
                     id="settings-api-key"
                     type="password"
                     value={apiKey}
                     onChange={e => setApiKey(e.target.value)}
                     placeholder="Enter your API key"
-                    className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+                    className={inputClass}
                   />
                 </div>
 
                 {/* Model selector */}
                 <div>
-                  <label htmlFor="settings-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
+                  <label htmlFor="settings-model" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Model</label>
                   {models.length > 0 ? (
                     <select
                       id="settings-model"
                       value={model}
                       onChange={e => setModel(e.target.value)}
-                      className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+                      className={inputClass}
                     >
                       {models.map(m => (
                         <option key={m} value={m}>{m}</option>
@@ -191,7 +194,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       value={model}
                       onChange={e => setModel(e.target.value)}
                       placeholder="Model name"
-                      className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+                      className={inputClass}
                     />
                   )}
                 </div>
@@ -199,12 +202,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 {/* Provider type (for custom only) */}
                 {selectedPresetId === "custom" && (
                   <div>
-                    <label htmlFor="settings-provider-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Provider Type</label>
+                    <label htmlFor="settings-provider-type" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Provider Type</label>
                     <select
                       id="settings-provider-type"
                       value={providerType}
                       onChange={e => setProviderType(e.target.value)}
-                      className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+                      className={inputClass}
                     >
                       <option value="openai">OpenAI Compatible</option>
                       <option value="anthropic">Anthropic</option>
@@ -215,22 +218,22 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             )}
 
             {/* Error/test messages */}
-            {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
+            {error && <div className="text-sm text-red-600 dark:text-status-danger">{error}</div>}
             {testResult && (
-              <div className={`text-sm ${testResult.ok ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+              <div className={`text-sm ${testResult.ok ? "text-green-600 dark:text-status-success" : "text-red-600 dark:text-status-danger"}`}>
                 {testResult.message}
               </div>
             )}
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">
-              <button onClick={handleSave} disabled={saving || !selectedPresetId} className="flex-1 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+              <button onClick={handleSave} disabled={saving || !selectedPresetId} className="flex-1 rounded-lg bg-ub-blue px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
                 {saving ? "Saving..." : "Save"}
               </button>
-              <button onClick={handleTest} disabled={testing} className="rounded border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 cursor-pointer">
+              <button onClick={handleTest} disabled={testing} className="rounded-lg border border-gray-300 dark:border-noc-border px-3 py-2 text-sm text-gray-700 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:text-gray-900 dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
                 {testing ? "Testing..." : "Test"}
               </button>
-              <button onClick={handleDelete} className="rounded border border-red-300 dark:border-red-700 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 cursor-pointer">
+              <button onClick={handleDelete} className="rounded-lg border border-red-300 dark:border-status-danger/30 px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all">
                 Delete
               </button>
             </div>

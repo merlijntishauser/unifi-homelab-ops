@@ -77,6 +77,15 @@ vi.mock("@xyflow/react", () => ({
   getSmoothStepPath: () => ["", 0, 0],
 }));
 
+// Mock SettingsModal
+vi.mock("./components/SettingsModal", () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="settings-modal">
+      <button data-testid="close-settings" onClick={onClose}>Close</button>
+    </div>
+  ),
+}));
+
 // Mock ZoneMatrix
 vi.mock("./components/ZoneMatrix", () => ({
   default: ({ zones, zonePairs, onCellClick, onZoneClick }: {
@@ -577,6 +586,57 @@ describe("App", () => {
     });
     expect(screen.getByTestId("react-flow")).toBeInTheDocument();
     expect(screen.queryByTestId("zone-matrix")).not.toBeInTheDocument();
+  });
+
+  it("opens and closes settings modal", async () => {
+    mockGetAuthStatus.mockResolvedValue({ configured: true, source: "env", url: "https://unifi.local" });
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("settings-modal")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId("close-settings"));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("settings-modal")).not.toBeInTheDocument();
+    });
+  });
+
+  it("refreshes AI config when settings modal closes", async () => {
+    mockGetAuthStatus.mockResolvedValue({ configured: true, source: "env", url: "https://unifi.local" });
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    });
+
+    // Clear the initial call count
+    mockGetAiConfig.mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("settings-modal")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId("close-settings"));
+
+    await waitFor(() => {
+      expect(mockGetAiConfig).toHaveBeenCalled();
+    });
   });
 
   it("calls getAiConfig when authenticated", async () => {

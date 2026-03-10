@@ -618,6 +618,20 @@ describe("RulePanel", () => {
       expect(lowBadge.className).toContain("bg-blue-100");
     });
 
+    it("shows gray badge for unknown severity", () => {
+      const pair = makePair([makeRule()], {
+        score: 50,
+        grade: "D",
+        findings: [
+          { id: "f1", severity: "unknown" as "high", title: "Unknown issue", description: "desc", rule_id: null, source: "static" },
+        ],
+      });
+      renderPanel(pair);
+
+      const badge = screen.getByText("unknown");
+      expect(badge.className).toContain("bg-gray-100");
+    });
+
     it("does not show analysis section when analysis is null", () => {
       const pair = makePair([makeRule()], null);
       renderPanel(pair);

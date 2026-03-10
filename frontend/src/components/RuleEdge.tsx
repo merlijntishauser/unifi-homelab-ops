@@ -70,28 +70,39 @@ export default function RuleEdgeComponent({
   } = resolveData(data);
   const color = getEdgeColor(allowCount, blockCount);
 
-  const EDGE_OFFSET_PX = 25;
-  const offsetX = edgeOffset * EDGE_OFFSET_PX;
-
-  // For upward edges (source below target), flip handle positions so the path
-  // goes straight up instead of S-curving and the arrowhead points upward.
   const isUpward = sourceY > targetY;
+  const CURVE_STRENGTH = 80;
 
-  const [edgePath] = getSmoothStepPath({
-    sourceX: sourceX + offsetX,
-    sourceY,
-    sourcePosition: isUpward ? Position.Top : sourcePosition,
-    targetX: targetX + offsetX,
-    targetY,
-    targetPosition: isUpward ? Position.Bottom : targetPosition,
-  });
+  let computedPath: string;
+  let labelPosX: number;
+  let labelPosY: number;
 
-  // Position label near source (not midpoint) to avoid overlapping intermediate nodes
-  const LABEL_OFFSET = 90;
-  const dy = targetY - sourceY;
-  const clampedOffset = Math.sign(dy) * Math.min(LABEL_OFFSET, Math.abs(dy) * 0.4);
-  const labelPosX = (sourceX + targetX) / 2 + offsetX;
-  const labelPosY = sourceY + clampedOffset;
+  if (edgeOffset !== 0) {
+    // Curved bezier for bidirectional edges: one bows left, the other right
+    const cx = (sourceX + targetX) / 2 + edgeOffset * CURVE_STRENGTH;
+    const cy = (sourceY + targetY) / 2;
+    computedPath = `M ${sourceX},${sourceY} Q ${cx},${cy} ${targetX},${targetY}`;
+    // Label at the apex of the curve (midpoint)
+    labelPosX = (sourceX + targetX) / 2 + (edgeOffset * CURVE_STRENGTH) / 2;
+    labelPosY = (sourceY + targetY) / 2;
+  } else {
+    // Standard step path for unidirectional edges
+    [computedPath] = getSmoothStepPath({
+      sourceX,
+      sourceY,
+      sourcePosition: isUpward ? Position.Top : sourcePosition,
+      targetX,
+      targetY,
+      targetPosition: isUpward ? Position.Bottom : targetPosition,
+    });
+    const LABEL_OFFSET = 90;
+    const dy = targetY - sourceY;
+    const clampedOffset =
+      Math.sign(dy) * Math.min(LABEL_OFFSET, Math.abs(dy) * 0.4);
+    labelPosX = (sourceX + targetX) / 2;
+    labelPosY = sourceY + clampedOffset;
+  }
+
   // Place label on the outer side for bidirectional edges
   const labelAnchor =
     edgeOffset < 0
@@ -105,7 +116,7 @@ export default function RuleEdgeComponent({
     <>
       <BaseEdge
         id={id}
-        path={edgePath}
+        path={computedPath}
         markerEnd={markerEnd}
         style={{
           stroke: color,

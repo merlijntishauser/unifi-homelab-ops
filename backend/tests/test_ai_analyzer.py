@@ -259,6 +259,12 @@ class TestParseFindingsMarkdownCodeBlocks:
         assert len(result) == 1
         assert result[0]["title"] == "Valid"
 
+    def test_handles_code_block_without_closing(self) -> None:
+        text = '```json\n[{"severity": "high", "title": "Risk", "description": "Desc"}]'
+        result = _parse_findings(text)
+        assert len(result) == 1
+        assert result[0]["title"] == "Risk"
+
     def test_non_list_returns_empty(self) -> None:
         text = '{"severity": "high", "title": "Single", "description": "Not a list"}'
         result = _parse_findings(text)

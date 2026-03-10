@@ -17,12 +17,12 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
   const size = zones.length;
 
   return (
-    <div className="h-full flex items-center justify-center p-8 overflow-auto bg-gray-50 dark:bg-gray-900">
+    <div className="h-full flex items-center justify-center p-8 overflow-auto bg-gray-50 dark:bg-noc-bg">
       <div
-        className="grid gap-px"
+        className="grid gap-1"
         style={{
-          gridTemplateColumns: `auto repeat(${size}, minmax(48px, 80px))`,
-          gridTemplateRows: `auto repeat(${size}, minmax(48px, 80px))`,
+          gridTemplateColumns: `auto repeat(${size}, minmax(52px, 84px))`,
+          gridTemplateRows: `auto repeat(${size}, minmax(52px, 84px))`,
         }}
       >
         {/* Top-left empty corner */}
@@ -34,7 +34,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             key={`col-${zone.id}`}
             data-testid={`col-header-${zone.id}`}
             onClick={() => onZoneClick(zone.id)}
-            className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate px-1 pb-2 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer text-center"
+            className="text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary truncate px-1 pb-2 hover:text-ub-blue cursor-pointer text-center transition-colors"
             style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
           >
             {zone.name}
@@ -48,7 +48,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             <button
               data-testid={`row-header-${srcZone.id}`}
               onClick={() => onZoneClick(srcZone.id)}
-              className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate pr-3 flex items-center hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+              className="text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary truncate pr-3 flex items-center hover:text-ub-blue cursor-pointer transition-colors"
             >
               {srcZone.name}
             </button>

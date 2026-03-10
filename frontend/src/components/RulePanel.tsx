@@ -12,55 +12,55 @@ interface RulePanelProps {
 }
 
 function gradeColor(grade: string): string {
-  if (grade === "A" || grade === "B") return "bg-green-600";
-  if (grade === "C") return "bg-amber-500";
-  return "bg-red-600";
+  if (grade === "A" || grade === "B") return "bg-status-success";
+  if (grade === "C") return "bg-status-warning";
+  return "bg-status-danger";
 }
 
 function severityBadge(severity: string): string {
   switch (severity) {
     case "high":
-      return "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300";
+      return "bg-red-100 dark:bg-status-danger-dim text-red-700 dark:text-status-danger";
     case "medium":
-      return "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300";
+      return "bg-amber-100 dark:bg-status-warning-dim text-amber-700 dark:text-status-warning";
     case "low":
-      return "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300";
+      return "bg-blue-100 dark:bg-ub-blue-dim text-blue-700 dark:text-ub-blue";
     default:
-      return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
+      return "bg-gray-100 dark:bg-noc-raised text-gray-700 dark:text-noc-text-secondary";
   }
 }
 
 function actionColor(action: Rule["action"], enabled: boolean): string {
-  if (!enabled) return "bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600";
+  if (!enabled) return "bg-gray-50 dark:bg-noc-raised/50 border-gray-200 dark:border-noc-border";
   switch (action) {
     case "ALLOW":
-      return "bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700";
+      return "bg-green-50 dark:bg-status-success/6 border-green-200 dark:border-status-success/20";
     case "BLOCK":
     case "REJECT":
-      return "bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700";
+      return "bg-red-50 dark:bg-status-danger/6 border-red-200 dark:border-status-danger/20";
   }
 }
 
 function actionBadge(action: Rule["action"]): string {
   switch (action) {
     case "ALLOW":
-      return "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200";
+      return "bg-green-100 dark:bg-status-success/15 text-green-800 dark:text-status-success";
     case "BLOCK":
-      return "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200";
+      return "bg-red-100 dark:bg-status-danger/15 text-red-800 dark:text-status-danger";
     case "REJECT":
-      return "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200";
+      return "bg-red-100 dark:bg-status-danger/15 text-red-800 dark:text-status-danger";
   }
 }
 
 function verdictColor(verdict: string | null): string {
   switch (verdict) {
     case "ALLOW":
-      return "bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200";
+      return "bg-green-50 dark:bg-status-success/10 border-green-300 dark:border-status-success/30 text-green-800 dark:text-status-success";
     case "BLOCK":
     case "REJECT":
-      return "bg-red-100 dark:bg-red-900 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200";
+      return "bg-red-50 dark:bg-status-danger/10 border-red-300 dark:border-status-danger/30 text-red-800 dark:text-status-danger";
     default:
-      return "bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300";
+      return "bg-gray-50 dark:bg-noc-raised border-gray-300 dark:border-noc-border text-gray-700 dark:text-noc-text-secondary";
   }
 }
 
@@ -126,16 +126,19 @@ export default function RulePanel({
     }
   }
 
+  const inputClass =
+    "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-2.5 py-1.5 text-xs font-mono text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
+
   return (
-    <div className="w-[400px] h-full border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col overflow-hidden">
+    <div className="w-[400px] h-full border-l border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface flex flex-col overflow-hidden animate-slide-right">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-noc-border">
+        <h2 className="text-sm font-display font-semibold text-gray-900 dark:text-noc-text truncate">
           {sourceZoneName} &rarr; {destZoneName}
         </h2>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none cursor-pointer"
+          className="text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text text-lg leading-none cursor-pointer transition-colors"
           aria-label="Close panel"
         >
           &times;
@@ -147,32 +150,32 @@ export default function RulePanel({
         {pair.analysis && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className={`px-2 py-1 rounded text-xs font-bold text-white ${gradeColor(pair.analysis.grade)}`}>
+              <div className={`px-2.5 py-1 rounded-md text-xs font-bold text-white ${gradeColor(pair.analysis.grade)}`}>
                 {pair.analysis.grade}
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs font-mono text-gray-500 dark:text-noc-text-dim">
                 {pair.analysis.score}/100
               </span>
             </div>
             {allFindings.length > 0 && (
               <div className="space-y-1.5">
-                <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
                   Findings ({allFindings.length})
                 </h3>
                 {allFindings.map((finding, idx) => (
-                  <div key={finding.id ?? idx} className="rounded border border-gray-200 dark:border-gray-700 p-2 text-xs">
+                  <div key={finding.id ?? idx} className="rounded-lg border border-gray-200 dark:border-noc-border p-2.5 text-xs bg-gray-50 dark:bg-noc-raised/50">
                     <div className="flex items-center gap-1.5">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${severityBadge(finding.severity)}`}>
                         {finding.severity}
                       </span>
                       {finding.source === "ai" && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-ub-purple/15 text-purple-700 dark:text-ub-purple-light">
                           AI
                         </span>
                       )}
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{finding.title}</span>
+                      <span className="font-medium text-gray-900 dark:text-noc-text">{finding.title}</span>
                     </div>
-                    <p className="mt-1 text-gray-500 dark:text-gray-400">{finding.description}</p>
+                    <p className="mt-1 text-gray-500 dark:text-noc-text-secondary">{finding.description}</p>
                   </div>
                 ))}
               </div>
@@ -180,7 +183,7 @@ export default function RulePanel({
           </div>
         )}
         {aiError && (
-          <div className="rounded bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-2 text-xs text-red-700 dark:text-red-300">
+          <div className="rounded-lg bg-red-50 dark:bg-status-danger-dim border border-red-200 dark:border-status-danger/20 p-2.5 text-xs text-red-700 dark:text-status-danger">
             {aiError}
           </div>
         )}
@@ -188,7 +191,7 @@ export default function RulePanel({
           <button
             onClick={handleAiAnalyze}
             disabled={aiLoading}
-            className="w-full rounded bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full rounded-lg bg-ub-purple px-3 py-1.5 text-xs font-semibold text-white hover:bg-ub-purple-light focus:outline-none focus:ring-2 focus:ring-ub-purple/40 focus:ring-offset-1 dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
           >
             {aiLoading ? "Analyzing..." : "Analyze with AI"}
           </button>
@@ -196,25 +199,25 @@ export default function RulePanel({
 
         {/* Rule list */}
         <div className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
             Rules ({sortedRules.length})
           </h3>
           {sortedRules.map((rule) => (
             <div
               key={rule.id}
-              className={`rounded border p-2 text-xs ${actionColor(rule.action, rule.enabled)} ${
+              className={`rounded-lg border p-2.5 text-xs ${actionColor(rule.action, rule.enabled)} ${
                 simResult?.matched_rule_id === rule.id
-                  ? "ring-2 ring-blue-500"
+                  ? "ring-2 ring-ub-blue"
                   : ""
               }`}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                <span className="font-medium text-gray-900 dark:text-noc-text truncate">
                   {rule.index}. {rule.name}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
                   {rule.predefined && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-noc-input text-gray-600 dark:text-noc-text-dim font-mono">
                       built-in
                     </span>
                   )}
@@ -226,7 +229,7 @@ export default function RulePanel({
                 </div>
               </div>
               {(rule.protocol || rule.port_ranges.length > 0) && (
-                <div className="mt-1 text-gray-500 dark:text-gray-400">
+                <div className="mt-1 font-mono text-gray-500 dark:text-noc-text-secondary">
                   {rule.protocol && <span>{rule.protocol}</span>}
                   {rule.port_ranges.length > 0 && (
                     <span className="ml-1">
@@ -236,7 +239,7 @@ export default function RulePanel({
                 </div>
               )}
               {!rule.enabled && (
-                <div className="mt-1 text-gray-400 dark:text-gray-500 italic">
+                <div className="mt-1 text-gray-400 dark:text-noc-text-dim italic">
                   disabled
                 </div>
               )}
@@ -246,7 +249,7 @@ export default function RulePanel({
 
         {/* Packet simulation form */}
         <form onSubmit={handleSimulate} className="space-y-2">
-          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
             Packet Simulation
           </h3>
           <input
@@ -255,7 +258,7 @@ export default function RulePanel({
             value={srcIp}
             onChange={(e) => setSrcIp(e.target.value)}
             required
-            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputClass}
           />
           <input
             type="text"
@@ -263,13 +266,13 @@ export default function RulePanel({
             value={dstIp}
             onChange={(e) => setDstIp(e.target.value)}
             required
-            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputClass}
           />
           <div className="flex gap-2">
             <select
               value={protocol}
               onChange={(e) => setProtocol(e.target.value)}
-              className="flex-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={inputClass}
             >
               <option value="TCP">TCP</option>
               <option value="UDP">UDP</option>
@@ -283,13 +286,13 @@ export default function RulePanel({
               onChange={(e) => setPort(e.target.value)}
               min={1}
               max={65535}
-              className="flex-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={inputClass}
             />
           </div>
           <button
             type="submit"
             disabled={simLoading}
-            className="w-full rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full rounded-lg bg-ub-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 focus:ring-offset-1 dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
           >
             {simLoading ? "Simulating..." : "Simulate"}
           </button>
@@ -297,29 +300,29 @@ export default function RulePanel({
 
         {/* Simulation error */}
         {simError && (
-          <div className="rounded bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-2 text-xs text-red-700 dark:text-red-300">
+          <div className="rounded-lg bg-red-50 dark:bg-status-danger-dim border border-red-200 dark:border-status-danger/20 p-2.5 text-xs text-red-700 dark:text-status-danger">
             {simError}
           </div>
         )}
 
         {/* Simulation result */}
         {simResult && (
-          <div className="space-y-2">
+          <div className="space-y-2 animate-fade-in">
             <div
-              className={`rounded border p-3 text-center font-semibold text-sm ${verdictColor(simResult.verdict)}`}
+              className={`rounded-lg border p-3 text-center font-display font-semibold text-sm ${verdictColor(simResult.verdict)}`}
             >
               {simResult.verdict ?? "NO MATCH"}
               {simResult.default_policy_used && (
-                <div className="text-xs font-normal mt-1 opacity-75">
+                <div className="text-xs font-normal mt-1 opacity-70 font-body">
                   (default policy)
                 </div>
               )}
             </div>
 
             {simResult.matched_rule_name && (
-              <div className="text-xs text-gray-600 dark:text-gray-400">
+              <div className="text-xs text-gray-600 dark:text-noc-text-secondary">
                 Matched:{" "}
-                <span className="font-medium text-gray-900 dark:text-gray-100">
+                <span className="font-medium text-gray-900 dark:text-noc-text">
                   {simResult.matched_rule_name}
                 </span>
               </div>
@@ -327,31 +330,31 @@ export default function RulePanel({
 
             {simResult.evaluations.length > 0 && (
               <div className="space-y-1">
-                <h4 className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <h4 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
                   Evaluation Chain
                 </h4>
                 {simResult.evaluations.map((ev) => (
                   <div
                     key={ev.rule_id}
-                    className={`text-xs px-2 py-1 rounded border ${
+                    className={`text-xs px-2.5 py-1.5 rounded-lg border ${
                       ev.matched
-                        ? "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950"
+                        ? "border-blue-300 dark:border-ub-blue/30 bg-blue-50 dark:bg-ub-blue-dim"
                         : ev.skipped_disabled
-                          ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                          ? "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50 opacity-50"
+                          : "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
+                      <span className="font-medium text-gray-700 dark:text-noc-text-secondary truncate">
                         {ev.rule_name}
                       </span>
                       <span
-                        className={`shrink-0 ml-1 ${ev.matched ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-gray-400 dark:text-gray-500"}`}
+                        className={`shrink-0 ml-1 font-mono ${ev.matched ? "text-ub-blue font-semibold" : "text-gray-400 dark:text-noc-text-dim"}`}
                       >
                         {ev.matched ? "MATCH" : "skip"}
                       </span>
                     </div>
-                    <div className="text-gray-400 dark:text-gray-500 mt-0.5">
+                    <div className="text-gray-400 dark:text-noc-text-dim mt-0.5">
                       {ev.reason}
                     </div>
                   </div>

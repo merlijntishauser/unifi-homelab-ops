@@ -566,7 +566,7 @@ describe("RulePanel", () => {
       await waitFor(() => {
         const ruleTwo = screen.getByText("2. Rule Two").closest("div[class*='rounded']");
         expect(ruleTwo?.className).toContain("ring-2");
-        expect(ruleTwo?.className).toContain("ring-blue-500");
+        expect(ruleTwo?.className).toContain("ring-ub-blue");
       });
     });
   });
@@ -642,14 +642,14 @@ describe("RulePanel", () => {
       const pair = makePair([makeRule()], { score: 95, grade: "A", findings: [] });
       renderPanel(pair);
       const gradeBadge = screen.getByText("A");
-      expect(gradeBadge.className).toContain("bg-green-600");
+      expect(gradeBadge.className).toContain("bg-status-success");
     });
 
     it("shows red badge for F grade", () => {
       const pair = makePair([makeRule()], { score: 20, grade: "F", findings: [] });
       renderPanel(pair);
       const gradeBadge = screen.getByText("F");
-      expect(gradeBadge.className).toContain("bg-red-600");
+      expect(gradeBadge.className).toContain("bg-status-danger");
     });
   });
 

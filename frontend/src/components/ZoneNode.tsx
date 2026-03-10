@@ -10,20 +10,19 @@ export interface ZoneNodeData {
 
 export type ZoneNode = Node<ZoneNodeData, "zone">;
 
-const ZONE_COLORS: Record<string, { border: string; bg: string; text: string }> = {
-  External: { border: "border-red-500", bg: "bg-red-50 dark:bg-red-950", text: "text-red-700 dark:text-red-300" },
-  Internal: { border: "border-blue-500", bg: "bg-blue-50 dark:bg-blue-950", text: "text-blue-700 dark:text-blue-300" },
-  Guest: { border: "border-green-500", bg: "bg-green-50 dark:bg-green-950", text: "text-green-700 dark:text-green-300" },
-  VPN: { border: "border-purple-500", bg: "bg-purple-50 dark:bg-purple-950", text: "text-purple-700 dark:text-purple-300" },
-  Gateway: { border: "border-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-950", text: "text-yellow-700 dark:text-yellow-300" },
-  IoT: { border: "border-teal-500", bg: "bg-teal-50 dark:bg-teal-950", text: "text-teal-700 dark:text-teal-300" },
-  DMZ: { border: "border-orange-500", bg: "bg-orange-50 dark:bg-orange-950", text: "text-orange-700 dark:text-orange-300" },
+const ZONE_COLORS: Record<string, { accent: string; text: string }> = {
+  External: { accent: "border-l-red-500", text: "text-red-400" },
+  Internal: { accent: "border-l-blue-500", text: "text-blue-400" },
+  Guest: { accent: "border-l-green-500", text: "text-green-400" },
+  VPN: { accent: "border-l-purple-500", text: "text-purple-400" },
+  Gateway: { accent: "border-l-yellow-500", text: "text-yellow-400" },
+  IoT: { accent: "border-l-teal-500", text: "text-teal-400" },
+  DMZ: { accent: "border-l-orange-500", text: "text-orange-400" },
 };
 
 const DEFAULT_COLORS = {
-  border: "border-gray-500",
-  bg: "bg-gray-50 dark:bg-gray-800",
-  text: "text-gray-700 dark:text-gray-300",
+  accent: "border-l-gray-500",
+  text: "text-gray-400",
 };
 
 function getZoneColors(name: string) {
@@ -37,16 +36,16 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
 
   return (
     <div
-      className={`rounded-lg border-2 ${colors.border} ${colors.bg} shadow-md min-w-[200px]`}
+      className={`rounded-lg border border-gray-200 dark:border-noc-border ${colors.accent} border-l-[3px] bg-white dark:bg-noc-raised shadow-md dark:shadow-lg min-w-[200px]`}
     >
-      <Handle type="target" position={Position.Top} className="!bg-gray-400" />
+      <Handle type="target" position={Position.Top} className="!bg-gray-400 dark:!bg-noc-text-dim" />
 
       <div className="px-3 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className={`font-semibold text-sm ${colors.text}`}>
+          <span className={`font-display font-semibold text-sm ${colors.text}`}>
             {data.label}
           </span>
-          <span className="inline-flex items-center rounded-full bg-gray-200 dark:bg-gray-700 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+          <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-noc-input px-2 py-0.5 text-xs font-mono font-medium text-gray-600 dark:text-noc-text-secondary">
             {networks.length}
           </span>
         </div>
@@ -54,7 +53,7 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
         {networks.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="mt-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+            className="mt-1 text-xs text-gray-500 dark:text-noc-text-dim hover:text-gray-700 dark:hover:text-noc-text-secondary cursor-pointer transition-colors"
           >
             {expanded ? "Hide networks" : "Show networks"}
           </button>
@@ -65,16 +64,16 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
             {networks.map((net) => (
               <li
                 key={net.id}
-                className="text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-600 pt-1"
+                className="text-xs text-gray-600 dark:text-noc-text-secondary border-t border-gray-100 dark:border-noc-border pt-1"
               >
                 <span className="font-medium">{net.name}</span>
                 {net.vlan_id != null && (
-                  <span className="ml-1 text-gray-400 dark:text-gray-500">
+                  <span className="ml-1 font-mono text-gray-400 dark:text-noc-text-dim">
                     VLAN {net.vlan_id}
                   </span>
                 )}
                 {net.subnet && (
-                  <span className="ml-1 text-gray-400 dark:text-gray-500">
+                  <span className="ml-1 font-mono text-gray-400 dark:text-noc-text-dim">
                     {net.subnet}
                   </span>
                 )}
@@ -87,7 +86,7 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!bg-gray-400"
+        className="!bg-gray-400 dark:!bg-noc-text-dim"
       />
     </div>
   );

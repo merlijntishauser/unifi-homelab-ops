@@ -13,7 +13,7 @@ import RulePanel from "./components/RulePanel";
 function App() {
   const [authed, setAuthed] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
-  const [colorMode, setColorMode] = useState<ColorMode>("light");
+  const [colorMode, setColorMode] = useState<ColorMode>("dark");
   const [showDisabled, setShowDisabled] = useState(false);
   const [selectedPair, setSelectedPair] = useState<ZonePair | null>(null);
   const [focusZoneIds, setFocusZoneIds] = useState<string[] | null>(null);
@@ -87,7 +87,7 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-noc-bg text-gray-400 dark:text-noc-text-secondary font-body">
         Loading...
       </div>
     );
@@ -113,17 +113,17 @@ function App() {
       />
       {settingsOpen && <SettingsModal onClose={() => { setSettingsOpen(false); refreshAiConfig(); }} />}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-800 px-4 py-2 text-sm text-red-700 dark:text-red-300">
+        <div className="bg-red-50 dark:bg-status-danger-dim border-b border-red-200 dark:border-status-danger/20 px-4 py-2 text-sm text-red-700 dark:text-status-danger">
           {error}
         </div>
       )}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden bg-gray-50 dark:bg-noc-bg">
         <div className="flex-1 relative">
           {focusZoneIds ? (
             <>
               <button
                 onClick={handleBack}
-                className="absolute top-3 left-3 z-10 rounded bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm cursor-pointer"
+                className="absolute top-3 left-3 z-10 rounded-lg bg-white dark:bg-noc-surface border border-gray-300 dark:border-noc-border px-3 py-1.5 text-sm text-gray-700 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm dark:shadow-lg cursor-pointer transition-all"
               >
                 Back to matrix
               </button>

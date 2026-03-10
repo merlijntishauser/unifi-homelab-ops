@@ -247,7 +247,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-red-500");
+      expect(wrapper.className).toContain("border-l-red-500");
     });
 
     it("uses known colors for Internal zone", () => {
@@ -259,7 +259,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-blue-500");
+      expect(wrapper.className).toContain("border-l-blue-500");
     });
 
     it("uses known colors for Guest zone", () => {
@@ -271,7 +271,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-green-500");
+      expect(wrapper.className).toContain("border-l-green-500");
     });
 
     it("uses known colors for VPN zone", () => {
@@ -283,7 +283,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-purple-500");
+      expect(wrapper.className).toContain("border-l-purple-500");
     });
 
     it("uses known colors for Gateway zone", () => {
@@ -295,7 +295,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-yellow-500");
+      expect(wrapper.className).toContain("border-l-yellow-500");
     });
 
     it("uses known colors for IoT zone", () => {
@@ -307,7 +307,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-teal-500");
+      expect(wrapper.className).toContain("border-l-teal-500");
     });
 
     it("uses known colors for DMZ zone", () => {
@@ -319,7 +319,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-orange-500");
+      expect(wrapper.className).toContain("border-l-orange-500");
     });
 
     it("uses default colors for unknown zone", () => {
@@ -331,7 +331,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-gray-500");
+      expect(wrapper.className).toContain("border-l-gray-500");
     });
   });
 });

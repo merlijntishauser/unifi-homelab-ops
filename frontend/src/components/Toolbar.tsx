@@ -21,18 +21,21 @@ export default function Toolbar({
   onLogout,
   onOpenSettings,
 }: ToolbarProps) {
+  const btnClass =
+    "rounded-lg border border-gray-300 dark:border-noc-border px-3 py-1.5 text-sm text-gray-600 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:text-gray-900 dark:hover:text-noc-text hover:border-gray-400 dark:hover:border-noc-border-hover cursor-pointer transition-all";
+
   return (
-    <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mr-auto">
+    <div className="flex items-center gap-3 px-5 py-2.5 border-b border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface">
+      <h1 className="text-base font-display font-semibold text-gray-900 dark:text-noc-text mr-auto tracking-tight">
         UniFi Firewall Analyser
       </h1>
 
-      <label className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
+      <label className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-noc-text-secondary cursor-pointer select-none">
         <input
           type="checkbox"
           checked={showDisabled}
           onChange={(e) => onShowDisabledChange(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
         />
         Show disabled rules
       </label>
@@ -41,7 +44,7 @@ export default function Toolbar({
         onClick={() =>
           onColorModeChange(colorMode === "dark" ? "light" : "dark")
         }
-        className="rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+        className={btnClass}
       >
         {colorMode === "dark" ? "Light" : "Dark"}
       </button>
@@ -49,21 +52,21 @@ export default function Toolbar({
       <button
         onClick={onRefresh}
         disabled={loading}
-        className="rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        className={`${btnClass} disabled:opacity-40 disabled:cursor-not-allowed`}
       >
         {loading ? "Refreshing..." : "Refresh"}
       </button>
 
       <button
         onClick={onOpenSettings}
-        className="rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+        className={btnClass}
       >
         Settings
       </button>
 
       <button
         onClick={onLogout}
-        className="rounded border border-red-300 dark:border-red-700 px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 cursor-pointer"
+        className="rounded-lg border border-red-300 dark:border-status-danger/30 px-3 py-1.5 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all"
       >
         Disconnect
       </button>

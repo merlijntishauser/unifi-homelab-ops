@@ -48,7 +48,7 @@ describe("RuleEdgeComponent", () => {
         />,
       );
       const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke", "#22c55e");
+      expect(edge).toHaveAttribute("data-stroke", "#00d68f");
     });
 
     it("uses red color when only blocks", () => {
@@ -60,7 +60,7 @@ describe("RuleEdgeComponent", () => {
         />,
       );
       const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke", "#ef4444");
+      expect(edge).toHaveAttribute("data-stroke", "#ff4d5e");
     });
 
     it("uses amber color when mixed allows and blocks", () => {
@@ -72,7 +72,7 @@ describe("RuleEdgeComponent", () => {
         />,
       );
       const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke", "#f59e0b");
+      expect(edge).toHaveAttribute("data-stroke", "#ffaa2c");
     });
 
     it("uses amber color when both counts are 0", () => {
@@ -84,7 +84,7 @@ describe("RuleEdgeComponent", () => {
         />,
       );
       const edge = screen.getByTestId("edge-edge-1");
-      expect(edge).toHaveAttribute("data-stroke", "#f59e0b");
+      expect(edge).toHaveAttribute("data-stroke", "#ffaa2c");
     });
   });
 
@@ -198,7 +198,7 @@ describe("RuleEdgeComponent", () => {
       );
       const edge = screen.getByTestId("edge-edge-1");
       // 0 and 0 => amber
-      expect(edge).toHaveAttribute("data-stroke", "#f59e0b");
+      expect(edge).toHaveAttribute("data-stroke", "#ffaa2c");
       expect(screen.getByText("0 rules")).toBeInTheDocument();
     });
   });

@@ -5,27 +5,27 @@ import MatrixCell from "./MatrixCell";
 describe("MatrixCell", () => {
   it("renders green when grade is A", () => {
     render(<MatrixCell totalRules={3} grade="A" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-green-100");
+    expect(screen.getByRole("button")).toHaveClass("bg-green-50");
   });
 
   it("renders green when grade is B", () => {
     render(<MatrixCell totalRules={3} grade="B" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-green-100");
+    expect(screen.getByRole("button")).toHaveClass("bg-green-50");
   });
 
   it("renders amber when grade is C", () => {
     render(<MatrixCell totalRules={2} grade="C" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-amber-100");
+    expect(screen.getByRole("button")).toHaveClass("bg-amber-50");
   });
 
   it("renders red when grade is D", () => {
     render(<MatrixCell totalRules={1} grade="D" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-red-100");
+    expect(screen.getByRole("button")).toHaveClass("bg-red-50");
   });
 
   it("renders red when grade is F", () => {
     render(<MatrixCell totalRules={2} grade="F" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-red-100");
+    expect(screen.getByRole("button")).toHaveClass("bg-red-50");
   });
 
   it("renders gray when no rules exist", () => {
@@ -35,7 +35,8 @@ describe("MatrixCell", () => {
 
   it("shows rule count and grade", () => {
     render(<MatrixCell totalRules={3} grade="B" onClick={vi.fn()} />);
-    expect(screen.getByText("3 B")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("B")).toBeInTheDocument();
   });
 
   it("shows dash when no rules", () => {
@@ -52,7 +53,7 @@ describe("MatrixCell", () => {
 
   it("applies dimmed style when isSelfPair is true", () => {
     render(<MatrixCell totalRules={0} grade={null} onClick={vi.fn()} isSelfPair />);
-    expect(screen.getByRole("button")).toHaveClass("opacity-40");
+    expect(screen.getByRole("button")).toHaveClass("opacity-30");
   });
 
   it("does not apply dimmed style when isSelfPair is false", () => {

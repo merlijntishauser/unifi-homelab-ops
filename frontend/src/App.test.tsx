@@ -293,12 +293,12 @@ describe("App", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Dark" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Light" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Dark" }));
+    fireEvent.click(screen.getByRole("button", { name: "Light" }));
 
-    expect(screen.getByRole("button", { name: "Light" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dark" })).toBeInTheDocument();
   });
 
   it("toggles show disabled rules and filters disabled rules", async () => {

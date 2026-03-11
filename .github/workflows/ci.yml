@@ -90,6 +90,12 @@ jobs:
             cache_scope: ci-docker-alpine
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/cache@v4
+        with:
+          path: .cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ matrix.variant }}
+          restore-keys: |
+            trivy-db-${{ runner.os }}-
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
@@ -100,21 +106,24 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.cache_scope }}
           cache-to: type=gha,mode=max,scope=${{ matrix.cache_scope }}
       - run: ./scripts/smoke-test-image.sh "${{ matrix.image_tag }}" "${{ matrix.container_name }}" "${{ matrix.host_port }}"
-      - uses: aquasecurity/setup-trivy@v0.2.3
-        with:
-          version: v0.68.1
-          cache: true
-      - uses: aquasecurity/trivy-action@0.33.1
-        with:
-          image-ref: ${{ matrix.image_tag }}
-          format: sarif
-          output: trivy-results-${{ matrix.variant }}.sarif
-          vuln-type: os,library
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          limit-severities-for-sarif: true
-          exit-code: "1"
-          skip-setup-trivy: true
+      - id: trivy_scan
+        continue-on-error: true
+        run: |
+          mkdir -p .cache/trivy
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/.cache:/root/.cache" \
+            -v "$PWD:/work" \
+            -w /work \
+            ghcr.io/aquasecurity/trivy:0.68.1 image \
+            --scanners vuln \
+            --format sarif \
+            --output "trivy-results-${{ matrix.variant }}.sarif" \
+            --vuln-type os,library \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            "${{ matrix.image_tag }}"
       - id: trivy_sarif
         if: always() && github.event_name != 'pull_request'
         run: |
@@ -128,3 +137,6 @@ jobs:
         with:
           sarif_file: trivy-results-${{ matrix.variant }}.sarif
           category: trivy-${{ matrix.variant }}
+      - name: Fail on High/Critical image vulnerabilities
+        if: steps.trivy_scan.outcome == 'failure'
+        run: exit 1

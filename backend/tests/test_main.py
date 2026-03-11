@@ -12,6 +12,8 @@ from app.main import (
     HealthcheckAccessFilter,
     _configure_access_log_filters,
     _get_app_access_url,
+    _get_frontend_dist_dir,
+    _get_frontend_response,
     _is_enabled,
     _is_healthcheck_access_log,
     _log_startup_banner,
@@ -66,6 +68,21 @@ def test_healthcheck_filter_allows_other_access_logs() -> None:
     assert HealthcheckAccessFilter().filter(record) is True
 
 
+def test_healthcheck_filter_uses_message_fallback() -> None:
+    record = logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg='127.0.0.1 - "GET /api/health HTTP/1.1" 200 OK',
+        args=(),
+        exc_info=None,
+    )
+
+    assert _is_healthcheck_access_log(record) is True
+    assert HealthcheckAccessFilter().filter(record) is False
+
+
 def test_get_app_access_url_defaults_to_localhost(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("APP_ACCESS_URL", raising=False)
     monkeypatch.delenv("PORT", raising=False)
@@ -77,6 +94,15 @@ def test_get_app_access_url_uses_override(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setenv("APP_ACCESS_URL", "http://localhost:8081/")
 
     assert _get_app_access_url() == "http://localhost:8081"
+
+
+def test_get_frontend_dist_dir_defaults_to_repo_frontend_dist(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("FRONTEND_DIST_DIR", raising=False)
+
+    dist_dir = _get_frontend_dist_dir()
+
+    assert dist_dir.name == "dist"
+    assert dist_dir.parent.name == "frontend"
 
 
 def test_configure_access_log_filters_only_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -136,6 +162,51 @@ async def test_root_returns_404_without_frontend_dist(
     assert response.status_code == 404
 
 
+def test_get_frontend_response_rejects_path_traversal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
+
+    response = _get_frontend_response("../secret.txt")
+
+    assert response is None
+
+
+def test_get_frontend_response_returns_none_without_index(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
+
+    response = _get_frontend_response("")
+
+    assert response is None
+
+
+@pytest.mark.anyio
+async def test_root_serves_index_when_frontend_dist_exists(
+    client: AsyncClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
+
+    response = await client.get("/")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "UniFi Firewall Analyser" in response.text
+
+
 @pytest.mark.anyio
 async def test_serves_index_for_spa_routes(
     client: AsyncClient,
@@ -185,5 +256,21 @@ async def test_missing_static_assets_return_404(
     monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
 
     response = await client.get("/assets/missing.js")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_api_paths_are_not_handled_by_frontend_catchall(
+    client: AsyncClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
+
+    response = await client.get("/api/not-real")
 
     assert response.status_code == 404

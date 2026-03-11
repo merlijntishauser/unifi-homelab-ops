@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import { api } from "../api/client";
 import type { AiPreset } from "../api/types";
 
@@ -6,19 +6,43 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
+interface SettingsState {
+  presets: AiPreset[];
+  selectedPresetId: string | null;
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  providerType: string;
+  models: string[];
+  saving: boolean;
+  testing: boolean;
+  testResult: { ok: boolean; message: string } | null;
+  error: string | null;
+  loading: boolean;
+}
+
+const initialSettingsState: SettingsState = {
+  presets: [],
+  selectedPresetId: null,
+  baseUrl: "",
+  apiKey: "",
+  model: "",
+  providerType: "openai",
+  models: [],
+  saving: false,
+  testing: false,
+  testResult: null,
+  error: null,
+  loading: true,
+};
+
+function settingsReducer(state: SettingsState, update: Partial<SettingsState>): SettingsState {
+  return { ...state, ...update };
+}
+
 export default function SettingsModal({ onClose }: SettingsModalProps) {
-  const [presets, setPresets] = useState<AiPreset[]>([]);
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
-  const [baseUrl, setBaseUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState("");
-  const [providerType, setProviderType] = useState("openai");
-  const [models, setModels] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, dispatch] = useReducer(settingsReducer, initialSettingsState);
+  const { presets, selectedPresetId, baseUrl, apiKey, model, providerType, models, saving, testing, testResult, error, loading } = state;
 
   // Load presets and current config on mount
   useEffect(() => {
@@ -28,22 +52,22 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           api.getAiPresets(),
           api.getAiConfig(),
         ]);
-        setPresets(presetsData);
         if (config.source !== "none") {
-          setBaseUrl(config.base_url);
-          setModel(config.model);
-          setProviderType(config.provider_type);
-          // Try to match to a preset
           const matchedPreset = presetsData.find(p => p.base_url === config.base_url);
-          if (matchedPreset) {
-            setSelectedPresetId(matchedPreset.id);
-            setModels(matchedPreset.models);
-          }
+          dispatch({
+            presets: presetsData,
+            baseUrl: config.base_url,
+            model: config.model,
+            providerType: config.provider_type,
+            selectedPresetId: matchedPreset ? matchedPreset.id : null,
+            models: matchedPreset ? matchedPreset.models : [],
+            loading: false,
+          });
+        } else {
+          dispatch({ presets: presetsData, loading: false });
         }
       } catch {
-        setError("Failed to load settings");
-      } finally {
-        setLoading(false);
+        dispatch({ error: "Failed to load settings", loading: false });
       }
     }
     load();
@@ -51,47 +75,33 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
   const handlePresetChange = useCallback((presetId: string) => {
     if (presetId === "custom") {
-      setSelectedPresetId("custom");
-      setBaseUrl("");
-      setModel("");
-      setProviderType("openai");
-      setModels([]);
+      dispatch({ selectedPresetId: "custom", baseUrl: "", model: "", providerType: "openai", models: [] });
       return;
     }
     const preset = presets.find(p => p.id === presetId);
     if (preset) {
-      setSelectedPresetId(preset.id);
-      setBaseUrl(preset.base_url);
-      setModel(preset.default_model);
-      setProviderType(preset.provider_type);
-      setModels(preset.models);
+      dispatch({ selectedPresetId: preset.id, baseUrl: preset.base_url, model: preset.default_model, providerType: preset.provider_type, models: preset.models });
     }
   }, [presets]);
 
   const handleSave = useCallback(async () => {
-    setSaving(true);
-    setError(null);
+    dispatch({ saving: true, error: null });
     try {
       await api.saveAiConfig({ base_url: baseUrl, api_key: apiKey, model, provider_type: providerType });
       onClose();
     } catch {
-      setError("Failed to save settings");
-    } finally {
-      setSaving(false);
+      dispatch({ error: "Failed to save settings", saving: false });
     }
   }, [baseUrl, apiKey, model, providerType, onClose]);
 
   const handleTest = useCallback(async () => {
-    setTesting(true);
-    setTestResult(null);
+    dispatch({ testing: true, testResult: null });
     try {
       await api.testAiConnection();
-      setTestResult({ ok: true, message: "Connection successful - provider responded" });
+      dispatch({ testResult: { ok: true, message: "Connection successful - provider responded" }, testing: false });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Connection failed";
-      setTestResult({ ok: false, message });
-    } finally {
-      setTesting(false);
+      dispatch({ testResult: { ok: false, message }, testing: false });
     }
   }, []);
 
@@ -100,7 +110,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       await api.deleteAiConfig();
       onClose();
     } catch {
-      setError("Failed to delete settings");
+      dispatch({ error: "Failed to delete settings" });
     }
   }, [onClose]);
 
@@ -108,10 +118,18 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-3 py-2 text-sm text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
+      role="button"
+      tabIndex={-1}
+      aria-label="Close dialog"
+    >
       <div
         className="bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-xl shadow-xl dark:shadow-2xl w-full max-w-md mx-4 p-6 animate-fade-in"
         onClick={e => e.stopPropagation()}
+        onKeyDown={e => e.stopPropagation()}
         role="dialog"
         aria-label="AI Settings"
       >
@@ -151,7 +169,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   id="settings-base-url"
                   type="text"
                   value={baseUrl}
-                  onChange={e => setBaseUrl(e.target.value)}
+                  onChange={e => dispatch({ baseUrl: e.target.value })}
                   placeholder="https://api.example.com/v1"
                   className={inputClass}
                 />
@@ -167,7 +185,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     id="settings-api-key"
                     type="password"
                     value={apiKey}
-                    onChange={e => setApiKey(e.target.value)}
+                    onChange={e => dispatch({ apiKey: e.target.value })}
                     placeholder="Enter your API key"
                     className={inputClass}
                   />
@@ -180,7 +198,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     <select
                       id="settings-model"
                       value={model}
-                      onChange={e => setModel(e.target.value)}
+                      onChange={e => dispatch({ model: e.target.value })}
                       className={inputClass}
                     >
                       {models.map(m => (
@@ -192,7 +210,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       id="settings-model"
                       type="text"
                       value={model}
-                      onChange={e => setModel(e.target.value)}
+                      onChange={e => dispatch({ model: e.target.value })}
                       placeholder="Model name"
                       className={inputClass}
                     />
@@ -206,7 +224,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     <select
                       id="settings-provider-type"
                       value={providerType}
-                      onChange={e => setProviderType(e.target.value)}
+                      onChange={e => dispatch({ providerType: e.target.value })}
                       className={inputClass}
                     >
                       <option value="openai">OpenAI Compatible</option>

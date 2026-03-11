@@ -1,4 +1,4 @@
-.PHONY: up down build build-prod build-prod-alpine run-prod run-prod-alpine smoke-prod smoke-prod-alpine quality complexity test backend-install frontend-install ci help
+.PHONY: up down build build-prod build-prod-alpine run-prod run-prod-alpine smoke-prod smoke-prod-alpine quality complexity test react-doctor backend-install frontend-install ci help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
@@ -51,6 +51,9 @@ complexity: ## Check code complexity
 test: ## Run tests via Docker
 	docker compose exec api uv run pytest
 	docker compose exec frontend npx vitest run --coverage
+
+react-doctor: ## Run React Doctor code quality check
+	@cd frontend && npx react-doctor . --yes
 
 ci: ## Run all CI checks locally
 	@./scripts/ci-checks.sh

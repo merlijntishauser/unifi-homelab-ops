@@ -1,8 +1,8 @@
 import dagre from "@dagrejs/dagre";
 import type { Node, Edge } from "@xyflow/react";
 
-export const NODE_WIDTH = 220;
-export const NODE_HEIGHT = 100;
+const NODE_WIDTH = 220;
+const NODE_HEIGHT = 100;
 
 /** Usable horizontal spread on each side of the node (pixels from center). */
 const SPREAD_HALF = NODE_WIDTH * 0.35; // 77px each side → 154px total

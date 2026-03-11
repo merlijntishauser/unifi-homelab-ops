@@ -411,6 +411,52 @@ describe("SettingsModal", () => {
     });
   });
 
+  it("calls onClose when Escape is pressed on backdrop", async () => {
+    mockGetAiPresets.mockResolvedValue(testPresets);
+    mockGetAiConfig.mockResolvedValue(noConfig);
+    const onClose = vi.fn();
+
+    render(<SettingsModal onClose={onClose} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
+    });
+
+    fireEvent.keyDown(screen.getByLabelText("Close dialog"), { key: "Escape" });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("does not call onClose for non-Escape keys on backdrop", async () => {
+    mockGetAiPresets.mockResolvedValue(testPresets);
+    mockGetAiConfig.mockResolvedValue(noConfig);
+    const onClose = vi.fn();
+
+    render(<SettingsModal onClose={onClose} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
+    });
+
+    fireEvent.keyDown(screen.getByLabelText("Close dialog"), { key: "Tab" });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("stops keyboard event propagation on dialog content", async () => {
+    mockGetAiPresets.mockResolvedValue(testPresets);
+    mockGetAiConfig.mockResolvedValue(noConfig);
+    const onClose = vi.fn();
+
+    render(<SettingsModal onClose={onClose} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
+    });
+
+    // Pressing Escape on the dialog content should NOT close (event is stopped)
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it("auto-fills fields from existing config matching a preset", async () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(existingConfig);

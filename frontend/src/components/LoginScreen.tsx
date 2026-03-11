@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import type { FormEvent } from "react";
 import { api } from "../api/client";
 
@@ -6,26 +6,44 @@ interface LoginScreenProps {
   onLoggedIn: () => void;
 }
 
+interface LoginState {
+  url: string;
+  username: string;
+  password: string;
+  site: string;
+  verifySsl: boolean;
+  error: string | null;
+  loading: boolean;
+}
+
+const initialLoginState: LoginState = {
+  url: "",
+  username: "",
+  password: "",
+  site: "default",
+  verifySsl: false,
+  error: null,
+  loading: false,
+};
+
+function loginReducer(state: LoginState, update: Partial<LoginState>): LoginState {
+  return { ...state, ...update };
+}
+
 export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
-  const [url, setUrl] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [site, setSite] = useState("default");
-  const [verifySsl, setVerifySsl] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [state, dispatch] = useReducer(loginReducer, initialLoginState);
+  const { url, username, password, site, verifySsl, error, loading } = state;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
+    dispatch({ error: null, loading: true });
     try {
       await api.login(url, username, password, site, verifySsl);
       onLoggedIn();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      dispatch({ error: err instanceof Error ? err.message : "Login failed" });
     } finally {
-      setLoading(false);
+      dispatch({ loading: false });
     }
   }
 
@@ -63,7 +81,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             type="url"
             required
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => dispatch({ url: e.target.value })}
             placeholder="https://192.168.1.1"
             className={inputClass}
           />
@@ -81,7 +99,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             type="text"
             required
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => dispatch({ username: e.target.value })}
             className={inputClass}
           />
         </div>
@@ -98,7 +116,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             type="password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => dispatch({ password: e.target.value })}
             className={inputClass}
           />
         </div>
@@ -115,7 +133,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             type="text"
             required
             value={site}
-            onChange={(e) => setSite(e.target.value)}
+            onChange={(e) => dispatch({ site: e.target.value })}
             className={inputClass}
           />
         </div>
@@ -125,7 +143,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             id="verifySsl"
             type="checkbox"
             checked={verifySsl}
-            onChange={(e) => setVerifySsl(e.target.checked)}
+            onChange={(e) => dispatch({ verifySsl: e.target.checked })}
             className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
           />
           <label

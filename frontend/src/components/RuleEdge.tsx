@@ -136,23 +136,15 @@ export default function RuleEdgeComponent({
   const [isPinned, setIsPinned] = useState(false);
 
   const isUpward = sourceY > targetY;
-  const EDGE_OFFSET_PX = 20;
-  const offsetX = edgeOffset * EDGE_OFFSET_PX;
-
-  // For upward bidirectional edges, redirect to the short path through the gap
-  const NODE_H = 100;
-  const sy = edgeOffset !== 0 && isUpward ? sourceY - NODE_H : sourceY;
-  const ty = edgeOffset !== 0 && isUpward ? targetY + NODE_H : targetY;
 
   const [computedPath, labelPosX, labelPosY] = getSmoothStepPath({
     sourceX,
-    sourceY: sy,
+    sourceY,
     sourcePosition: isUpward ? Position.Top : sourcePosition,
     targetX,
-    targetY: ty,
+    targetY,
     targetPosition: isUpward ? Position.Bottom : targetPosition,
     borderRadius: 16,
-    centerX: edgeOffset !== 0 ? (sourceX + targetX) / 2 + offsetX : undefined,
   });
 
   const cardSide = edgeOffset < 0 ? "right-full mr-2" : "left-full ml-2";

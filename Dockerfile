@@ -35,6 +35,8 @@ ENV PATH="/app/backend/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV ANALYSER_DB_PATH=/data/analyser.db
 ENV FRONTEND_DIST_DIR=/app/frontend/dist
+ENV SUPPRESS_HEALTHCHECK_ACCESS_LOGS=true
+ENV SHOW_STARTUP_BANNER=true
 
 RUN groupadd --system appuser && useradd --system --gid appuser --create-home appuser
 

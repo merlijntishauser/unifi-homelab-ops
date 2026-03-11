@@ -71,6 +71,7 @@ make down
 | `UNIFI_PASS`       | Controller password     | --        |
 | `UNIFI_VERIFY_SSL` | Verify SSL certificates | `false`   |
 | `ANALYSER_DB_PATH` | SQLite database path    | `/data/analyser.db` in the production image |
+| `APP_ACCESS_URL`   | URL shown in the production startup banner | `http://localhost:8080` |
 
 AI analysis is optional. You can configure an OpenAI or Anthropic API key in the Settings modal within the app.
 

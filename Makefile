@@ -27,12 +27,12 @@ build-prod-alpine: ## Build the experimental Alpine production image locally
 run-prod: build-prod ## Build and run the production single-container image on localhost:8080
 	@env_args=""; \
 	if [ -f .env ]; then env_args="--env-file .env"; fi; \
-	docker run --rm --name unifi-firewall-analyser-prod -p 8080:8080 -v unifi-firewall-analyser-data:/data $$env_args unifi-firewall-analyser:local
+	docker run --rm --name unifi-firewall-analyser-prod -p 8080:8080 -v unifi-firewall-analyser-data:/data -e APP_ACCESS_URL=http://localhost:8080 $$env_args unifi-firewall-analyser:local
 
 run-prod-alpine: build-prod-alpine ## Build and run the Alpine image on localhost:8081
 	@env_args=""; \
 	if [ -f .env ]; then env_args="--env-file .env"; fi; \
-	docker run --rm --name unifi-firewall-analyser-prod-alpine -p 8081:8080 -v unifi-firewall-analyser-alpine-data:/data $$env_args unifi-firewall-analyser:alpine-local
+	docker run --rm --name unifi-firewall-analyser-prod-alpine -p 8081:8080 -v unifi-firewall-analyser-alpine-data:/data -e APP_ACCESS_URL=http://localhost:8081 $$env_args unifi-firewall-analyser:alpine-local
 
 smoke-prod: ## Smoke-test the production single-container image locally
 	./scripts/smoke-test-image.sh unifi-firewall-analyser:local unifi-firewall-analyser-smoke 18080

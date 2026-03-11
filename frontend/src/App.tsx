@@ -32,12 +32,18 @@ const initialAppState: AppState = {
   aiConfigured: false,
 };
 
+function initAppState(): AppState {
+  const stored = localStorage.getItem("colorMode");
+  const colorMode: ColorMode = stored === "light" || stored === "dark" ? stored : "dark";
+  return { ...initialAppState, colorMode };
+}
+
 function appReducer(state: AppState, update: Partial<AppState>): AppState {
   return { ...state, ...update };
 }
 
 function App() {
-  const [state, dispatch] = useReducer(appReducer, initialAppState);
+  const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
   const { authed, authLoading, colorMode, showDisabled, selectedPair, focusZoneIds, settingsOpen, aiConfigured } = state;
 
   const { zones, zonePairs, loading, error, refresh } = useFirewallData(authed);
@@ -126,7 +132,7 @@ function App() {
     >
       <Toolbar
         colorMode={colorMode}
-        onColorModeChange={(mode: ColorMode) => dispatch({ colorMode: mode })}
+        onColorModeChange={(mode: ColorMode) => { localStorage.setItem("colorMode", mode); dispatch({ colorMode: mode }); }}
         showDisabled={showDisabled}
         onShowDisabledChange={(val: boolean) => dispatch({ showDisabled: val })}
         onRefresh={refresh}

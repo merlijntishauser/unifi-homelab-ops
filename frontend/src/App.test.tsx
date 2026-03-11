@@ -153,6 +153,7 @@ const testZonePairs: ZonePair[] = [
 describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     mockGetAiConfig.mockResolvedValue({
       base_url: "",
       model: "",
@@ -300,6 +301,25 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Light" }));
 
     expect(screen.getByRole("button", { name: "Dark" })).toBeInTheDocument();
+    expect(localStorage.getItem("colorMode")).toBe("light");
+  });
+
+  it("restores color mode from localStorage", async () => {
+    localStorage.setItem("colorMode", "light");
+    mockGetAuthStatus.mockResolvedValue({
+      configured: true,
+      source: "env",
+      url: "https://unifi.local",
+    });
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    render(<App />);
+
+    await waitFor(() => {
+      // Light mode shows "Dark" button to switch back
+      expect(screen.getByRole("button", { name: "Dark" })).toBeInTheDocument();
+    });
   });
 
   it("toggles show disabled rules and filters disabled rules", async () => {

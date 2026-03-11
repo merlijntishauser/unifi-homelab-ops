@@ -18,6 +18,58 @@ from app.routers.simulate import router as simulate_router
 from app.routers.zones import router as zones_router
 
 logger = logging.getLogger(__name__)
+startup_logger = logging.getLogger("uvicorn.error")
+
+
+def _is_enabled(value: str | None) -> bool:
+    return value is not None and value.lower() in {"1", "true", "yes", "on"}
+
+
+def _is_healthcheck_access_log(record: logging.LogRecord) -> bool:
+    args = record.args
+    if isinstance(args, tuple) and len(args) >= 3 and isinstance(args[2], str):
+        return args[2].startswith("/api/health")
+
+    return "/api/health" in record.getMessage()
+
+
+class HealthcheckAccessFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return not _is_healthcheck_access_log(record)
+
+
+def _configure_access_log_filters() -> None:
+    if not _is_enabled(os.environ.get("SUPPRESS_HEALTHCHECK_ACCESS_LOGS")):
+        return
+
+    access_logger = logging.getLogger("uvicorn.access")
+    if not any(isinstance(existing_filter, HealthcheckAccessFilter) for existing_filter in access_logger.filters):
+        access_logger.addFilter(HealthcheckAccessFilter())
+
+
+def _get_app_access_url() -> str:
+    configured_url = os.environ.get("APP_ACCESS_URL")
+    if configured_url:
+        return configured_url.rstrip("/")
+
+    port = os.environ.get("PORT", "8080")
+    return f"http://localhost:{port}"
+
+
+def _log_startup_banner() -> None:
+    if not _is_enabled(os.environ.get("SHOW_STARTUP_BANNER")):
+        return
+
+    app_url = _get_app_access_url()
+    banner_lines = [
+        "============================================================",
+        "UniFi Firewall Analyser",
+        f"App URL:    {app_url}",
+        f"Health URL: {app_url}/api/health",
+        "============================================================",
+    ]
+    for line in banner_lines:
+        startup_logger.info(line)
 
 
 def _get_frontend_dist_dir() -> Path:
@@ -58,8 +110,11 @@ def _get_frontend_response(frontend_path: str) -> FileResponse | None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     init_db(DEFAULT_DB_PATH)
+    _log_startup_banner()
     yield
 
+
+_configure_access_log_filters()
 
 app = FastAPI(title="UniFi Firewall Analyser", lifespan=lifespan)
 

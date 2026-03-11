@@ -52,11 +52,20 @@ vi.mock("@dagrejs/dagre", () => {
         (a, b) => (rank.get(a) ?? 0) - (rank.get(b) ?? 0),
       );
 
+      // Group by rank and spread horizontally
+      const rankGroups = new Map<number, string[]>();
       for (const id of sorted) {
         const r = rank.get(id) ?? 0;
-        const nodeData = this.nodes.get(id)!;
-        nodeData.x = nodeData.width / 2;
-        nodeData.y = r * 220 + nodeData.height / 2;
+        if (!rankGroups.has(r)) rankGroups.set(r, []);
+        rankGroups.get(r)!.push(id);
+      }
+
+      for (const [r, ids] of rankGroups) {
+        for (let i = 0; i < ids.length; i++) {
+          const nodeData = this.nodes.get(ids[i])!;
+          nodeData.x = i * 320 + nodeData.width / 2;
+          nodeData.y = r * 220 + nodeData.height / 2;
+        }
       }
     }
   }
@@ -73,7 +82,7 @@ vi.mock("@dagrejs/dagre", () => {
 import { getLayoutedElements } from "./layout";
 
 describe("getLayoutedElements", () => {
-  it("returns positioned nodes and the same edges", () => {
+  it("returns positioned nodes and edges with handles", () => {
     const nodes: Node[] = [
       { id: "a", position: { x: 0, y: 0 }, data: {} },
       { id: "b", position: { x: 0, y: 0 }, data: {} },
@@ -83,7 +92,7 @@ describe("getLayoutedElements", () => {
     const result = getLayoutedElements(nodes, edges);
 
     expect(result.nodes).toHaveLength(2);
-    expect(result.edges).toBe(edges);
+    expect(result.edges).toHaveLength(1);
 
     for (const node of result.nodes) {
       expect(node.position).toBeDefined();
@@ -137,6 +146,62 @@ describe("getLayoutedElements", () => {
     expect(result.nodes[0].data).toEqual({ label: "Zone A" });
     expect(result.nodes[0].type).toBe("zone");
     expect(result.nodes[0].id).toBe("a");
+  });
+
+  it("spreads target handles when a node has multiple incoming edges", () => {
+    // a and b are at the same rank (both sources), c is target of both
+    // a at x~0, b at x~320 → c gets two incoming edges from different sides
+    const nodes: Node[] = [
+      { id: "a", position: { x: 0, y: 0 }, data: {} },
+      { id: "b", position: { x: 0, y: 0 }, data: {} },
+      { id: "c", position: { x: 0, y: 0 }, data: {} },
+    ];
+    const edges: Edge[] = [
+      { id: "e1", source: "a", target: "c" },
+      { id: "e2", source: "b", target: "c" },
+    ];
+
+    const result = getLayoutedElements(nodes, edges);
+    const e1 = result.edges.find((e) => e.id === "e1")!;
+    const e2 = result.edges.find((e) => e.id === "e2")!;
+
+    // Two incoming edges to c should use different target handles
+    expect(e1.targetHandle).not.toBe(e2.targetHandle);
+  });
+
+  it("spreads source handles when a node has multiple outgoing edges", () => {
+    // a connects to both b and c; b and c at same rank with different x
+    const nodes: Node[] = [
+      { id: "a", position: { x: 0, y: 0 }, data: {} },
+      { id: "b", position: { x: 0, y: 0 }, data: {} },
+      { id: "c", position: { x: 0, y: 0 }, data: {} },
+    ];
+    const edges: Edge[] = [
+      { id: "e1", source: "a", target: "b" },
+      { id: "e2", source: "a", target: "c" },
+    ];
+
+    const result = getLayoutedElements(nodes, edges);
+    const e1 = result.edges.find((e) => e.id === "e1")!;
+    const e2 = result.edges.find((e) => e.id === "e2")!;
+
+    // Two outgoing edges from a should use different source handles
+    expect(e1.sourceHandle).not.toBe(e2.sourceHandle);
+  });
+
+  it("assigns center handle when node has a single connection", () => {
+    const nodes: Node[] = [
+      { id: "a", position: { x: 0, y: 0 }, data: {} },
+      { id: "b", position: { x: 0, y: 0 }, data: {} },
+    ];
+    const edges: Edge[] = [{ id: "e1", source: "a", target: "b" }];
+
+    const result = getLayoutedElements(nodes, edges);
+    const e1 = result.edges.find((e) => e.id === "e1")!;
+
+    // Single edge → center slot (index 2 of 5)
+    expect(e1.sourceHandle).toBe("source-2");
+    expect(e1.targetHandle).toBe("target-2");
   });
 
   it("handles a three-node chain", () => {

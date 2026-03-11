@@ -9,6 +9,7 @@ import {
 import { getActionColor, getEdgeColor } from "../utils/edgeColor";
 
 export interface RuleSummary {
+  id: string;
   name: string;
   action: string;
   protocol: string;
@@ -81,11 +82,11 @@ function RuleCardContent({
           {sourceZoneName} &rarr; {destZoneName}
         </div>
       )}
-      {visibleRules.map((rule, i) => {
+      {visibleRules.map((rule) => {
         const portLabel = formatPortLabel(rule.protocol, rule.portRanges);
         return (
           <div
-            key={i}
+            key={rule.id}
             className={`flex items-center gap-1.5 py-0.5 ${rule.enabled ? "" : "opacity-40"}`}
           >
             <span

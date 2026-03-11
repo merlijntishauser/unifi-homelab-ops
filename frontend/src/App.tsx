@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import type { ColorMode } from "@xyflow/react";
 import { api } from "./api/client";
 import type { ZonePair } from "./api/types";
@@ -10,21 +10,41 @@ import ZoneGraph from "./components/ZoneGraph";
 import ZoneMatrix from "./components/ZoneMatrix";
 import RulePanel from "./components/RulePanel";
 
+interface AppState {
+  authed: boolean;
+  authLoading: boolean;
+  colorMode: ColorMode;
+  showDisabled: boolean;
+  selectedPair: ZonePair | null;
+  focusZoneIds: string[] | null;
+  settingsOpen: boolean;
+  aiConfigured: boolean;
+}
+
+const initialAppState: AppState = {
+  authed: false,
+  authLoading: true,
+  colorMode: "dark" as ColorMode,
+  showDisabled: false,
+  selectedPair: null,
+  focusZoneIds: null,
+  settingsOpen: false,
+  aiConfigured: false,
+};
+
+function appReducer(state: AppState, update: Partial<AppState>): AppState {
+  return { ...state, ...update };
+}
+
 function App() {
-  const [authed, setAuthed] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [colorMode, setColorMode] = useState<ColorMode>("dark");
-  const [showDisabled, setShowDisabled] = useState(false);
-  const [selectedPair, setSelectedPair] = useState<ZonePair | null>(null);
-  const [focusZoneIds, setFocusZoneIds] = useState<string[] | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [aiConfigured, setAiConfigured] = useState(false);
+  const [state, dispatch] = useReducer(appReducer, initialAppState);
+  const { authed, authLoading, colorMode, showDisabled, selectedPair, focusZoneIds, settingsOpen, aiConfigured } = state;
 
   const { zones, zonePairs, loading, error, refresh } = useFirewallData(authed);
 
   const refreshAiConfig = useCallback(() => {
     api.getAiConfig()
-      .then((config) => setAiConfigured(config.has_key))
+      .then((config) => dispatch({ aiConfigured: config.has_key }))
       .catch(() => {});
   }, []);
 
@@ -32,22 +52,22 @@ function App() {
     api
       .getAuthStatus()
       .then((status) => {
-        setAuthed(status.configured);
+        dispatch({ authed: status.configured });
         if (status.configured) {
           refreshAiConfig();
         }
       })
       .catch(() => {
-        setAuthed(false);
+        dispatch({ authed: false });
       })
       .finally(() => {
-        setAuthLoading(false);
+        dispatch({ authLoading: false });
       });
   }, [refreshAiConfig]);
 
   const handleLogout = useCallback(async () => {
     await api.logout();
-    setAuthed(false);
+    dispatch({ authed: false });
   }, []);
 
   const zoneNameMap = useMemo(() => {
@@ -67,25 +87,22 @@ function App() {
   }, [zonePairs, showDisabled]);
 
   const handleEdgeSelect = useCallback((pair: ZonePair) => {
-    setSelectedPair(pair);
+    dispatch({ selectedPair: pair });
   }, []);
 
   const handleCellClick = useCallback((pair: ZonePair) => {
-    setFocusZoneIds([pair.source_zone_id, pair.destination_zone_id]);
-    setSelectedPair(pair);
+    dispatch({ focusZoneIds: [pair.source_zone_id, pair.destination_zone_id], selectedPair: pair });
     history.pushState({ view: "graph" }, "");
   }, []);
 
   const handleZoneClick = useCallback((zoneId: string) => {
-    setFocusZoneIds([zoneId]);
-    setSelectedPair(null);
+    dispatch({ focusZoneIds: [zoneId], selectedPair: null });
     history.pushState({ view: "graph" }, "");
   }, []);
 
   useEffect(() => {
     const onPopState = () => {
-      setFocusZoneIds(null);
-      setSelectedPair(null);
+      dispatch({ focusZoneIds: null, selectedPair: null });
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -100,7 +117,7 @@ function App() {
   }
 
   if (!authed) {
-    return <LoginScreen onLoggedIn={() => setAuthed(true)} />;
+    return <LoginScreen onLoggedIn={() => dispatch({ authed: true })} />;
   }
 
   return (
@@ -109,15 +126,15 @@ function App() {
     >
       <Toolbar
         colorMode={colorMode}
-        onColorModeChange={setColorMode}
+        onColorModeChange={(mode: ColorMode) => dispatch({ colorMode: mode })}
         showDisabled={showDisabled}
-        onShowDisabledChange={setShowDisabled}
+        onShowDisabledChange={(val: boolean) => dispatch({ showDisabled: val })}
         onRefresh={refresh}
         loading={loading}
         onLogout={handleLogout}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={() => dispatch({ settingsOpen: true })}
       />
-      {settingsOpen && <SettingsModal onClose={() => { setSettingsOpen(false); refreshAiConfig(); }} />}
+      {settingsOpen && <SettingsModal onClose={() => { dispatch({ settingsOpen: false }); refreshAiConfig(); }} />}
       {error && (
         <div className="bg-red-50 dark:bg-status-danger-dim border-b border-red-200 dark:border-status-danger/20 px-4 py-2 text-sm text-red-700 dark:text-status-danger">
           {error}
@@ -161,7 +178,7 @@ function App() {
               zoneNameMap.get(selectedPair.destination_zone_id) ?? "Unknown"
             }
             aiConfigured={aiConfigured}
-            onClose={() => setSelectedPair(null)}
+            onClose={() => dispatch({ selectedPair: null })}
           />
         )}
       </div>

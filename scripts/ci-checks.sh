@@ -21,6 +21,15 @@ cd "$ROOT/frontend" && npx eslint src/ --no-warn-ignored
 echo "=== Frontend: tests ==="
 cd "$ROOT/frontend" && npx vitest run --coverage
 
+echo "=== Frontend: react-doctor ==="
+score=$(cd "$ROOT/frontend" && npx react-doctor . --yes --score 2>/dev/null | tail -1 | tr -dc '0-9')
+if [ -z "$score" ] || [ "$score" -lt 90 ]; then
+    echo "FAIL: React Doctor score below 90 (got: ${score:-unknown})"
+    exit 1
+else
+    echo "  Score: $score/100"
+fi
+
 echo "=== Complexity ==="
 "$ROOT/scripts/check-complexity.sh"
 

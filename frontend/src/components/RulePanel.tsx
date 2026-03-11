@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useReducer } from "react";
 import type { FormEvent } from "react";
 import { api } from "../api/client";
 import type { ZonePair, Rule, Finding, SimulateResponse } from "../api/types";
@@ -9,6 +9,36 @@ interface RulePanelProps {
   destZoneName: string;
   aiConfigured: boolean;
   onClose: () => void;
+}
+
+interface RulePanelState {
+  srcIp: string;
+  dstIp: string;
+  protocol: string;
+  port: string;
+  simLoading: boolean;
+  simResult: SimulateResponse | null;
+  simError: string | null;
+  aiLoading: boolean;
+  aiError: string | null;
+  aiFindings: Finding[];
+}
+
+const initialState: RulePanelState = {
+  srcIp: "",
+  dstIp: "",
+  protocol: "TCP",
+  port: "",
+  simLoading: false,
+  simResult: null,
+  simError: null,
+  aiLoading: false,
+  aiError: null,
+  aiFindings: [],
+};
+
+function rulePanelReducer(state: RulePanelState, update: Partial<RulePanelState>): RulePanelState {
+  return { ...state, ...update };
 }
 
 function gradeColor(grade: string): string {
@@ -64,6 +94,156 @@ function verdictColor(verdict: string | null): string {
   }
 }
 
+function SimulationForm({
+  state,
+  dispatch,
+  inputClass,
+}: {
+  state: RulePanelState;
+  dispatch: React.Dispatch<Partial<RulePanelState>>;
+  inputClass: string;
+}) {
+  async function handleSimulate(e: FormEvent) {
+    e.preventDefault();
+    dispatch({ simLoading: true, simError: null, simResult: null });
+    try {
+      const result = await api.simulate({
+        src_ip: state.srcIp,
+        dst_ip: state.dstIp,
+        protocol: state.protocol === "Any" ? "all" : state.protocol.toLowerCase(),
+        port: state.port ? Number(state.port) : null,
+      });
+      dispatch({ simResult: result });
+    } catch (err) {
+      dispatch({ simError: err instanceof Error ? err.message : "Simulation failed" });
+    } finally {
+      dispatch({ simLoading: false });
+    }
+  }
+
+  return (
+    <form onSubmit={handleSimulate} className="space-y-2">
+      <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
+        Packet Simulation
+      </h3>
+      <input
+        type="text"
+        placeholder="Source IP"
+        value={state.srcIp}
+        onChange={(e) => dispatch({ srcIp: e.target.value })}
+        required
+        className={inputClass}
+      />
+      <input
+        type="text"
+        placeholder="Destination IP"
+        value={state.dstIp}
+        onChange={(e) => dispatch({ dstIp: e.target.value })}
+        required
+        className={inputClass}
+      />
+      <div className="flex gap-2">
+        <select
+          value={state.protocol}
+          onChange={(e) => dispatch({ protocol: e.target.value })}
+          className={inputClass}
+        >
+          <option value="TCP">TCP</option>
+          <option value="UDP">UDP</option>
+          <option value="ICMP">ICMP</option>
+          <option value="Any">Any</option>
+        </select>
+        <input
+          type="number"
+          placeholder="Port"
+          value={state.port}
+          onChange={(e) => dispatch({ port: e.target.value })}
+          min={1}
+          max={65535}
+          className={inputClass}
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={state.simLoading}
+        className="w-full rounded-lg bg-ub-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 focus:ring-offset-1 dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+      >
+        {state.simLoading ? "Simulating..." : "Simulate"}
+      </button>
+    </form>
+  );
+}
+
+function SimulationResult({ simResult, simError }: { simResult: SimulateResponse | null; simError: string | null }) {
+  return (
+    <>
+      {simError && (
+        <div className="rounded-lg bg-red-50 dark:bg-status-danger-dim border border-red-200 dark:border-status-danger/20 p-2.5 text-xs text-red-700 dark:text-status-danger">
+          {simError}
+        </div>
+      )}
+
+      {simResult && (
+        <div className="space-y-2 animate-fade-in">
+          <div
+            className={`rounded-lg border p-3 text-center font-display font-semibold text-sm ${verdictColor(simResult.verdict)}`}
+          >
+            {simResult.verdict ?? "NO MATCH"}
+            {simResult.default_policy_used && (
+              <div className="text-xs font-normal mt-1 opacity-70 font-body">
+                (default policy)
+              </div>
+            )}
+          </div>
+
+          {simResult.matched_rule_name && (
+            <div className="text-xs text-gray-600 dark:text-noc-text-secondary">
+              Matched:{" "}
+              <span className="font-medium text-gray-900 dark:text-noc-text">
+                {simResult.matched_rule_name}
+              </span>
+            </div>
+          )}
+
+          {simResult.evaluations.length > 0 && (
+            <div className="space-y-1">
+              <h4 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
+                Evaluation Chain
+              </h4>
+              {simResult.evaluations.map((ev) => (
+                <div
+                  key={ev.rule_id}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border ${
+                    ev.matched
+                      ? "border-blue-300 dark:border-ub-blue/30 bg-blue-50 dark:bg-ub-blue-dim"
+                      : ev.skipped_disabled
+                        ? "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50 opacity-50"
+                        : "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-700 dark:text-noc-text-secondary truncate">
+                      {ev.rule_name}
+                    </span>
+                    <span
+                      className={`shrink-0 ml-1 font-mono ${ev.matched ? "text-ub-blue font-semibold" : "text-gray-400 dark:text-noc-text-dim"}`}
+                    >
+                      {ev.matched ? "MATCH" : "skip"}
+                    </span>
+                  </div>
+                  <div className="text-gray-400 dark:text-noc-text-dim mt-0.5">
+                    {ev.reason}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function RulePanel({
   pair,
   sourceZoneName,
@@ -71,58 +251,28 @@ export default function RulePanel({
   aiConfigured,
   onClose,
 }: RulePanelProps) {
-  const [srcIp, setSrcIp] = useState("");
-  const [dstIp, setDstIp] = useState("");
-  const [protocol, setProtocol] = useState("TCP");
-  const [port, setPort] = useState("");
-  const [simLoading, setSimLoading] = useState(false);
-  const [simResult, setSimResult] = useState<SimulateResponse | null>(null);
-  const [simError, setSimError] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiFindings, setAiFindings] = useState<Finding[]>([]);
+  const [state, dispatch] = useReducer(rulePanelReducer, initialState);
 
   const sortedRules = useMemo(() => [...pair.rules].sort((a, b) => a.index - b.index), [pair.rules]);
 
   const allFindings = useMemo<Finding[]>(() => [
     ...(pair.analysis?.findings ?? []),
-    ...aiFindings,
-  ], [pair.analysis?.findings, aiFindings]);
+    ...state.aiFindings,
+  ], [pair.analysis?.findings, state.aiFindings]);
 
   async function handleAiAnalyze() {
-    setAiLoading(true);
-    setAiError(null);
+    dispatch({ aiLoading: true, aiError: null });
     try {
       const result = await api.analyzeWithAi({
         source_zone_name: sourceZoneName,
         destination_zone_name: destZoneName,
         rules: pair.rules,
       });
-      setAiFindings(result.findings);
+      dispatch({ aiFindings: result.findings });
     } catch (err) {
-      setAiError(err instanceof Error ? err.message : "AI analysis failed");
+      dispatch({ aiError: err instanceof Error ? err.message : "AI analysis failed" });
     } finally {
-      setAiLoading(false);
-    }
-  }
-
-  async function handleSimulate(e: FormEvent) {
-    e.preventDefault();
-    setSimLoading(true);
-    setSimError(null);
-    setSimResult(null);
-    try {
-      const result = await api.simulate({
-        src_ip: srcIp,
-        dst_ip: dstIp,
-        protocol: protocol === "Any" ? "all" : protocol.toLowerCase(),
-        port: port ? Number(port) : null,
-      });
-      setSimResult(result);
-    } catch (err) {
-      setSimError(err instanceof Error ? err.message : "Simulation failed");
-    } finally {
-      setSimLoading(false);
+      dispatch({ aiLoading: false });
     }
   }
 
@@ -182,18 +332,18 @@ export default function RulePanel({
             )}
           </div>
         )}
-        {aiError && (
+        {state.aiError && (
           <div className="rounded-lg bg-red-50 dark:bg-status-danger-dim border border-red-200 dark:border-status-danger/20 p-2.5 text-xs text-red-700 dark:text-status-danger">
-            {aiError}
+            {state.aiError}
           </div>
         )}
         {aiConfigured && (
           <button
             onClick={handleAiAnalyze}
-            disabled={aiLoading}
+            disabled={state.aiLoading}
             className="w-full rounded-lg bg-ub-purple px-3 py-1.5 text-xs font-semibold text-white hover:bg-ub-purple-light focus:outline-none focus:ring-2 focus:ring-ub-purple/40 focus:ring-offset-1 dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
           >
-            {aiLoading ? "Analyzing..." : "Analyze with AI"}
+            {state.aiLoading ? "Analyzing..." : "Analyze with AI"}
           </button>
         )}
 
@@ -206,7 +356,7 @@ export default function RulePanel({
             <div
               key={rule.id}
               className={`rounded-lg border p-2.5 text-xs ${actionColor(rule.action, rule.enabled)} ${
-                simResult?.matched_rule_id === rule.id
+                state.simResult?.matched_rule_id === rule.id
                   ? "ring-2 ring-ub-blue"
                   : ""
               }`}
@@ -248,121 +398,10 @@ export default function RulePanel({
         </div>
 
         {/* Packet simulation form */}
-        <form onSubmit={handleSimulate} className="space-y-2">
-          <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
-            Packet Simulation
-          </h3>
-          <input
-            type="text"
-            placeholder="Source IP"
-            value={srcIp}
-            onChange={(e) => setSrcIp(e.target.value)}
-            required
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder="Destination IP"
-            value={dstIp}
-            onChange={(e) => setDstIp(e.target.value)}
-            required
-            className={inputClass}
-          />
-          <div className="flex gap-2">
-            <select
-              value={protocol}
-              onChange={(e) => setProtocol(e.target.value)}
-              className={inputClass}
-            >
-              <option value="TCP">TCP</option>
-              <option value="UDP">UDP</option>
-              <option value="ICMP">ICMP</option>
-              <option value="Any">Any</option>
-            </select>
-            <input
-              type="number"
-              placeholder="Port"
-              value={port}
-              onChange={(e) => setPort(e.target.value)}
-              min={1}
-              max={65535}
-              className={inputClass}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={simLoading}
-            className="w-full rounded-lg bg-ub-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 focus:ring-offset-1 dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-          >
-            {simLoading ? "Simulating..." : "Simulate"}
-          </button>
-        </form>
-
-        {/* Simulation error */}
-        {simError && (
-          <div className="rounded-lg bg-red-50 dark:bg-status-danger-dim border border-red-200 dark:border-status-danger/20 p-2.5 text-xs text-red-700 dark:text-status-danger">
-            {simError}
-          </div>
-        )}
+        <SimulationForm state={state} dispatch={dispatch} inputClass={inputClass} />
 
         {/* Simulation result */}
-        {simResult && (
-          <div className="space-y-2 animate-fade-in">
-            <div
-              className={`rounded-lg border p-3 text-center font-display font-semibold text-sm ${verdictColor(simResult.verdict)}`}
-            >
-              {simResult.verdict ?? "NO MATCH"}
-              {simResult.default_policy_used && (
-                <div className="text-xs font-normal mt-1 opacity-70 font-body">
-                  (default policy)
-                </div>
-              )}
-            </div>
-
-            {simResult.matched_rule_name && (
-              <div className="text-xs text-gray-600 dark:text-noc-text-secondary">
-                Matched:{" "}
-                <span className="font-medium text-gray-900 dark:text-noc-text">
-                  {simResult.matched_rule_name}
-                </span>
-              </div>
-            )}
-
-            {simResult.evaluations.length > 0 && (
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
-                  Evaluation Chain
-                </h4>
-                {simResult.evaluations.map((ev) => (
-                  <div
-                    key={ev.rule_id}
-                    className={`text-xs px-2.5 py-1.5 rounded-lg border ${
-                      ev.matched
-                        ? "border-blue-300 dark:border-ub-blue/30 bg-blue-50 dark:bg-ub-blue-dim"
-                        : ev.skipped_disabled
-                          ? "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50 opacity-50"
-                          : "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-700 dark:text-noc-text-secondary truncate">
-                        {ev.rule_name}
-                      </span>
-                      <span
-                        className={`shrink-0 ml-1 font-mono ${ev.matched ? "text-ub-blue font-semibold" : "text-gray-400 dark:text-noc-text-dim"}`}
-                      >
-                        {ev.matched ? "MATCH" : "skip"}
-                      </span>
-                    </div>
-                    <div className="text-gray-400 dark:text-noc-text-dim mt-0.5">
-                      {ev.reason}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <SimulationResult simResult={state.simResult} simError={state.simError} />
       </div>
     </div>
   );

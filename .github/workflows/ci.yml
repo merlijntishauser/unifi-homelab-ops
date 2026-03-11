@@ -39,6 +39,14 @@ jobs:
       - run: npx tsc --noEmit
       - run: npx eslint src/ --no-warn-ignored
       - run: npx vitest run --coverage
+      - name: React Doctor
+        run: |
+          score=$(npx react-doctor . --yes --score 2>/dev/null | tail -1 | tr -dc '0-9')
+          echo "React Doctor score: $score/100"
+          if [ -z "$score" ] || [ "$score" -lt 90 ]; then
+            echo "::error::React Doctor score below 90 (got: ${score:-unknown})"
+            exit 1
+          fi
 
   complexity:
     runs-on: ubuntu-latest

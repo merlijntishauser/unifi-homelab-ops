@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -103,6 +103,7 @@ function buildElements(
       },
       data: {
         rules: pair.rules.map((r) => ({
+          id: r.id,
           name: r.name,
           action: r.action,
           protocol: r.protocol,
@@ -123,6 +124,41 @@ function buildElements(
   return getLayoutedElements(rawNodes, rawEdges);
 }
 
+function ZoneGraphInner({
+  initialNodes,
+  initialEdges,
+  colorMode,
+  onEdgeClick,
+}: {
+  initialNodes: Node[];
+  initialEdges: Edge[];
+  colorMode: ColorMode;
+  onEdgeClick: (event: React.MouseEvent, edge: Edge) => void;
+}) {
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onEdgeClick={onEdgeClick}
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
+      colorMode={colorMode}
+      fitView
+      minZoom={0.3}
+      maxZoom={2}
+    >
+      <Background />
+      <Controls />
+      <MiniMap />
+    </ReactFlow>
+  );
+}
+
 export default function ZoneGraph({
   zones,
   zonePairs,
@@ -135,13 +171,7 @@ export default function ZoneGraph({
     [zones, zonePairs, onEdgeSelect, focusZoneIds],
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
-
-  useEffect(() => {
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-  }, [layoutedNodes, layoutedEdges, setNodes, setEdges]);
+  const layoutKey = layoutedNodes.map(n => n.id).join(",") + "|" + layoutedEdges.map(e => e.id).join(",");
 
   const handleEdgeClick = useCallback(
     (_: React.MouseEvent, edge: Edge) => {
@@ -158,22 +188,12 @@ export default function ZoneGraph({
   );
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onEdgeClick={handleEdgeClick}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
+    <ZoneGraphInner
+      key={layoutKey}
+      initialNodes={layoutedNodes}
+      initialEdges={layoutedEdges}
       colorMode={colorMode}
-      fitView
-      minZoom={0.3}
-      maxZoom={2}
-    >
-      <Background />
-      <Controls />
-      <MiniMap />
-    </ReactFlow>
+      onEdgeClick={handleEdgeClick}
+    />
   );
 }

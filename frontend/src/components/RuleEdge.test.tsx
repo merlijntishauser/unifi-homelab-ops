@@ -34,6 +34,7 @@ vi.mock("@xyflow/react", () => ({
 }));
 
 const allowRule: RuleSummary = {
+  id: "allow-http",
   name: "Allow HTTP",
   action: "ALLOW",
   protocol: "TCP",
@@ -42,6 +43,7 @@ const allowRule: RuleSummary = {
 };
 
 const blockRule: RuleSummary = {
+  id: "block-ssh",
   name: "Block SSH",
   action: "BLOCK",
   protocol: "TCP",
@@ -184,7 +186,7 @@ describe("RuleEdgeComponent", () => {
           {...makeEdgeProps({
             data: {
               rules: [
-                { name: "ICMP Rule", action: "ALLOW", protocol: "ICMP", portRanges: [], enabled: true },
+                { id: "icmp-rule", name: "ICMP Rule", action: "ALLOW", protocol: "ICMP", portRanges: [], enabled: true },
               ],
               allowCount: 1,
               blockCount: 0,
@@ -201,7 +203,7 @@ describe("RuleEdgeComponent", () => {
           {...makeEdgeProps({
             data: {
               rules: [
-                { name: "Any Rule", action: "ALLOW", protocol: "", portRanges: [], enabled: true },
+                { id: "any-rule", name: "Any Rule", action: "ALLOW", protocol: "", portRanges: [], enabled: true },
               ],
               allowCount: 1,
               blockCount: 0,
@@ -230,6 +232,7 @@ describe("RuleEdgeComponent", () => {
   describe("overflow indicator", () => {
     it("shows overflow count when more than 3 rules", () => {
       const rules: RuleSummary[] = Array.from({ length: 5 }, (_, i) => ({
+        id: `r${i + 1}`,
         name: `Rule ${i + 1}`,
         action: "ALLOW",
         protocol: "TCP",
@@ -251,6 +254,7 @@ describe("RuleEdgeComponent", () => {
 
     it("does not show overflow when 3 or fewer rules", () => {
       const rules: RuleSummary[] = Array.from({ length: 3 }, (_, i) => ({
+        id: `r${i + 1}`,
         name: `Rule ${i + 1}`,
         action: "ALLOW",
         protocol: "TCP",
@@ -275,7 +279,7 @@ describe("RuleEdgeComponent", () => {
           {...makeEdgeProps({
             data: {
               rules: [
-                { name: "Disabled Rule", action: "ALLOW", protocol: "TCP", portRanges: [], enabled: false },
+                { id: "disabled-rule", name: "Disabled Rule", action: "ALLOW", protocol: "TCP", portRanges: [], enabled: false },
               ],
               allowCount: 1,
               blockCount: 0,

@@ -138,6 +138,8 @@ export default function RuleEdgeComponent({
   } = resolved;
   const srcOff = resolved.sourceXOffset ?? 0;
   const tgtOff = resolved.targetXOffset ?? 0;
+  // Shift bidirectional edges apart so they render as parallel lines
+  const biDirShift = edgeOffset * 12;
   const color = getEdgeColor(allowCount, blockCount);
   const [isPinned, setIsPinned] = useState(false);
 
@@ -149,10 +151,10 @@ export default function RuleEdgeComponent({
   const ty = isUpward ? targetY + NODE_HEIGHT : targetY;
 
   const [computedPath, labelPosX, labelPosY] = getSmoothStepPath({
-    sourceX: sourceX + srcOff,
+    sourceX: sourceX + srcOff + biDirShift,
     sourceY: sy,
     sourcePosition: isUpward ? Position.Top : sourcePosition,
-    targetX: targetX + tgtOff,
+    targetX: targetX + tgtOff + biDirShift,
     targetY: ty,
     targetPosition: isUpward ? Position.Bottom : targetPosition,
     borderRadius: 16,

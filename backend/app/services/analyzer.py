@@ -205,6 +205,8 @@ def analyze_zone_pair(
         )
     else:
         for rule in rules:
+            if rule.predefined:
+                continue
             for check in (
                 lambda r: _check_allow_all_external(r, src_zone_name),
                 _check_allow_all_protocols_ports,

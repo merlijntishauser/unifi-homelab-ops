@@ -53,7 +53,7 @@ function formatPortLabel(protocol: string, portRanges: string[]): string | null 
   return protocol || null;
 }
 
-function RuleCardContent({
+export function RuleCardContent({
   rules,
   sourceZoneName,
   destZoneName,

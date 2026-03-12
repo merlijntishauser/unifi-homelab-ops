@@ -1344,4 +1344,81 @@ describe("RulePanel", () => {
       });
     });
   });
+
+  describe("finding rationale", () => {
+    it("shows 'Why?' button when finding has rationale", () => {
+      const analysis = {
+        score: 85,
+        grade: "B",
+        findings: [{
+          id: "test-finding",
+          severity: "high" as const,
+          title: "Test Finding",
+          description: "Test description",
+          rationale: "This is the rationale",
+          rule_id: null,
+          source: "static" as const,
+        }],
+      };
+      renderPanel(makePair([], analysis));
+      expect(screen.getByText("Why?")).toBeInTheDocument();
+    });
+
+    it("does not show 'Why?' button when finding has no rationale", () => {
+      const analysis = {
+        score: 85,
+        grade: "B",
+        findings: [{
+          id: "test-finding",
+          severity: "high" as const,
+          title: "Test Finding",
+          description: "Test description",
+          rule_id: null,
+          source: "static" as const,
+        }],
+      };
+      renderPanel(makePair([], analysis));
+      expect(screen.queryByText("Why?")).not.toBeInTheDocument();
+    });
+
+    it("shows rationale when 'Why?' is clicked", () => {
+      const analysis = {
+        score: 85,
+        grade: "B",
+        findings: [{
+          id: "test-finding",
+          severity: "high" as const,
+          title: "Test Finding",
+          description: "Test description",
+          rationale: "This is the rationale",
+          rule_id: null,
+          source: "static" as const,
+        }],
+      };
+      renderPanel(makePair([], analysis));
+      fireEvent.click(screen.getByText("Why?"));
+      expect(screen.getByText("This is the rationale")).toBeInTheDocument();
+    });
+  });
+
+  describe("findings severity grouping", () => {
+    it("groups findings by severity with high first", () => {
+      const analysis = {
+        score: 50,
+        grade: "D",
+        findings: [
+          { id: "f-low", severity: "low" as const, title: "Low finding", description: "d", rule_id: null, source: "static" as const },
+          { id: "f-high", severity: "high" as const, title: "High finding", description: "d", rule_id: null, source: "static" as const },
+          { id: "f-med", severity: "medium" as const, title: "Med finding", description: "d", rule_id: null, source: "static" as const },
+        ],
+      };
+      renderPanel(makePair([], analysis));
+      const titles = screen.getAllByText(/finding/).map((el) => el.textContent);
+      const highIdx = titles.indexOf("High finding");
+      const medIdx = titles.indexOf("Med finding");
+      const lowIdx = titles.indexOf("Low finding");
+      expect(highIdx).toBeLessThan(medIdx);
+      expect(medIdx).toBeLessThan(lowIdx);
+    });
+  });
 });

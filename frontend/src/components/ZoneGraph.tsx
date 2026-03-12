@@ -66,6 +66,8 @@ interface ZoneGraphProps {
   colorMode: ColorMode;
   onEdgeSelect: (pair: ZonePair) => void;
   focusZoneIds?: string[];
+  hiddenZoneIds?: Set<string>;
+  showHidden?: boolean;
 }
 
 function buildElements(
@@ -73,6 +75,8 @@ function buildElements(
   zonePairs: ZonePair[],
   onEdgeSelect: (pair: ZonePair) => void,
   focusZoneIds?: string[],
+  hiddenZoneIds?: Set<string>,
+  showHidden?: boolean,
 ) {
   let filteredZones = zones;
   let filteredPairs = zonePairs;
@@ -98,6 +102,13 @@ function buildElements(
       connectedIds.add(p.destination_zone_id);
     }
     filteredZones = zones.filter((z) => connectedIds.has(z.id));
+  }
+
+  if (!showHidden && hiddenZoneIds && hiddenZoneIds.size > 0) {
+    filteredZones = filteredZones.filter((z) => !hiddenZoneIds.has(z.id));
+    filteredPairs = filteredPairs.filter(
+      (p) => !hiddenZoneIds.has(p.source_zone_id) && !hiddenZoneIds.has(p.destination_zone_id),
+    );
   }
 
   const rawNodes: Node<ZoneNodeData>[] = filteredZones.map((zone) => ({
@@ -208,10 +219,12 @@ export default function ZoneGraph({
   colorMode,
   onEdgeSelect,
   focusZoneIds,
+  hiddenZoneIds,
+  showHidden,
 }: ZoneGraphProps) {
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(
-    () => buildElements(zones, zonePairs, onEdgeSelect, focusZoneIds),
-    [zones, zonePairs, onEdgeSelect, focusZoneIds],
+    () => buildElements(zones, zonePairs, onEdgeSelect, focusZoneIds, hiddenZoneIds, showHidden),
+    [zones, zonePairs, onEdgeSelect, focusZoneIds, hiddenZoneIds, showHidden],
   );
 
   const layoutKey = layoutedNodes.map(n => n.id).join(",") + "|" + layoutedEdges.map(e => e.id).join(",");

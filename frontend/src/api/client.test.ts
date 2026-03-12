@@ -209,4 +209,25 @@ describe("api client", () => {
       expect(JSON.parse(init.body)).toEqual(req);
     });
   });
+
+  describe("getZoneFilter", () => {
+    it("fetches zone filter from correct endpoint", async () => {
+      const data = { hidden_zone_ids: ["z1", "z2"] };
+      mockFetch.mockResolvedValue(mockOkResponse(data));
+      const result = await api.getZoneFilter();
+      expect(result).toEqual(data);
+      expect(mockFetch).toHaveBeenCalledWith("/api/settings/zone-filter", expect.objectContaining({}));
+    });
+  });
+
+  describe("saveZoneFilter", () => {
+    it("sends PUT with hidden zone IDs", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ status: "ok" }));
+      await api.saveZoneFilter(["z1", "z2"]);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/settings/zone-filter");
+      expect(init.method).toBe("PUT");
+      expect(JSON.parse(init.body)).toEqual({ hidden_zone_ids: ["z1", "z2"] });
+    });
+  });
 });

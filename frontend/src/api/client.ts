@@ -9,6 +9,7 @@ import type {
   SimulateRequest,
   SimulateResponse,
   Zone,
+  ZoneFilter,
   ZonePair,
 } from "./types";
 
@@ -68,5 +69,11 @@ export const api = {
     fetchJson<AiAnalyzeResponse>("/analyze", {
       method: "POST",
       body: JSON.stringify(req),
+    }),
+  getZoneFilter: () => fetchJson<ZoneFilter>("/settings/zone-filter"),
+  saveZoneFilter: (hiddenZoneIds: string[]) =>
+    fetchJson("/settings/zone-filter", {
+      method: "PUT",
+      body: JSON.stringify({ hidden_zone_ids: hiddenZoneIds }),
     }),
 };

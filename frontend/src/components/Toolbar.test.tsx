@@ -6,8 +6,10 @@ describe("Toolbar", () => {
   const defaultProps = {
     colorMode: "light" as const,
     onColorModeChange: vi.fn(),
-    showDisabled: false,
-    onShowDisabledChange: vi.fn(),
+    showHidden: false,
+    onShowHiddenChange: vi.fn(),
+    hasHiddenZones: false,
+    hasDisabledRules: false,
     onRefresh: vi.fn(),
     loading: false,
     onLogout: vi.fn(),
@@ -23,25 +25,35 @@ describe("Toolbar", () => {
     expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
   });
 
-  it("renders 'Show disabled rules' checkbox", () => {
+  it("does not show toggle when neither hidden zones nor disabled rules", () => {
     renderToolbar();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("shows 'Show disabled rules' when only disabled rules exist", () => {
+    renderToolbar({ hasDisabledRules: true });
     expect(screen.getByLabelText("Show disabled rules")).toBeInTheDocument();
   });
 
-  it("checkbox reflects showDisabled prop", () => {
-    renderToolbar({ showDisabled: true });
-    expect(screen.getByLabelText("Show disabled rules")).toBeChecked();
+  it("shows 'Show filtered zones' when only zones are hidden", () => {
+    renderToolbar({ hasHiddenZones: true });
+    expect(screen.getByLabelText("Show filtered zones")).toBeInTheDocument();
   });
 
-  it("checkbox unchecked when showDisabled is false", () => {
-    renderToolbar({ showDisabled: false });
-    expect(screen.getByLabelText("Show disabled rules")).not.toBeChecked();
+  it("shows combined label when both hidden zones and disabled rules", () => {
+    renderToolbar({ hasHiddenZones: true, hasDisabledRules: true });
+    expect(screen.getByLabelText("Show filtered zones and disabled rules")).toBeInTheDocument();
   });
 
-  it("calls onShowDisabledChange when checkbox is toggled", () => {
+  it("checkbox reflects showHidden prop", () => {
+    renderToolbar({ hasDisabledRules: true, showHidden: true });
+    expect(screen.getByRole("checkbox")).toBeChecked();
+  });
+
+  it("calls onShowHiddenChange when checkbox is toggled", () => {
     const handler = vi.fn();
-    renderToolbar({ onShowDisabledChange: handler });
-    fireEvent.click(screen.getByLabelText("Show disabled rules"));
+    renderToolbar({ hasDisabledRules: true, onShowHiddenChange: handler });
+    fireEvent.click(screen.getByRole("checkbox"));
     expect(handler).toHaveBeenCalledWith(true);
   });
 

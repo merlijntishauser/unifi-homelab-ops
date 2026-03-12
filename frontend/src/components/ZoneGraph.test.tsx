@@ -291,6 +291,60 @@ describe("ZoneGraph", () => {
     expect(screen.getByTestId("edge-z2->z1")).toBeInTheDocument();
   });
 
+  it("filters out hidden zones when showHidden is false", () => {
+    const threeZones: Zone[] = [
+      { id: "z1", name: "External", networks: [] },
+      { id: "z2", name: "Internal", networks: [] },
+      { id: "z3", name: "Guest", networks: [] },
+    ];
+    const pairs: ZonePair[] = [
+      {
+        source_zone_id: "z1", destination_zone_id: "z2",
+        rules: [{ id: "r1", name: "R1", description: "", enabled: true, action: "ALLOW", source_zone_id: "z1", destination_zone_id: "z2", protocol: "TCP", port_ranges: [], ip_ranges: [], index: 1, predefined: false }],
+        allow_count: 1, block_count: 0, analysis: null,
+      },
+      {
+        source_zone_id: "z2", destination_zone_id: "z3",
+        rules: [{ id: "r2", name: "R2", description: "", enabled: true, action: "BLOCK", source_zone_id: "z2", destination_zone_id: "z3", protocol: "TCP", port_ranges: [], ip_ranges: [], index: 2, predefined: false }],
+        allow_count: 0, block_count: 1, analysis: null,
+      },
+    ];
+
+    render(
+      <ZoneGraph zones={threeZones} zonePairs={pairs} colorMode="light" onEdgeSelect={onEdgeSelect} hiddenZoneIds={new Set(["z3"])} showHidden={false} />,
+    );
+    // z3 is hidden, so 2 nodes (z1, z2) and 1 edge (z1->z2)
+    expect(screen.getByTestId("nodes-count").textContent).toBe("2");
+    expect(screen.getByTestId("edges-count").textContent).toBe("1");
+  });
+
+  it("shows hidden zones when showHidden is true", () => {
+    const threeZones: Zone[] = [
+      { id: "z1", name: "External", networks: [] },
+      { id: "z2", name: "Internal", networks: [] },
+      { id: "z3", name: "Guest", networks: [] },
+    ];
+    const pairs: ZonePair[] = [
+      {
+        source_zone_id: "z1", destination_zone_id: "z2",
+        rules: [{ id: "r1", name: "R1", description: "", enabled: true, action: "ALLOW", source_zone_id: "z1", destination_zone_id: "z2", protocol: "TCP", port_ranges: [], ip_ranges: [], index: 1, predefined: false }],
+        allow_count: 1, block_count: 0, analysis: null,
+      },
+      {
+        source_zone_id: "z2", destination_zone_id: "z3",
+        rules: [{ id: "r2", name: "R2", description: "", enabled: true, action: "BLOCK", source_zone_id: "z2", destination_zone_id: "z3", protocol: "TCP", port_ranges: [], ip_ranges: [], index: 2, predefined: false }],
+        allow_count: 0, block_count: 1, analysis: null,
+      },
+    ];
+
+    render(
+      <ZoneGraph zones={threeZones} zonePairs={pairs} colorMode="light" onEdgeSelect={onEdgeSelect} hiddenZoneIds={new Set(["z3"])} showHidden={true} />,
+    );
+    // showHidden=true means all zones visible despite hiddenZoneIds
+    expect(screen.getByTestId("nodes-count").textContent).toBe("3");
+    expect(screen.getByTestId("edges-count").textContent).toBe("2");
+  });
+
   it("shows all zones when focusZoneIds is not set", () => {
     const threeZones: Zone[] = [
       { id: "z1", name: "External", networks: [] },

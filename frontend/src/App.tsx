@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import type { ColorMode } from "@xyflow/react";
 import { api } from "./api/client";
 import type { ZonePair } from "./api/types";
@@ -15,7 +15,7 @@ interface AppState {
   authed: boolean;
   authLoading: boolean;
   colorMode: ColorMode;
-  showDisabled: boolean;
+  showHidden: boolean;
   selectedPair: ZonePair | null;
   focusZoneIds: string[] | null;
   settingsOpen: boolean;
@@ -27,7 +27,7 @@ const initialAppState: AppState = {
   authed: false,
   authLoading: true,
   colorMode: "dark" as ColorMode,
-  showDisabled: false,
+  showHidden: false,
   selectedPair: null,
   focusZoneIds: null,
   settingsOpen: false,
@@ -50,7 +50,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 function App() {
   const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
-  const { authed, authLoading, colorMode, showDisabled, selectedPair, focusZoneIds, settingsOpen, aiConfigured, hiddenZoneIds } = state;
+  const { authed, authLoading, colorMode, showHidden, selectedPair, focusZoneIds, settingsOpen, aiConfigured, hiddenZoneIds } = state;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", colorMode === "dark");
@@ -64,6 +64,14 @@ function App() {
       .catch(() => {});
   }, []);
 
+  const refreshZoneFilter = useCallback(() => {
+    api.getZoneFilter()
+      .then((filter) => dispatch({ hiddenZoneIds: new Set(filter.hidden_zone_ids) }))
+      .catch(() => {});
+  }, []);
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
   useEffect(() => {
     api
       .getAuthStatus()
@@ -71,6 +79,7 @@ function App() {
         dispatch({ authed: status.configured });
         if (status.configured) {
           refreshAiConfig();
+          refreshZoneFilter();
         }
       })
       .catch(() => {
@@ -79,7 +88,7 @@ function App() {
       .finally(() => {
         dispatch({ authLoading: false });
       });
-  }, [refreshAiConfig]);
+  }, [refreshAiConfig, refreshZoneFilter]);
 
   const handleLogout = useCallback(async () => {
     await api.logout();
@@ -95,17 +104,24 @@ function App() {
   }, [zones]);
 
   const filteredZonePairs = useMemo(() => {
-    if (showDisabled) return zonePairs;
+    if (showHidden) return zonePairs;
     return zonePairs.map((pair) => ({
       ...pair,
       rules: pair.rules.filter((r) => r.enabled),
     }));
-  }, [zonePairs, showDisabled]);
+  }, [zonePairs, showHidden]);
 
   const visibleZones = useMemo(() => {
-    if (hiddenZoneIds.size === 0) return zones;
+    if (showHidden || hiddenZoneIds.size === 0) return zones;
     return zones.filter((z) => !hiddenZoneIds.has(z.id));
-  }, [zones, hiddenZoneIds]);
+  }, [zones, hiddenZoneIds, showHidden]);
+
+  const hasDisabledRules = useMemo(
+    () => zonePairs.some((p) => p.rules.some((r) => !r.enabled)),
+    [zonePairs],
+  );
+
+  const hasHiddenZones = hiddenZoneIds.size > 0;
 
   const handleToggleZone = useCallback((zoneId: string) => {
     dispatch((prev) => {
@@ -115,6 +131,10 @@ function App() {
       } else {
         next.add(zoneId);
       }
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => {
+        api.saveZoneFilter([...next]).catch(() => {});
+      }, 300);
       return { hiddenZoneIds: next };
     });
   }, []);
@@ -160,8 +180,10 @@ function App() {
       <Toolbar
         colorMode={colorMode}
         onColorModeChange={(mode: ColorMode) => { localStorage.setItem("colorMode", mode); dispatch({ colorMode: mode }); }}
-        showDisabled={showDisabled}
-        onShowDisabledChange={(val: boolean) => dispatch({ showDisabled: val })}
+        showHidden={showHidden}
+        onShowHiddenChange={(val: boolean) => dispatch({ showHidden: val })}
+        hasHiddenZones={hasHiddenZones}
+        hasDisabledRules={hasDisabledRules}
         onRefresh={refresh}
         loading={loading}
         onLogout={handleLogout}
@@ -188,6 +210,8 @@ function App() {
               colorMode={colorMode}
               onEdgeSelect={handleEdgeSelect}
               focusZoneIds={focusZoneIds}
+              hiddenZoneIds={hiddenZoneIds}
+              showHidden={showHidden}
             />
           </div>
         ) : (

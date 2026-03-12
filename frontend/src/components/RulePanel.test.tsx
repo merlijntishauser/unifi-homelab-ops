@@ -3,6 +3,34 @@ import { render, screen, fireEvent, waitFor, within } from "@testing-library/rea
 import RulePanel from "./RulePanel";
 import type { ZonePair, Rule, SimulateResponse, ZonePairAnalysis } from "../api/types";
 
+let capturedOnConfirm: (() => void) | null = null;
+
+vi.mock("./ConfirmDialog", () => ({
+  default: ({ open, title, message, confirmLabel, onConfirm, onCancel }: {
+    open: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }) => {
+    capturedOnConfirm = onConfirm;
+    if (!open) return null;
+    return (
+      <div data-testid="confirm-backdrop" role="presentation" onClick={onCancel} onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}>
+        <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+          <h3>{title}</h3>
+          <p>{message}</p>
+          <div>
+            <button onClick={onCancel}>Cancel</button>
+            <button onClick={onConfirm}>{confirmLabel ?? "Confirm"}</button>
+          </div>
+        </div>
+      </div>
+    );
+  },
+}));
+
 vi.mock("../api/client", () => ({
   api: {
     simulate: vi.fn(),
@@ -395,6 +423,22 @@ describe("RulePanel", () => {
       expect(screen.getByText("WEEKDAYS")).toBeInTheDocument();
     });
 
+    it("shows raw schedule when JSON has no mode key", () => {
+      renderPanel(makePair([makeRule({ schedule: "{'days': ['Mon']}" })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.getByText("Schedule")).toBeInTheDocument();
+      expect(screen.getByText("{'days': ['Mon']}")).toBeInTheDocument();
+    });
+
+    it("shows 'any' when protocol is empty in expanded details", () => {
+      renderPanel(makePair([makeRule({ protocol: "", port_ranges: ["80"] })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      const anyElements = screen.getAllByText("any");
+      expect(anyElements.length).toBeGreaterThanOrEqual(1);
+    });
+
     it("shows raw IPSec value for unknown match types", () => {
       renderPanel(makePair([makeRule({ match_ip_sec: "CUSTOM_VALUE" })]));
 
@@ -433,6 +477,14 @@ describe("RulePanel", () => {
 
       fireEvent.keyDown(ruleBtn, { key: " " });
       expect(screen.getByText("Space desc")).toBeInTheDocument();
+    });
+
+    it("does not expand on unrelated key press", () => {
+      renderPanel(makePair([makeRule({ description: "Key desc" })]));
+      const ruleBtn = screen.getByRole("button", { name: /1\. Test Rule/ });
+
+      fireEvent.keyDown(ruleBtn, { key: "Tab" });
+      expect(screen.queryByText("Key desc")).not.toBeInTheDocument();
     });
 
     it("only expands one rule at a time", () => {
@@ -933,6 +985,19 @@ describe("RulePanel", () => {
       expect(badge.className).toContain("bg-gray-100");
     });
 
+    it("uses index as key when finding has no id", () => {
+      const pair = makePair([makeRule()], {
+        score: 50,
+        grade: "D",
+        findings: [
+          { id: undefined as unknown as string, severity: "high", title: "No-id finding", description: "Missing id", rule_id: null, source: "static" },
+        ],
+      });
+      renderPanel(pair);
+      expect(screen.getByText("No-id finding")).toBeInTheDocument();
+      expect(screen.getByText("Missing id")).toBeInTheDocument();
+    });
+
     it("does not show analysis section when analysis is null", () => {
       const pair = makePair([makeRule()], null);
       renderPanel(pair);
@@ -1046,6 +1111,19 @@ describe("RulePanel", () => {
         expect(screen.getByText("AI service unavailable")).toBeInTheDocument();
       });
     });
+
+    it("shows fallback error when AI analysis rejects with non-Error", async () => {
+      mockAnalyzeWithAi.mockRejectedValue("unexpected");
+
+      const pair = makePair([makeRule()], analysisWithFindings);
+      renderPanel(pair, "External", "Internal", true);
+
+      fireEvent.click(screen.getByRole("button", { name: "Analyze with AI" }));
+
+      await waitFor(() => {
+        expect(screen.getByText("AI analysis failed")).toBeInTheDocument();
+      });
+    });
   });
 
   describe("toggle", () => {
@@ -1063,6 +1141,18 @@ describe("RulePanel", () => {
       renderPanel();
       fireEvent.click(screen.getByLabelText(/Disable Test Rule/));
       expect(screen.getByText(/Disable "Test Rule"/)).toBeVisible();
+    });
+
+    it("shows Enable confirm dialog for disabled rules", async () => {
+      const onRuleUpdated = vi.fn();
+      vi.mocked(api.toggleRule).mockResolvedValue(undefined);
+      renderPanel(makePair([makeRule({ enabled: false })]), undefined, undefined, undefined, onRuleUpdated);
+      fireEvent.click(screen.getByLabelText(/Enable Test Rule/));
+      expect(screen.getByText(/Enable "Test Rule"/)).toBeVisible();
+      fireEvent.click(screen.getByRole("button", { name: "Enable" }));
+      await waitFor(() => {
+        expect(api.toggleRule).toHaveBeenCalledWith("r1", true);
+      });
     });
 
     it("calls toggleRule API on confirm", async () => {
@@ -1174,6 +1264,25 @@ describe("RulePanel", () => {
         makeRule({ id: "r2", name: "Built-in", index: 200, predefined: true }),
       ]));
       expect(screen.queryByLabelText(/Move Built-in/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("confirm dialog falsy action branch", () => {
+    it("does not call action when confirmAction is null on confirm", async () => {
+      // The onConfirm handler captures confirmAction from state. When confirmAction is null,
+      // action is undefined and the `if (action)` branch is skipped.
+      // We exercise this by calling the captured onConfirm when no dialog has been opened.
+      const onRuleUpdated = vi.fn();
+      renderPanel(undefined, undefined, undefined, undefined, onRuleUpdated);
+
+      // At this point confirmAction is null -- call the captured onConfirm directly
+      expect(capturedOnConfirm).not.toBeNull();
+      await capturedOnConfirm!();
+
+      // No API should have been called
+      expect(api.toggleRule).not.toHaveBeenCalled();
+      expect(api.swapRuleOrder).not.toHaveBeenCalled();
+      expect(onRuleUpdated).not.toHaveBeenCalled();
     });
   });
 

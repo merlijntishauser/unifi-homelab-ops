@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { useState } from "react";
 import { PinnedEdgeContext } from "./PinnedEdgeContext";
-import RuleEdgeComponent from "./RuleEdge";
+import RuleEdgeComponent, { RuleCardContent } from "./RuleEdge";
 import type { EdgeProps } from "@xyflow/react";
 import type { RuleEdge, RuleSummary } from "./RuleEdge";
 
@@ -738,6 +738,29 @@ describe("RuleEdgeComponent", () => {
       );
       expect(screen.getByTestId("edge-edge-1")).toBeInTheDocument();
       mockFn.mockReturnValue({ measured: { height: 100 } } as never);
+    });
+  });
+
+  describe("RuleCardContent borderColor", () => {
+    it("does not set inline borderColor style when borderColor is undefined", () => {
+      render(
+        <RuleCardContent
+          rules={[allowRule]}
+        />,
+      );
+      const button = screen.getByText("Allow HTTP").closest("button")!;
+      expect(button.style.borderColor).toBe("");
+    });
+
+    it("sets inline borderColor style when borderColor is provided", () => {
+      render(
+        <RuleCardContent
+          rules={[allowRule]}
+          borderColor="#00d68f"
+        />,
+      );
+      const button = screen.getByText("Allow HTTP").closest("button")!;
+      expect(button.style.borderColor).toBe("rgb(0, 214, 143)");
     });
   });
 

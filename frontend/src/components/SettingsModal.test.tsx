@@ -475,4 +475,80 @@ describe("SettingsModal", () => {
     const modelSelect = screen.getByLabelText("Model") as HTMLSelectElement;
     expect(modelSelect.value).toBe("gpt-4o");
   });
+
+  it("loads existing config with no matching preset", async () => {
+    mockGetAiPresets.mockResolvedValue(testPresets);
+    mockGetAiConfig.mockResolvedValue({
+      base_url: "https://custom.example.com/v1",
+      model: "custom-model-7b",
+      provider_type: "openai",
+      has_key: true,
+      source: "db",
+    });
+
+    render(<SettingsModal onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
+    });
+
+    // No preset matched, so provider dropdown should show placeholder
+    const providerSelect = screen.getByLabelText("Provider") as HTMLSelectElement;
+    expect(providerSelect.value).toBe("");
+
+    // Model field should not be visible since no preset is selected
+    expect(screen.queryByLabelText("Model")).not.toBeInTheDocument();
+  });
+
+  it("ignores handlePresetChange for unknown preset id", async () => {
+    mockGetAiPresets.mockResolvedValue(testPresets);
+    mockGetAiConfig.mockResolvedValue(noConfig);
+
+    render(<SettingsModal onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
+    });
+
+    // First select openai to populate fields
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Provider"), {
+        target: { value: "openai" },
+      });
+    });
+
+    const modelSelect = screen.getByLabelText("Model") as HTMLSelectElement;
+    expect(modelSelect.value).toBe("gpt-4o");
+
+    // Now select a non-existent preset id (not "custom", not a valid preset)
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Provider"), {
+        target: { value: "nonexistent" },
+      });
+    });
+
+    // Fields should remain unchanged since the preset was not found
+    const modelAfter = screen.getByLabelText("Model") as HTMLSelectElement;
+    expect(modelAfter.value).toBe("gpt-4o");
+  });
+
+  it("shows fallback message when test fails with non-Error value", async () => {
+    mockGetAiPresets.mockResolvedValue(testPresets);
+    mockGetAiConfig.mockResolvedValue(noConfig);
+    mockTestAiConnection.mockRejectedValue("string error");
+
+    render(<SettingsModal onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Test" }));
+    });
+
+    const failMsg = screen.getByText("Connection failed");
+    expect(failMsg).toBeInTheDocument();
+    expect(failMsg.className).toContain("text-red-600");
+  });
 });

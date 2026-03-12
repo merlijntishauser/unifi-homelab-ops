@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -15,6 +15,7 @@ import type { Zone, ZonePair } from "../api/types";
 import { getLayoutedElements } from "../utils/layout";
 import { getEdgeColor } from "../utils/edgeColor";
 import ZoneNodeComponent, { type ZoneNodeData } from "./ZoneNode";
+import { PinnedEdgeContext } from "./PinnedEdgeContext";
 import RuleEdgeComponent, { type RuleEdgeData } from "./RuleEdge";
 
 const nodeTypes = { zone: ZoneNodeComponent };
@@ -189,27 +190,30 @@ function ZoneGraphInner({
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
   const containerRef = useCrispZoom();
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onEdgeClick={onEdgeClick}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        colorMode={colorMode}
-        fitView
-        minZoom={0.3}
-        maxZoom={2}
-      >
-        <Background />
-        <Controls />
-        <MiniMap />
-      </ReactFlow>
-    </div>
+    <PinnedEdgeContext.Provider value={{ pinnedId, setPinnedId }}>
+      <div ref={containerRef} className="w-full h-full">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onEdgeClick={onEdgeClick}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          colorMode={colorMode}
+          fitView
+          minZoom={0.3}
+          maxZoom={2}
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+      </div>
+    </PinnedEdgeContext.Provider>
   );
 }
 

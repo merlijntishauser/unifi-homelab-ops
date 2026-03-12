@@ -93,6 +93,27 @@ async def test_simulate_with_protocol_and_port(client: AsyncClient) -> None:
 
 
 @pytest.mark.anyio
+async def test_simulate_with_source_port(client: AsyncClient) -> None:
+    _login()
+    resp = await client.post(
+        "/api/simulate",
+        json={
+            "src_ip": "192.168.1.50",
+            "dst_ip": "10.0.100.10",
+            "protocol": "tcp",
+            "port": 443,
+            "source_port": 50000,
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "assumptions" in data
+    assert "evaluations" in data
+    for ev in data["evaluations"]:
+        assert "unresolvable_constraints" in ev
+
+
+@pytest.mark.anyio
 async def test_simulate_response_includes_zone_names(client: AsyncClient) -> None:
     _login()
     resp = await client.post(

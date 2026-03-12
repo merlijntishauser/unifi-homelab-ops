@@ -116,3 +116,7 @@ export interface AuthStatus {
   source: "env" | "runtime" | "none";
   url: string;
 }
+
+export interface ZoneFilter {
+  hidden_zone_ids: string[];
+}

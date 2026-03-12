@@ -18,6 +18,8 @@ vi.mock("./api/client", () => ({
     testAiConnection: vi.fn(),
     getAiPresets: vi.fn(),
     analyzeWithAi: vi.fn(),
+    getZoneFilter: vi.fn(),
+    saveZoneFilter: vi.fn(),
   },
 }));
 
@@ -29,6 +31,7 @@ const mockGetZones = vi.mocked(api.getZones);
 const mockGetZonePairs = vi.mocked(api.getZonePairs);
 const mockLogin = vi.mocked(api.login);
 const mockGetAiConfig = vi.mocked(api.getAiConfig);
+const mockGetZoneFilter = vi.mocked(api.getZoneFilter);
 vi.mocked(api.simulate);
 
 // Mock @xyflow/react for ZoneGraph
@@ -161,6 +164,8 @@ describe("App", () => {
       has_key: false,
       source: "none",
     });
+    mockGetZoneFilter.mockResolvedValue({ hidden_zone_ids: [] });
+    vi.mocked(api.saveZoneFilter).mockResolvedValue({ status: "ok" });
   });
 
   it("shows loading spinner initially", () => {
@@ -322,7 +327,7 @@ describe("App", () => {
     });
   });
 
-  it("toggles show disabled rules and filters disabled rules", async () => {
+  it("shows contextual toggle for disabled rules and toggles it", async () => {
     mockGetAuthStatus.mockResolvedValue({
       configured: true,
       source: "env",
@@ -379,6 +384,72 @@ describe("App", () => {
 
     fireEvent.click(screen.getByLabelText("Show disabled rules"));
     expect(screen.getByLabelText("Show disabled rules")).toBeChecked();
+  });
+
+  it("does not show toggle when no disabled rules and no hidden zones", async () => {
+    mockGetAuthStatus.mockResolvedValue({
+      configured: true,
+      source: "env",
+      url: "https://unifi.local",
+    });
+    mockGetZones.mockResolvedValue(testZones);
+    mockGetZonePairs.mockResolvedValue(testZonePairs);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
+    });
+
+    // The toolbar toggle should not show any of these labels
+    expect(screen.queryByLabelText("Show disabled rules")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Show filtered zones")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Show filtered zones and disabled rules")).not.toBeInTheDocument();
+  });
+
+  it("shows 'Show filtered zones' when zones are hidden", async () => {
+    mockGetAuthStatus.mockResolvedValue({
+      configured: true,
+      source: "env",
+      url: "https://unifi.local",
+    });
+    mockGetZones.mockResolvedValue(testZones);
+    mockGetZonePairs.mockResolvedValue(testZonePairs);
+
+    render(<App />);
+
+    // Wait for zones to load and render in sidebar
+    await waitFor(() => {
+      expect(screen.getByLabelText("External")).toBeInTheDocument();
+    });
+
+    // Hide a zone via sidebar
+    fireEvent.click(screen.getByLabelText("External"));
+
+    expect(screen.getByLabelText("Show filtered zones")).toBeInTheDocument();
+  });
+
+  it("loads hidden zones from API on auth", async () => {
+    mockGetZoneFilter.mockResolvedValue({ hidden_zone_ids: ["z1"] });
+    mockGetAuthStatus.mockResolvedValue({
+      configured: true,
+      source: "env",
+      url: "https://unifi.local",
+    });
+    mockGetZones.mockResolvedValue(testZones);
+    mockGetZonePairs.mockResolvedValue(testZonePairs);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(mockGetZoneFilter).toHaveBeenCalled();
+    });
+
+    // z1 should be hidden from the matrix
+    await waitFor(() => {
+      expect(screen.queryByTestId("matrix-zone-z1")).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId("matrix-zone-z2")).toBeInTheDocument();
   });
 
   it("calls refresh when Refresh button is clicked", async () => {

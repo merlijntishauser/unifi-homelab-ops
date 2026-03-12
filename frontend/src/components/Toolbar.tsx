@@ -3,8 +3,10 @@ import type { ColorMode } from "@xyflow/react";
 interface ToolbarProps {
   colorMode: ColorMode;
   onColorModeChange: (mode: ColorMode) => void;
-  showDisabled: boolean;
-  onShowDisabledChange: (show: boolean) => void;
+  showHidden: boolean;
+  onShowHiddenChange: (show: boolean) => void;
+  hasHiddenZones: boolean;
+  hasDisabledRules: boolean;
   onRefresh: () => void;
   loading: boolean;
   onLogout: () => void;
@@ -14,8 +16,10 @@ interface ToolbarProps {
 export default function Toolbar({
   colorMode,
   onColorModeChange,
-  showDisabled,
-  onShowDisabledChange,
+  showHidden,
+  onShowHiddenChange,
+  hasHiddenZones,
+  hasDisabledRules,
   onRefresh,
   loading,
   onLogout,
@@ -30,15 +34,21 @@ export default function Toolbar({
         UniFi Firewall Analyser
       </h1>
 
-      <label className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-noc-text-secondary cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={showDisabled}
-          onChange={(e) => onShowDisabledChange(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
-        />
-        Show disabled rules
-      </label>
+      {(hasHiddenZones || hasDisabledRules) && (
+        <label className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-noc-text-secondary cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showHidden}
+            onChange={(e) => onShowHiddenChange(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
+          />
+          {hasHiddenZones && hasDisabledRules
+            ? "Show filtered zones and disabled rules"
+            : hasHiddenZones
+              ? "Show filtered zones"
+              : "Show disabled rules"}
+        </label>
+      )}
 
       <button
         onClick={() =>

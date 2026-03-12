@@ -13,6 +13,7 @@ class SimulateRequest(BaseModel):
     dst_ip: str
     protocol: str | None = None
     port: int | None = None
+    source_port: int | None = None
 
 
 @router.post("/simulate")
@@ -34,7 +35,13 @@ async def simulate(request: SimulateRequest) -> SimulationResult:
     if dst_zone_id is None:
         raise HTTPException(status_code=400, detail=f"Could not resolve destination IP {request.dst_ip} to a zone")
 
-    result = evaluate_rules(rules, src_zone_id, dst_zone_id, request.protocol, request.port)
+    result = evaluate_rules(
+        rules, src_zone_id, dst_zone_id,
+        request.protocol, request.port,
+        source_ip=request.src_ip,
+        destination_ip=request.dst_ip,
+        source_port=request.source_port,
+    )
 
     # Fill in zone names
     zone_map = {z.id: z.name for z in zones}

@@ -132,10 +132,11 @@ class TestAnalyzeZonePair:
         result = analyze_zone_pair(rules, "LAN", "WAN")
         assert not any(f.id == "wide-port-range" for f in result.findings)
 
-    def test_predefined_rule_not_flagged(self) -> None:
-        rules = [_rule(predefined=True, action="BLOCK")]
-        result = analyze_zone_pair(rules, "LAN", "WAN")
-        assert not any(f.id == "predefined-unreviewed" for f in result.findings)
+    def test_predefined_rules_skipped_entirely(self) -> None:
+        rules = [_rule(predefined=True, protocol="all", port_ranges=[])]
+        result = analyze_zone_pair(rules, "External", "Internal")
+        assert result.findings == []
+        assert result.score == 100
 
     def test_score_deductions(self) -> None:
         # One high finding = -15

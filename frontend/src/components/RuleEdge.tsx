@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext } from "react";
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -7,6 +7,7 @@ import {
   type Edge,
 } from "@xyflow/react";
 import { getActionColor, getEdgeColor } from "../utils/edgeColor";
+import { PinnedEdgeContext } from "./PinnedEdgeContext";
 
 export interface RuleSummary {
   id: string;
@@ -176,24 +177,27 @@ function computePath(
 }
 
 function CompactPill({
+  edgeId,
   color,
   ruleCount,
   cardSide,
   children,
 }: {
+  edgeId: string;
   color: string;
   ruleCount: number;
   cardSide: string;
   children: React.ReactNode;
 }) {
-  const [isPinned, setIsPinned] = useState(false);
+  const { pinnedId, setPinnedId } = useContext(PinnedEdgeContext);
+  const isPinned = pinnedId === edgeId;
 
   return (
     <>
       <button
         onClick={(e) => {
           e.stopPropagation();
-          setIsPinned((p) => !p);
+          setPinnedId(isPinned ? null : edgeId);
         }}
         className="flex items-center gap-1 rounded-full px-1.5 py-0.5 bg-white/80 dark:bg-noc-bg/80 border border-gray-200/40 dark:border-noc-border/20 cursor-pointer hover:border-gray-300 dark:hover:border-noc-border/40 transition-colors"
       >
@@ -291,7 +295,7 @@ export default function RuleEdgeComponent({
               borderColor={color}
             />
           ) : (
-            <CompactPill color={color} ruleCount={rules.length} cardSide={cardSide}>
+            <CompactPill edgeId={id} color={color} ruleCount={rules.length} cardSide={cardSide}>
               <RuleCardContent
                 rules={rules}
                 sourceZoneName={sourceZoneName}

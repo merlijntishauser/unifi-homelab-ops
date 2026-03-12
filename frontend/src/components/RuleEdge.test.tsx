@@ -1,8 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { useState } from "react";
+import { PinnedEdgeContext } from "./PinnedEdgeContext";
 import RuleEdgeComponent from "./RuleEdge";
 import type { EdgeProps } from "@xyflow/react";
 import type { RuleEdge, RuleSummary } from "./RuleEdge";
+
+function PinnedEdgeProvider({ children }: { children: React.ReactNode }) {
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
+  return (
+    <PinnedEdgeContext.Provider value={{ pinnedId, setPinnedId }}>
+      {children}
+    </PinnedEdgeContext.Provider>
+  );
+}
 
 // Mock @xyflow/react
 vi.mock("@xyflow/react", () => ({
@@ -363,15 +374,17 @@ describe("RuleEdgeComponent", () => {
 
     it("pins the card open when pill is clicked", () => {
       render(
-        <RuleEdgeComponent
-          {...makeEdgeProps({
-            data: {
-              rules: [allowRule],
-              allowCount: 1,
-              blockCount: 0,
-            },
-          })}
-        />,
+        <PinnedEdgeProvider>
+          <RuleEdgeComponent
+            {...makeEdgeProps({
+              data: {
+                rules: [allowRule],
+                allowCount: 1,
+                blockCount: 0,
+              },
+            })}
+          />
+        </PinnedEdgeProvider>,
       );
 
       const cardWrapper = screen.getByText("Allow HTTP").closest("button")!.parentElement!;
@@ -387,15 +400,17 @@ describe("RuleEdgeComponent", () => {
 
     it("unpins the card when pill is clicked again", () => {
       render(
-        <RuleEdgeComponent
-          {...makeEdgeProps({
-            data: {
-              rules: [allowRule],
-              allowCount: 1,
-              blockCount: 0,
-            },
-          })}
-        />,
+        <PinnedEdgeProvider>
+          <RuleEdgeComponent
+            {...makeEdgeProps({
+              data: {
+                rules: [allowRule],
+                allowCount: 1,
+                blockCount: 0,
+              },
+            })}
+          />
+        </PinnedEdgeProvider>,
       );
 
       const pill = screen.getByText("1");
@@ -408,6 +423,45 @@ describe("RuleEdgeComponent", () => {
       // Click again to unpin
       fireEvent.click(pill);
       expect(cardWrapper.className).toContain("opacity-0");
+    });
+
+    it("pinning one edge unpins the other", () => {
+      render(
+        <PinnedEdgeProvider>
+          <RuleEdgeComponent
+            {...makeEdgeProps({
+              id: "edge-a",
+              data: {
+                rules: [allowRule],
+                allowCount: 1,
+                blockCount: 0,
+              },
+            })}
+          />
+          <RuleEdgeComponent
+            {...makeEdgeProps({
+              id: "edge-b",
+              data: {
+                rules: [blockRule],
+                allowCount: 0,
+                blockCount: 1,
+              },
+            })}
+          />
+        </PinnedEdgeProvider>,
+      );
+
+      const pills = screen.getAllByText("1");
+      // Pin edge-a
+      fireEvent.click(pills[0]);
+      const cardA = screen.getByText("Allow HTTP").closest("button")!.parentElement!;
+      expect(cardA.className).toContain("opacity-100");
+
+      // Pin edge-b -- should unpin edge-a
+      fireEvent.click(pills[1]);
+      expect(cardA.className).toContain("opacity-0");
+      const cardB = screen.getByText("Block SSH").closest("button")!.parentElement!;
+      expect(cardB.className).toContain("opacity-100");
     });
   });
 

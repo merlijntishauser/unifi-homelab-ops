@@ -1,7 +1,6 @@
 """Settings router for AI configuration management."""
 
-import logging
-
+import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -14,7 +13,7 @@ from app.services.ai_settings import (
     save_ai_config,
 )
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -52,20 +51,20 @@ class AiAnalysisSettingsInput(BaseModel):
 @router.get("/ai")
 async def get_config() -> dict[str, object]:
     config = get_ai_config()
-    logger.debug("Get AI config: source=%s", config.get("source"))
+    log.debug("ai_config_get", source=config.get("source"))
     return config
 
 
 @router.put("/ai")
 async def save_config(body: AiConfigInput) -> dict[str, str]:
-    logger.debug("Save AI config: provider=%s, model=%s, base_url=%s", body.provider_type, body.model, body.base_url)
+    log.info("ai_config_save", provider=body.provider_type, model=body.model)
     save_ai_config(body.base_url, body.api_key, body.model, body.provider_type)
     return {"status": "ok"}
 
 
 @router.delete("/ai")
 async def delete_config() -> dict[str, str]:
-    logger.debug("Delete AI config")
+    log.info("ai_config_delete")
     delete_ai_config()
     return {"status": "ok"}
 
@@ -100,7 +99,7 @@ async def test_connection(body: AiTestInput | None = None) -> dict[str, str]:
         model = full_config["model"]
         provider_type = full_config["provider_type"]
 
-    logger.debug("Testing AI connection: provider=%s, model=%s", provider_type, model)
+    log.info("ai_test_connection", provider=provider_type, model=model)
     try:
         if provider_type == "anthropic":
             resp = httpx.post(
@@ -133,19 +132,19 @@ async def test_connection(body: AiTestInput | None = None) -> dict[str, str]:
             )
         resp.raise_for_status()
     except httpx.HTTPStatusError as e:
-        logger.debug("AI test failed: provider returned %s: %s", e.response.status_code, e.response.text[:200])
+        log.warning("ai_test_failed", status_code=e.response.status_code)
         raise HTTPException(
             status_code=502,
             detail=f"Provider returned HTTP {e.response.status_code}",
         ) from e
     except httpx.ConnectError as e:
-        logger.debug("AI test failed: connection error: %s", e)
+        log.warning("ai_test_failed", error="connection_error")
         raise HTTPException(status_code=502, detail="Connection to provider failed") from e
     except httpx.TimeoutException as e:
-        logger.debug("AI test failed: timeout")
+        log.warning("ai_test_failed", error="timeout")
         raise HTTPException(status_code=504, detail="Connection timed out") from e
 
-    logger.debug("AI test connection succeeded")
+    log.info("ai_test_success", provider=provider_type)
     return {"status": "ok"}
 
 
@@ -156,14 +155,12 @@ async def get_presets() -> list[dict[str, object]]:
 
 @router.get("/ai-analysis")
 async def get_analysis_settings() -> dict[str, str]:
-    settings = get_ai_analysis_settings()
-    logger.debug("Get AI analysis settings: %s", settings)
-    return settings
+    return get_ai_analysis_settings()
 
 
 @router.put("/ai-analysis")
 async def save_analysis_settings(body: AiAnalysisSettingsInput) -> dict[str, str]:
-    logger.debug("Save AI analysis settings: site_profile=%s", body.site_profile)
+    log.info("ai_analysis_settings_save", site_profile=body.site_profile)
     try:
         save_ai_analysis_settings(body.site_profile)
     except ValueError as exc:

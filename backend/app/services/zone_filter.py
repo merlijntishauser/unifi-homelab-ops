@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import logging
-
+import structlog
 from sqlalchemy import select
 
 from app.database import get_session
 from app.models_db import HiddenZoneRow
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 
 def get_hidden_zone_ids() -> list[str]:
@@ -17,7 +16,7 @@ def get_hidden_zone_ids() -> list[str]:
     session = get_session()
     try:
         rows = session.execute(select(HiddenZoneRow.zone_id)).scalars().all()
-        logger.debug("Loaded %d hidden zone IDs", len(rows))
+        log.debug("hidden_zones_loaded", count=len(rows))
         return list(rows)
     finally:
         session.close()
@@ -25,7 +24,7 @@ def get_hidden_zone_ids() -> list[str]:
 
 def save_hidden_zone_ids(zone_ids: list[str]) -> None:
     """Replace hidden zone IDs with the given list."""
-    logger.debug("Saving %d hidden zone IDs: %s", len(zone_ids), zone_ids)
+    log.info("hidden_zones_save", count=len(zone_ids), zone_ids=zone_ids)
     session = get_session()
     try:
         session.query(HiddenZoneRow).delete()

@@ -6,7 +6,6 @@ When unset, the middleware is a no-op passthrough.
 
 import hashlib
 import hmac
-import logging
 import time
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -14,8 +13,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from app.config import settings
-
-logger = logging.getLogger(__name__)
 
 COOKIE_NAME = "_session"
 

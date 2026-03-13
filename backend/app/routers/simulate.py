@@ -1,5 +1,4 @@
-import logging
-
+import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -7,7 +6,7 @@ from app.config import get_unifi_config, has_credentials
 from app.services.firewall import get_rules, get_zones
 from app.services.simulator import SimulationResult, evaluate_rules, resolve_zone
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 router = APIRouter(prefix="/api", tags=["simulate"])
 
@@ -28,9 +27,10 @@ async def simulate(request: SimulateRequest) -> SimulationResult:
     credentials = get_unifi_config()
     assert credentials is not None  # guaranteed by has_credentials()
 
-    logger.debug(
-        "Simulate: src_ip=%s, dst_ip=%s, proto=%s, port=%s, src_port=%s",
-        request.src_ip, request.dst_ip, request.protocol, request.port, request.source_port,
+    log.info(
+        "simulate",
+        src_ip=request.src_ip, dst_ip=request.dst_ip,
+        protocol=request.protocol, port=request.port, source_port=request.source_port,
     )
 
     zones = get_zones(credentials)
@@ -40,13 +40,11 @@ async def simulate(request: SimulateRequest) -> SimulationResult:
     dst_zone_id = resolve_zone(request.dst_ip, zones)
 
     if src_zone_id is None:
-        logger.debug("Could not resolve source IP %s to a zone", request.src_ip)
         raise HTTPException(status_code=400, detail=f"Could not resolve source IP {request.src_ip} to a zone")
     if dst_zone_id is None:
-        logger.debug("Could not resolve destination IP %s to a zone", request.dst_ip)
         raise HTTPException(status_code=400, detail=f"Could not resolve destination IP {request.dst_ip} to a zone")
 
-    logger.debug("Resolved zones: %s -> %s", src_zone_id, dst_zone_id)
+    log.debug("simulate_zones_resolved", src_zone=src_zone_id, dst_zone=dst_zone_id)
 
     result = evaluate_rules(
         rules, src_zone_id, dst_zone_id,
@@ -61,5 +59,5 @@ async def simulate(request: SimulateRequest) -> SimulationResult:
     result.source_zone_name = zone_map.get(src_zone_id, "")
     result.destination_zone_name = zone_map.get(dst_zone_id, "")
 
-    logger.debug("Simulation verdict: %s (matched_rule=%s)", result.verdict, result.matched_rule_name)
+    log.info("simulate_complete", verdict=result.verdict, matched_rule=result.matched_rule_name)
     return result

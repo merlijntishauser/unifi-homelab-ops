@@ -165,12 +165,12 @@ def test_check_plaintext_db_key_warns_when_key_in_db(tmp_path: Path) -> None:
     try:
         with (
             patch("app.main.app_settings") as mock_settings,
-            patch("app.main.startup_logger.warning") as mock_warn,
+            patch("app.main.log") as mock_log,
         ):
             mock_settings.app_password = "secret"
             _check_plaintext_db_key()
-        mock_warn.assert_called_once()
-        assert "plaintext" in mock_warn.call_args[0][0].lower()
+        mock_log.warning.assert_called_once()
+        assert mock_log.warning.call_args[0][0] == "plaintext_db_key"
     finally:
         reset_engine()
 
@@ -178,11 +178,11 @@ def test_check_plaintext_db_key_warns_when_key_in_db(tmp_path: Path) -> None:
 def test_check_plaintext_db_key_silent_without_app_password() -> None:
     with (
         patch("app.main.app_settings") as mock_settings,
-        patch("app.main.startup_logger.warning") as mock_warn,
+        patch("app.main.log") as mock_log,
     ):
         mock_settings.app_password = ""
         _check_plaintext_db_key()
-    mock_warn.assert_not_called()
+    mock_log.warning.assert_not_called()
 
 
 def test_check_plaintext_db_key_silent_when_no_key_in_db(tmp_path: Path) -> None:
@@ -194,11 +194,11 @@ def test_check_plaintext_db_key_silent_when_no_key_in_db(tmp_path: Path) -> None
     try:
         with (
             patch("app.main.app_settings") as mock_settings,
-            patch("app.main.startup_logger.warning") as mock_warn,
+            patch("app.main.log") as mock_log,
         ):
             mock_settings.app_password = "secret"
             _check_plaintext_db_key()
-        mock_warn.assert_not_called()
+        mock_log.warning.assert_not_called()
     finally:
         reset_engine()
 

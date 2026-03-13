@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-import logging
 from datetime import UTC, datetime
 
 import httpx
+import structlog
 
 from app.database import get_session
 from app.models import AiAnalysisResult, FindingModel, Rule
@@ -15,7 +15,7 @@ from app.models_db import AiAnalysisCacheRow
 from app.services.ai_settings import get_ai_analysis_settings, get_full_ai_config
 from app.services.analyzer import Finding
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 AI_PROMPT_VERSION = "2026-03-13-v1"
 
@@ -250,7 +250,7 @@ async def analyze_with_ai(
     """Analyze rules with AI. Returns explicit status instead of empty list on error."""
     config = get_full_ai_config()
     if config is None:
-        logger.debug("No AI config found, skipping analysis")
+        log.debug("ai_analysis_no_config")
         return AiAnalysisResult(status="error", message="No AI provider configured")
 
     analysis_settings = get_ai_analysis_settings()
@@ -262,12 +262,12 @@ async def analyze_with_ai(
         rules, src_zone_name, dst_zone_name, model, site_profile, AI_PROMPT_VERSION, static_summary,
     )
     zone_pair_key = f"{src_zone_name}->{dst_zone_name}"
-    logger.debug("AI analysis for %s (cache_key=%s, profile=%s)", zone_pair_key, cache_key[:12], site_profile)
+    log.debug("ai_analysis_start", zone_pair=zone_pair_key, cache_key=cache_key[:12], site_profile=site_profile)
 
     # Check cache
     cached = _get_cached(cache_key)
     if cached is not None:
-        logger.debug("Cache hit for %s (%d findings)", zone_pair_key, len(cached))
+        log.debug("ai_analysis_cache_hit", zone_pair=zone_pair_key, finding_count=len(cached))
         return AiAnalysisResult(status="ok", findings=_findings_from_raw(cached), cached=True)
 
     # Build prompts
@@ -276,7 +276,7 @@ async def analyze_with_ai(
 
     try:
         provider_type = config.get("provider_type", "openai")
-        logger.debug("Calling %s API (model=%s)", provider_type, model)
+        log.debug("ai_api_call", provider=provider_type, model=model)
         if provider_type == "anthropic":
             response_text = _call_anthropic(
                 config["base_url"], config["api_key"], model, system_prompt, user_prompt,
@@ -286,24 +286,24 @@ async def analyze_with_ai(
                 config["base_url"], config["api_key"], model, system_prompt, user_prompt,
             )
     except httpx.HTTPStatusError as exc:
-        logger.warning("AI provider returned HTTP %s for %s", exc.response.status_code, zone_pair_key)
+        log.warning("ai_provider_http_error", zone_pair=zone_pair_key, status_code=exc.response.status_code)
         return AiAnalysisResult(status="error", message=f"Provider returned HTTP {exc.response.status_code}")
     except httpx.TimeoutException:
-        logger.warning("AI provider timed out for %s", zone_pair_key)
+        log.warning("ai_provider_timeout", zone_pair=zone_pair_key)
         return AiAnalysisResult(status="error", message="Provider request timed out")
     except httpx.ConnectError as exc:
-        logger.warning("AI provider connection failed for %s: %s", zone_pair_key, exc)
+        log.warning("ai_provider_connect_error", zone_pair=zone_pair_key, error=str(exc))
         return AiAnalysisResult(status="error", message="Connection to AI provider failed")
     except Exception:
-        logger.exception("AI analysis failed for %s", zone_pair_key)
+        log.exception("ai_analysis_failed", zone_pair=zone_pair_key)
         return AiAnalysisResult(status="error", message="Unexpected error during AI analysis")
 
     try:
         raw_findings = _parse_findings(response_text)
     except (json.JSONDecodeError, ValueError):
-        logger.warning("Failed to parse AI response for %s", zone_pair_key)
+        log.warning("ai_response_parse_error", zone_pair=zone_pair_key)
         return AiAnalysisResult(status="error", message="Failed to parse AI response")
 
-    logger.debug("AI returned %d findings for %s", len(raw_findings), zone_pair_key)
+    log.debug("ai_analysis_complete", zone_pair=zone_pair_key, finding_count=len(raw_findings))
     _save_cache(cache_key, zone_pair_key, raw_findings)
     return AiAnalysisResult(status="ok", findings=_findings_from_raw(raw_findings), cached=False)

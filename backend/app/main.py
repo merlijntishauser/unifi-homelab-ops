@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import structlog
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -11,6 +12,7 @@ from unifi_topology.adapters.unifi_api import UnifiApiError
 
 from app.config import settings as app_settings
 from app.database import DEFAULT_DB_PATH, init_db
+from app.logging import configure_logging
 from app.middleware import AppAuthMiddleware
 from app.routers.analyze import router as analyze_router
 from app.routers.auth import router as auth_router
@@ -20,7 +22,7 @@ from app.routers.simulate import router as simulate_router
 from app.routers.zone_filter import router as zone_filter_router
 from app.routers.zones import router as zones_router
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 startup_logger = logging.getLogger("uvicorn.error")
 
 
@@ -70,9 +72,7 @@ def _check_plaintext_db_key() -> None:
         try:
             row = session.get(AiConfigRow, 1)
             if row and row.api_key:
-                startup_logger.warning(
-                    "AI API key stored in plaintext database. In production, use AI_API_KEY env var instead."
-                )
+                log.warning("plaintext_db_key", msg="AI API key stored in plaintext database. Use AI_API_KEY env var.")
         finally:
             session.close()
     except Exception:
@@ -143,11 +143,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+configure_logging()
 _configure_access_log_filters()
-
-_log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=getattr(logging, _log_level, logging.INFO))
-logging.getLogger("app").setLevel(getattr(logging, _log_level, logging.INFO))
 
 app = FastAPI(title="UniFi Firewall Analyser", lifespan=lifespan)
 
@@ -167,7 +164,7 @@ if not os.environ.get("FRONTEND_DIST_DIR"):
 
 @app.exception_handler(UnifiApiError)
 async def unifi_api_error_handler(request: Request, exc: UnifiApiError) -> JSONResponse:
-    logger.error("UniFi API error: %s", exc)
+    log.error("unifi_api_error", error=str(exc))
     return JSONResponse(status_code=502, content={"detail": "Failed to communicate with UniFi controller"})
 
 app.include_router(analyze_router)

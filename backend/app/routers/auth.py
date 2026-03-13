@@ -1,7 +1,7 @@
 import hmac
-import logging
 from typing import Literal
 
+import structlog
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ from app.config import (
 from app.middleware import COOKIE_NAME, create_session_cookie, verify_session_cookie
 from app.models import AppAuthStatus, AppLoginInput
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -53,11 +53,11 @@ async def app_login(body: AppLoginInput) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": "App auth is not enabled"})
 
     if not hmac.compare_digest(body.password.encode(), secret.encode()):
-        logger.debug("App login failed: wrong password")
+        log.info("app_login_failed", reason="wrong_password")
         return JSONResponse(status_code=401, content={"detail": "Invalid password"})
 
     cookie_value, max_age = create_session_cookie(secret, settings.app_session_ttl)
-    logger.debug("App login succeeded")
+    log.info("app_login_success")
     response = JSONResponse(content={"status": "ok"})
     response.set_cookie(
         COOKIE_NAME,
@@ -83,7 +83,7 @@ async def app_status(request: Request) -> AppAuthStatus:
 
 @router.post("/login")
 async def login(request: LoginRequest) -> LoginResponse:
-    logger.debug("Login attempt: url=%s, user=%s, site=%s", request.url, request.username, request.site)
+    log.info("controller_login", url=request.url, user=request.username, site=request.site)
     set_runtime_credentials(
         url=request.url,
         username=request.username,
@@ -91,13 +91,12 @@ async def login(request: LoginRequest) -> LoginResponse:
         site=request.site,
         verify_ssl=request.verify_ssl,
     )
-    logger.debug("Login credentials stored")
     return LoginResponse(status="ok", message="Credentials stored")
 
 
 @router.post("/logout")
 async def logout() -> LogoutResponse:
-    logger.debug("Logout requested")
+    log.info("controller_logout")
     clear_runtime_credentials()
     return LogoutResponse(status="ok", message="Credentials cleared")
 
@@ -106,7 +105,7 @@ async def logout() -> LogoutResponse:
 async def status() -> AuthStatusResponse:
     config = get_unifi_config()
     source = get_credential_source()
-    logger.debug("Auth status check: source=%s, configured=%s", source, config is not None)
+    log.debug("auth_status", source=source, configured=config is not None)
 
     if config is None:
         return AuthStatusResponse(configured=False, source="none", url="", username="")

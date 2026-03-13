@@ -7,8 +7,8 @@ via the unifi-topology library.
 from __future__ import annotations
 
 import contextlib
-import logging
 
+import structlog
 from unifi_topology import (
     Config,
     FirewallGroup,
@@ -27,7 +27,7 @@ from app.config import UnifiCredentials
 from app.models import FindingModel, Network, Rule, Zone, ZonePair, ZonePairAnalysis
 from app.services.analyzer import analyze_zone_pair as run_analysis
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 
 def to_topology_config(credentials: UnifiCredentials) -> Config:
@@ -138,9 +138,8 @@ def get_zones(credentials: UnifiCredentials) -> list[Zone]:
     raw_zones = fetch_firewall_zones(config, site=credentials.site)
     zones = normalize_firewall_zones(raw_zones)
     network_lookup = _build_network_lookup(config)
-    logger.debug("Fetched %d networks", len(network_lookup))
     result = [_zone_to_model(z, network_lookup) for z in zones]
-    logger.debug("Fetched %d zones: %s", len(result), [z.name for z in result])
+    log.info("unifi_fetch_zones", zone_count=len(result), network_count=len(network_lookup))
     return result
 
 
@@ -150,9 +149,8 @@ def get_rules(credentials: UnifiCredentials) -> list[Rule]:
     raw_policies = fetch_firewall_policies(config, site=credentials.site)
     policies = normalize_firewall_policies(raw_policies)
     group_lookup = _build_group_lookup(config)
-    logger.debug("Fetched %d groups", len(group_lookup))
     rules = [_policy_to_rule(p, group_lookup) for p in policies]
-    logger.debug("Fetched %d rules", len(rules))
+    log.info("unifi_fetch_rules", rule_count=len(rules), group_count=len(group_lookup))
     return rules
 
 
@@ -191,5 +189,5 @@ def get_zone_pairs(credentials: UnifiCredentials) -> list[ZonePair]:
                 analysis=analysis,
             )
         )
-    logger.debug("Built %d zone pairs", len(result))
+    log.info("zone_pairs_built", pair_count=len(result))
     return result

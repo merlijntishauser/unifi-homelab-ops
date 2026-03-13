@@ -6,8 +6,7 @@ between analyser credentials and topology Config.
 
 from __future__ import annotations
 
-import logging
-
+import structlog
 from unifi_topology import UnifiWriteError
 from unifi_topology import swap_firewall_policy_order as _swap_upstream
 from unifi_topology import toggle_firewall_policy as _toggle_upstream
@@ -15,7 +14,7 @@ from unifi_topology import toggle_firewall_policy as _toggle_upstream
 from app.config import UnifiCredentials
 from app.services.firewall import to_topology_config
 
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 # Re-export for backward compatibility with router imports
 WriteError = UnifiWriteError
@@ -28,10 +27,9 @@ def toggle_policy(
     enabled: bool,
 ) -> None:
     """Toggle a firewall policy's enabled state."""
-    logger.debug("Toggle policy %s -> enabled=%s", policy_id, enabled)
+    log.info("policy_toggle", policy_id=policy_id, enabled=enabled)
     config = to_topology_config(credentials)
     _toggle_upstream(config, policy_id, enabled=enabled, site=credentials.site)
-    logger.debug("Toggle policy %s succeeded", policy_id)
 
 
 def swap_policy_order(
@@ -40,7 +38,6 @@ def swap_policy_order(
     policy_id_b: str,
 ) -> None:
     """Swap the index (priority) of two firewall policies."""
-    logger.debug("Swap policy order: %s <-> %s", policy_id_a, policy_id_b)
+    log.info("policy_swap", policy_a=policy_id_a, policy_b=policy_id_b)
     config = to_topology_config(credentials)
     _swap_upstream(config, policy_id_a, policy_id_b, site=credentials.site)
-    logger.debug("Swap policy order succeeded")

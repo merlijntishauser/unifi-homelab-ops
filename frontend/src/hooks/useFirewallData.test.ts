@@ -46,6 +46,7 @@ describe("useFirewallData", () => {
     expect(result.current.zones).toEqual([]);
     expect(result.current.zonePairs).toEqual([]);
     expect(result.current.loading).toBe(false);
+    expect(result.current.status).toBeNull();
     expect(result.current.error).toBeNull();
   });
 
@@ -64,7 +65,7 @@ describe("useFirewallData", () => {
     expect(result.current.error).toBeNull();
   });
 
-  it("sets loading to true while fetching", async () => {
+  it("sets loading and status while fetching", async () => {
     let resolveZones!: (value: unknown) => void;
     let resolveZonePairs!: (value: unknown) => void;
     mockGetZones.mockReturnValue(new Promise((r) => { resolveZones = r; }));
@@ -73,6 +74,7 @@ describe("useFirewallData", () => {
     const { result } = renderHook(() => useFirewallData(true));
 
     expect(result.current.loading).toBe(true);
+    expect(result.current.status).toBe("Connecting to controller...");
 
     await act(async () => {
       resolveZones(mockZones);
@@ -82,6 +84,7 @@ describe("useFirewallData", () => {
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
+    expect(result.current.status).toBeNull();
   });
 
   it("sets error when fetch fails with an Error", async () => {

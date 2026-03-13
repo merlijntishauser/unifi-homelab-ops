@@ -69,6 +69,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
   return { ...state, ...update };
 }
 
+function LoadingOverlay({ message }: { message: string | null }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+      <div className="h-6 w-6 rounded-full border-2 border-gray-300 dark:border-noc-border border-t-ub-blue animate-spin" />
+      {message && (
+        <p className="text-sm text-gray-500 dark:text-noc-text-secondary font-body animate-pulse">{message}</p>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
   const { appAuthRequired, appAuthenticated, authed, authLoading, colorMode, showHidden, selectedPair, focusZoneIds, settingsOpen, aiConfigured, connectionInfo, aiInfo, hiddenZoneIds } = state;
@@ -77,7 +88,7 @@ function App() {
     document.documentElement.classList.toggle("dark", colorMode === "dark");
   }, [colorMode]);
 
-  const { zones, zonePairs, loading, error, refresh } = useFirewallData(authed);
+  const { zones, zonePairs, loading, status: dataStatus, error, refresh } = useFirewallData(authed);
 
   const refreshAiConfig = useCallback(() => {
     api.getAiConfig()
@@ -151,12 +162,12 @@ function App() {
     dispatch({ authed: false });
   }, []);
 
-  const zoneNameMap = useMemo(() => {
+  const getZoneName = useMemo(() => {
     const map = new Map<string, string>();
     for (const z of zones) {
       map.set(z.id, z.name);
     }
-    return map;
+    return (id: string) => map.get(id) ?? "Unknown";
   }, [zones]);
 
   const filteredZonePairs = useMemo(() => {
@@ -217,15 +228,7 @@ function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  if (authLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-noc-bg text-gray-400 dark:text-noc-text-secondary font-body">
-        Loading...
-      </div>
-    );
-  }
-
-  if (appAuthRequired && !appAuthenticated) {
+  if (appAuthRequired && !appAuthenticated && !authLoading) {
     return (
       <PassphraseScreen
         onAuthenticated={() => {
@@ -236,9 +239,12 @@ function App() {
     );
   }
 
-  if (!authed) {
+  if (!authed && !authLoading) {
     return <LoginScreen onLoggedIn={() => dispatch({ authed: true })} />;
   }
+
+  const showLoadingOverlay = authLoading || (loading && zones.length === 0);
+  const loadingMessage = authLoading ? "Checking authentication..." : dataStatus;
 
   return (
     <div
@@ -265,7 +271,9 @@ function App() {
         </div>
       )}
       <div className="flex-1 flex overflow-hidden bg-gray-50 dark:bg-noc-bg">
-        {focusZoneIds ? (
+        {showLoadingOverlay ? (
+          <LoadingOverlay message={loadingMessage} />
+        ) : focusZoneIds ? (
           <div className="flex-1 relative">
             <button
               onClick={() => history.back()}
@@ -302,12 +310,8 @@ function App() {
           <RulePanel
             key={`${selectedPair.source_zone_id}-${selectedPair.destination_zone_id}`}
             pair={selectedPair}
-            sourceZoneName={
-              zoneNameMap.get(selectedPair.source_zone_id) ?? "Unknown"
-            }
-            destZoneName={
-              zoneNameMap.get(selectedPair.destination_zone_id) ?? "Unknown"
-            }
+            sourceZoneName={getZoneName(selectedPair.source_zone_id)}
+            destZoneName={getZoneName(selectedPair.destination_zone_id)}
             aiConfigured={aiConfigured}
             onClose={() => dispatch({ selectedPair: null })}
             onRuleUpdated={refresh}

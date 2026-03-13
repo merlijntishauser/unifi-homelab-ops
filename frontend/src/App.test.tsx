@@ -168,16 +168,17 @@ describe("App", () => {
       model: "",
       provider_type: "",
       has_key: false,
+      key_source: "none",
       source: "none",
     });
     mockGetZoneFilter.mockResolvedValue({ hidden_zone_ids: [] });
     vi.mocked(api.saveZoneFilter).mockResolvedValue({ status: "ok" });
   });
 
-  it("shows loading spinner initially", () => {
+  it("shows loading spinner with status while authenticating", () => {
     mockGetAuthStatus.mockReturnValue(new Promise(() => {}));
     render(<App />);
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByText("Checking authentication...")).toBeInTheDocument();
   });
 
   it("shows login screen when not authenticated", async () => {
@@ -766,6 +767,7 @@ describe("App", () => {
       model: "",
       provider_type: "",
       has_key: true,
+      key_source: "none",
       source: "none",
     });
     mockGetZones.mockResolvedValue(testZones);

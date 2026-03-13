@@ -144,7 +144,7 @@ async def test_test_connection_provider_error(client: AsyncClient) -> None:
     ):
         resp = await client.post("/api/settings/ai/test")
     assert resp.status_code == 502
-    assert "Connection failed" in resp.json()["detail"]
+    assert "Connection to provider failed" in resp.json()["detail"]
 
 
 @pytest.mark.anyio

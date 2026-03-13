@@ -10,6 +10,7 @@ from httpx import AsyncClient
 
 from app.main import (
     HealthcheckAccessFilter,
+    _check_plaintext_db_key,
     _configure_access_log_filters,
     _get_app_access_url,
     _get_frontend_dist_dir,
@@ -139,6 +140,63 @@ def test_log_startup_banner_logs_ascii_art(monkeypatch: pytest.MonkeyPatch) -> N
     assert any("http://localhost:8081" in line for line in logged_lines)
     assert any("/api/health" in line for line in logged_lines)
     assert any("DEBUG" in line for line in logged_lines)
+    assert any("disabled" in line for line in logged_lines)
+
+
+def test_log_startup_banner_shows_auth_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ACCESS_URL", "http://localhost:8081")
+    with patch("app.main.app_settings") as mock_settings:
+        mock_settings.app_password = "secret"
+        with patch("app.main.startup_logger.info") as mock_info:
+            _log_startup_banner()
+
+    logged_lines = [call.args[0] for call in mock_info.call_args_list]
+    assert any("enabled" in line for line in logged_lines)
+
+
+def test_check_plaintext_db_key_warns_when_key_in_db(tmp_path: Path) -> None:
+    from app.database import init_db
+    from app.services.ai_settings import save_ai_config
+
+    db_path = tmp_path / "test.db"
+    init_db(db_path)
+    save_ai_config(db_path, "https://api.openai.com/v1", "sk-secret", "gpt-4o", "openai")
+
+    with (
+        patch("app.main.app_settings") as mock_settings,
+        patch("app.main.DEFAULT_DB_PATH", db_path),
+        patch("app.main.startup_logger.warning") as mock_warn,
+    ):
+        mock_settings.app_password = "secret"
+        _check_plaintext_db_key()
+    mock_warn.assert_called_once()
+    assert "plaintext" in mock_warn.call_args[0][0].lower()
+
+
+def test_check_plaintext_db_key_silent_without_app_password() -> None:
+    with (
+        patch("app.main.app_settings") as mock_settings,
+        patch("app.main.startup_logger.warning") as mock_warn,
+    ):
+        mock_settings.app_password = ""
+        _check_plaintext_db_key()
+    mock_warn.assert_not_called()
+
+
+def test_check_plaintext_db_key_silent_when_no_key_in_db(tmp_path: Path) -> None:
+    from app.database import init_db
+
+    db_path = tmp_path / "test.db"
+    init_db(db_path)
+
+    with (
+        patch("app.main.app_settings") as mock_settings,
+        patch("app.main.DEFAULT_DB_PATH", db_path),
+        patch("app.main.startup_logger.warning") as mock_warn,
+    ):
+        mock_settings.app_password = "secret"
+        _check_plaintext_db_key()
+    mock_warn.assert_not_called()
 
 
 @pytest.mark.anyio

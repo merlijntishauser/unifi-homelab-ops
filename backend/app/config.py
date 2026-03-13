@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     unifi_user: str = ""
     unifi_pass: str = ""
     unifi_verify_ssl: bool = False
+    app_password: str = ""
+    app_session_ttl: int = 86400  # 24 hours in seconds
 
     model_config = {"env_file": ".env"}
 

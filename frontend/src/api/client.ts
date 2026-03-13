@@ -5,6 +5,7 @@ import type {
   AiConfig,
   AiConfigInput,
   AiPreset,
+  AppAuthStatus,
   AuthStatus,
   Rule,
   SimulateRequest,
@@ -29,6 +30,12 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getAppAuthStatus: () => fetchJson<AppAuthStatus>("/auth/app-status"),
+  appLogin: (password: string) =>
+    fetchJson("/auth/app-login", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
   getAuthStatus: () => fetchJson<AuthStatus>("/auth/status"),
   login: (
     url: string,

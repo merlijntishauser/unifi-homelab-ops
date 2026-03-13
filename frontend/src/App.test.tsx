@@ -6,6 +6,8 @@ import type { Zone, ZonePair } from "./api/types";
 // Mock the api client
 vi.mock("./api/client", () => ({
   api: {
+    getAppAuthStatus: vi.fn(),
+    appLogin: vi.fn(),
     getAuthStatus: vi.fn(),
     logout: vi.fn(),
     login: vi.fn(),
@@ -27,6 +29,7 @@ vi.mock("./api/client", () => ({
 
 import { api } from "./api/client";
 
+const mockGetAppAuthStatus = vi.mocked(api.getAppAuthStatus);
 const mockGetAuthStatus = vi.mocked(api.getAuthStatus);
 const mockLogout = vi.mocked(api.logout);
 const mockGetZones = vi.mocked(api.getZones);
@@ -159,6 +162,7 @@ describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    mockGetAppAuthStatus.mockResolvedValue({ required: false, authenticated: false });
     mockGetAiConfig.mockResolvedValue({
       base_url: "",
       model: "",

@@ -5,6 +5,7 @@ import type { ZonePair } from "./api/types";
 import { useFirewallData } from "./hooks/useFirewallData";
 import LoginScreen from "./components/LoginScreen";
 import MatrixSidebar from "./components/MatrixSidebar";
+import PassphraseScreen from "./components/PassphraseScreen";
 import SettingsModal from "./components/SettingsModal";
 import Toolbar from "./components/Toolbar";
 import ZoneGraph from "./components/ZoneGraph";
@@ -24,6 +25,8 @@ interface AiInfo {
 }
 
 interface AppState {
+  appAuthRequired: boolean;
+  appAuthenticated: boolean;
   authed: boolean;
   authLoading: boolean;
   colorMode: ColorMode;
@@ -38,6 +41,8 @@ interface AppState {
 }
 
 const initialAppState: AppState = {
+  appAuthRequired: false,
+  appAuthenticated: false,
   authed: false,
   authLoading: true,
   colorMode: "dark" as ColorMode,
@@ -66,7 +71,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 function App() {
   const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
-  const { authed, authLoading, colorMode, showHidden, selectedPair, focusZoneIds, settingsOpen, aiConfigured, connectionInfo, aiInfo, hiddenZoneIds } = state;
+  const { appAuthRequired, appAuthenticated, authed, authLoading, colorMode, showHidden, selectedPair, focusZoneIds, settingsOpen, aiConfigured, connectionInfo, aiInfo, hiddenZoneIds } = state;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", colorMode === "dark");
@@ -91,7 +96,7 @@ function App() {
 
   const saveTimerRef = useRef<number | undefined>(undefined);
 
-  useEffect(() => {
+  const checkUnifiAuth = useCallback(() => {
     api
       .getAuthStatus()
       .then((status) => {
@@ -111,6 +116,23 @@ function App() {
         dispatch({ authLoading: false });
       });
   }, [refreshAiConfig, refreshZoneFilter]);
+
+  useEffect(() => {
+    api
+      .getAppAuthStatus()
+      .then((appAuth) => {
+        dispatch({ appAuthRequired: appAuth.required, appAuthenticated: appAuth.authenticated });
+        if (!appAuth.required || appAuth.authenticated) {
+          checkUnifiAuth();
+        } else {
+          dispatch({ authLoading: false });
+        }
+      })
+      .catch(() => {
+        // If app-status fails, proceed without app auth
+        checkUnifiAuth();
+      });
+  }, [checkUnifiAuth]);
 
   // Keep selectedPair in sync when zonePairs refreshes (e.g. after toggle/reorder)
   useEffect(() => {
@@ -200,6 +222,17 @@ function App() {
       <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-noc-bg text-gray-400 dark:text-noc-text-secondary font-body">
         Loading...
       </div>
+    );
+  }
+
+  if (appAuthRequired && !appAuthenticated) {
+    return (
+      <PassphraseScreen
+        onAuthenticated={() => {
+          dispatch({ appAuthenticated: true, authLoading: true });
+          checkUnifiAuth();
+        }}
+      />
     );
   }
 

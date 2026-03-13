@@ -157,3 +157,8 @@ export interface AuthStatus {
 export interface ZoneFilter {
   hidden_zone_ids: string[];
 }
+
+export interface AppAuthStatus {
+  required: boolean;
+  authenticated: boolean;
+}

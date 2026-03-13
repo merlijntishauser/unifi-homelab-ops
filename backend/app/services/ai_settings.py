@@ -1,10 +1,13 @@
 """AI configuration storage and retrieval."""
 
+import logging
 import os
 import sqlite3
 from pathlib import Path
 
 from app.database import get_connection
+
+logger = logging.getLogger(__name__)
 
 
 def get_ai_config(db_path: Path) -> dict[str, object] | None:
@@ -15,6 +18,7 @@ def get_ai_config(db_path: Path) -> dict[str, object] | None:
     provider_type = os.environ.get("AI_PROVIDER_TYPE", "openai")
 
     if base_url and api_key and model:
+        logger.debug("AI config from env: provider=%s, model=%s", provider_type, model)
         return {
             "base_url": base_url,
             "model": model,
@@ -29,8 +33,10 @@ def get_ai_config(db_path: Path) -> dict[str, object] | None:
     conn.close()
 
     if row is None:
+        logger.debug("No AI config found in env or db")
         return None
 
+    logger.debug("AI config from db: provider=%s, model=%s", row["provider_type"], row["model"])
     return {
         "base_url": row["base_url"],
         "model": row["model"],
@@ -48,6 +54,7 @@ def get_full_ai_config(db_path: Path) -> dict[str, str] | None:
     provider_type = os.environ.get("AI_PROVIDER_TYPE", "openai")
 
     if base_url and api_key and model:
+        logger.debug("Full AI config from env: provider=%s, model=%s", provider_type, model)
         return {
             "base_url": base_url,
             "api_key": api_key,
@@ -61,8 +68,10 @@ def get_full_ai_config(db_path: Path) -> dict[str, str] | None:
     conn.close()
 
     if row is None:
+        logger.debug("No full AI config found")
         return None
 
+    logger.debug("Full AI config from db: provider=%s, model=%s", row["provider_type"], row["model"])
     return {
         "base_url": row["base_url"],
         "api_key": row["api_key"],
@@ -73,6 +82,7 @@ def get_full_ai_config(db_path: Path) -> dict[str, str] | None:
 
 def save_ai_config(db_path: Path, base_url: str, api_key: str, model: str, provider_type: str) -> None:
     """Save AI config (upsert)."""
+    logger.debug("Saving AI config: provider=%s, model=%s, base_url=%s", provider_type, model, base_url)
     conn = get_connection(db_path)
     conn.execute(
         """INSERT INTO ai_config (id, base_url, api_key, model, provider_type)
@@ -90,6 +100,7 @@ def save_ai_config(db_path: Path, base_url: str, api_key: str, model: str, provi
 
 def delete_ai_config(db_path: Path) -> None:
     """Delete AI config."""
+    logger.debug("Deleting AI config")
     conn = get_connection(db_path)
     conn.execute("DELETE FROM ai_config WHERE id = 1")
     conn.commit()

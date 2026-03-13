@@ -58,18 +58,21 @@ def _get_app_access_url() -> str:
 
 
 def _log_startup_banner() -> None:
-    if not _is_enabled(os.environ.get("SHOW_STARTUP_BANNER")):
-        return
-
     app_url = _get_app_access_url()
-    banner_lines = [
-        "============================================================",
-        "UniFi Firewall Analyser",
-        f"App URL:    {app_url}",
-        f"Health URL: {app_url}/api/health",
-        "============================================================",
-    ]
-    for line in banner_lines:
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    banner = f"""\
+    __  __      _ _______ _
+   / / / /___  (_) ____(_) |
+  / / / / __ \\/ / /_  / /| |
+ / /_/ / / / / / __/ / / | |
+ \\____/_/ /_/_/_/   /_/  |_|
+  Firewall Analyser
+
+  App:       {app_url}
+  Health:    {app_url}/api/health
+  Log level: {log_level}
+"""
+    for line in banner.splitlines():
         startup_logger.info(line)
 
 

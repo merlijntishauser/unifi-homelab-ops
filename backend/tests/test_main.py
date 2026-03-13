@@ -127,26 +127,18 @@ def test_configure_access_log_filters_only_when_enabled(monkeypatch: pytest.Monk
         access_logger.filters.extend(original_filters)
 
 
-def test_log_startup_banner_logs_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("SHOW_STARTUP_BANNER", "true")
+def test_log_startup_banner_logs_ascii_art(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("APP_ACCESS_URL", "http://localhost:8081")
+    monkeypatch.setenv("LOG_LEVEL", "DEBUG")
 
     with patch("app.main.startup_logger.info") as mock_info:
         _log_startup_banner()
 
     logged_lines = [call.args[0] for call in mock_info.call_args_list]
-    assert any("UniFi Firewall Analyser" in line for line in logged_lines)
+    assert any("Firewall Analyser" in line for line in logged_lines)
     assert any("http://localhost:8081" in line for line in logged_lines)
     assert any("/api/health" in line for line in logged_lines)
-
-
-def test_log_startup_banner_does_not_log_when_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("SHOW_STARTUP_BANNER", raising=False)
-
-    with patch("app.main.startup_logger.info") as mock_info:
-        _log_startup_banner()
-
-    mock_info.assert_not_called()
+    assert any("DEBUG" in line for line in logged_lines)
 
 
 @pytest.mark.anyio

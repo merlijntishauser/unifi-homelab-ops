@@ -1,5 +1,7 @@
 """Settings router for AI configuration management."""
 
+import logging
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -10,6 +12,8 @@ from app.services.ai_settings import (
     get_full_ai_config,
     save_ai_config,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -43,6 +47,7 @@ class AiConfigInput(BaseModel):
 @router.get("/ai")
 async def get_config() -> dict[str, object]:
     config = get_ai_config(DEFAULT_DB_PATH)
+    logger.debug("Get AI config: source=%s", config.get("source") if config else "none")
     if config is None:
         return {"source": "none", "has_key": False, "base_url": "", "model": "", "provider_type": ""}
     return config
@@ -50,12 +55,14 @@ async def get_config() -> dict[str, object]:
 
 @router.put("/ai")
 async def save_config(body: AiConfigInput) -> dict[str, str]:
+    logger.debug("Save AI config: provider=%s, model=%s, base_url=%s", body.provider_type, body.model, body.base_url)
     save_ai_config(DEFAULT_DB_PATH, body.base_url, body.api_key, body.model, body.provider_type)
     return {"status": "ok"}
 
 
 @router.delete("/ai")
 async def delete_config() -> dict[str, str]:
+    logger.debug("Delete AI config")
     delete_ai_config(DEFAULT_DB_PATH)
     return {"status": "ok"}
 
@@ -73,6 +80,7 @@ async def test_connection() -> dict[str, str]:
     model = full_config["model"]
     provider_type = full_config["provider_type"]
 
+    logger.debug("Testing AI connection: provider=%s, model=%s", provider_type, model)
     try:
         if provider_type == "anthropic":
             resp = httpx.post(
@@ -105,15 +113,19 @@ async def test_connection() -> dict[str, str]:
             )
         resp.raise_for_status()
     except httpx.HTTPStatusError as e:
+        logger.debug("AI test failed: provider returned %s", e.response.status_code)
         raise HTTPException(
             status_code=502,
             detail=f"Provider returned {e.response.status_code}: {e.response.text[:200]}",
         ) from e
     except httpx.ConnectError as e:
+        logger.debug("AI test failed: connection error: %s", e)
         raise HTTPException(status_code=502, detail=f"Connection failed: {e}") from e
     except httpx.TimeoutException as e:
+        logger.debug("AI test failed: timeout")
         raise HTTPException(status_code=504, detail="Connection timed out") from e
 
+    logger.debug("AI test connection succeeded")
     return {"status": "ok"}
 
 

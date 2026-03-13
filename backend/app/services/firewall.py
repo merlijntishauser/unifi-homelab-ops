@@ -138,7 +138,10 @@ def get_zones(credentials: UnifiCredentials) -> list[Zone]:
     raw_zones = fetch_firewall_zones(config, site=credentials.site)
     zones = normalize_firewall_zones(raw_zones)
     network_lookup = _build_network_lookup(config)
-    return [_zone_to_model(z, network_lookup) for z in zones]
+    logger.debug("Fetched %d networks", len(network_lookup))
+    result = [_zone_to_model(z, network_lookup) for z in zones]
+    logger.debug("Fetched %d zones: %s", len(result), [z.name for z in result])
+    return result
 
 
 def get_rules(credentials: UnifiCredentials) -> list[Rule]:
@@ -147,7 +150,10 @@ def get_rules(credentials: UnifiCredentials) -> list[Rule]:
     raw_policies = fetch_firewall_policies(config, site=credentials.site)
     policies = normalize_firewall_policies(raw_policies)
     group_lookup = _build_group_lookup(config)
-    return [_policy_to_rule(p, group_lookup) for p in policies]
+    logger.debug("Fetched %d groups", len(group_lookup))
+    rules = [_policy_to_rule(p, group_lookup) for p in policies]
+    logger.debug("Fetched %d rules", len(rules))
+    return rules
 
 
 def get_zone_pairs(credentials: UnifiCredentials) -> list[ZonePair]:
@@ -185,4 +191,5 @@ def get_zone_pairs(credentials: UnifiCredentials) -> list[ZonePair]:
                 analysis=analysis,
             )
         )
+    logger.debug("Built %d zone pairs", len(result))
     return result

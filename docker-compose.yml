@@ -5,6 +5,7 @@ services:
       - "8001:8000"
     volumes:
       - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
       - ./backend/tests:/app/tests
       - ./data:/app/data
     env_file:

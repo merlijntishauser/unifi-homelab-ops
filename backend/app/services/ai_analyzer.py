@@ -148,14 +148,17 @@ async def analyze_with_ai(
     """Analyze rules with AI. Returns findings or empty list on error."""
     config = get_full_ai_config(db_path)
     if config is None:
+        logger.debug("No AI config found, skipping analysis")
         return []
 
     cache_key = _build_cache_key(rules)
     zone_pair_key = f"{src_zone_name}->{dst_zone_name}"
+    logger.debug("AI analysis for %s (cache_key=%s)", zone_pair_key, cache_key[:12])
 
     # Check cache
     cached = _get_cached(db_path, cache_key)
     if cached is not None:
+        logger.debug("Cache hit for %s (%d findings)", zone_pair_key, len(cached))
         return [
             FindingModel(
                 id=f"ai-{i}",
@@ -173,6 +176,7 @@ async def analyze_with_ai(
 
     try:
         provider_type = config.get("provider_type", "openai")
+        logger.debug("Calling %s API (model=%s)", provider_type, config.get("model"))
         if provider_type == "anthropic":
             response_text = _call_anthropic(
                 config["base_url"],
@@ -191,6 +195,7 @@ async def analyze_with_ai(
             )
 
         raw_findings = _parse_findings(response_text)
+        logger.debug("AI returned %d findings for %s", len(raw_findings), zone_pair_key)
         _save_cache(db_path, cache_key, zone_pair_key, raw_findings)
 
         return [

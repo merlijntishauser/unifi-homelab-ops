@@ -11,6 +11,7 @@ services:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
 
   frontend:
     build: ./frontend

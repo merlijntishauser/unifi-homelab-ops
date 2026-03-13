@@ -5,9 +5,12 @@ to determine the verdict for a simulated packet.
 """
 
 import ipaddress
+import logging
 from dataclasses import dataclass, field
 
 from app.models import Rule, Zone
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -43,6 +46,7 @@ def resolve_zone(ip: str, zones: list[Zone]) -> str | None:
     try:
         addr = ipaddress.ip_address(ip)
     except ValueError:
+        logger.debug("Invalid IP address: %s", ip)
         return None
 
     for zone in zones:
@@ -54,8 +58,10 @@ def resolve_zone(ip: str, zones: list[Zone]) -> str | None:
             except ValueError:
                 continue
             if addr in net:
+                logger.debug("Resolved %s -> zone %s (network %s)", ip, zone.name, network.subnet)
                 return zone.id
 
+    logger.debug("Could not resolve %s to any zone", ip)
     return None
 
 
@@ -215,6 +221,10 @@ def evaluate_rules(
     """
     evaluations: list[RuleEvaluation] = []
     sorted_rules = sorted(rules, key=lambda r: r.index)
+    logger.debug(
+        "Evaluating %d rules for %s -> %s (proto=%s, port=%s, src_ip=%s, dst_ip=%s, src_port=%s)",
+        len(sorted_rules), source_zone_id, destination_zone_id, protocol, port, source_ip, destination_ip, source_port,
+    )
 
     for rule in sorted_rules:
         # Only consider rules for this zone pair
@@ -236,6 +246,7 @@ def evaluate_rules(
         result = _match_rule(rule, protocol, port, source_ip, destination_ip, source_port)
 
         if result.all_match:
+            logger.debug("Rule '%s' matched -> %s", rule.name, rule.action)
             unresolvable = _collect_unresolvable(rule)
             evaluations.append(
                 RuleEvaluation(
@@ -270,6 +281,7 @@ def evaluate_rules(
             )
 
     # No rule matched -- default deny
+    logger.debug("No rule matched, applying default deny")
     assumptions = _gather_assumptions(evaluations)
     return SimulationResult(
         source_zone_id=source_zone_id,

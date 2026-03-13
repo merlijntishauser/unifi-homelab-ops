@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -5,6 +7,8 @@ from app.config import get_unifi_config, has_credentials
 from app.models import Rule, ZonePair
 from app.services.firewall import get_rules, get_zone_pairs
 from app.services.firewall_writer import WriteError, swap_policy_order, toggle_policy
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["rules"])
 
@@ -50,10 +54,13 @@ async def toggle_rule(rule_id: str, body: ToggleRequest) -> dict[str, str]:
 
     credentials = get_unifi_config()
     assert credentials is not None
+    logger.debug("Toggle rule %s -> enabled=%s", rule_id, body.enabled)
     try:
         toggle_policy(credentials, rule_id, enabled=body.enabled)
     except WriteError as exc:
+        logger.debug("Toggle rule %s failed: %s", rule_id, exc)
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+    logger.debug("Toggle rule %s succeeded", rule_id)
     return {"status": "ok"}
 
 
@@ -69,8 +76,11 @@ async def reorder_rules(body: SwapOrderRequest) -> dict[str, str]:
 
     credentials = get_unifi_config()
     assert credentials is not None
+    logger.debug("Reorder rules: %s <-> %s", body.policy_id_a, body.policy_id_b)
     try:
         swap_policy_order(credentials, body.policy_id_a, body.policy_id_b)
     except WriteError as exc:
+        logger.debug("Reorder failed: %s", exc)
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+    logger.debug("Reorder succeeded")
     return {"status": "ok"}

@@ -1,7 +1,9 @@
+import hmac
 import logging
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.config import (
@@ -9,7 +11,10 @@ from app.config import (
     get_credential_source,
     get_unifi_config,
     set_runtime_credentials,
+    settings,
 )
+from app.middleware import COOKIE_NAME, create_session_cookie, verify_session_cookie
+from app.models import AppAuthStatus, AppLoginInput
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +44,41 @@ class AuthStatusResponse(BaseModel):
     source: Literal["env", "runtime", "none"]
     url: str
     username: str
+
+
+@router.post("/app-login")
+async def app_login(body: AppLoginInput) -> JSONResponse:
+    secret = settings.app_password
+    if not secret:
+        return JSONResponse(status_code=400, content={"detail": "App auth is not enabled"})
+
+    if not hmac.compare_digest(body.password.encode(), secret.encode()):
+        logger.debug("App login failed: wrong password")
+        return JSONResponse(status_code=401, content={"detail": "Invalid password"})
+
+    cookie_value, max_age = create_session_cookie(secret, settings.app_session_ttl)
+    logger.debug("App login succeeded")
+    response = JSONResponse(content={"status": "ok"})
+    response.set_cookie(
+        COOKIE_NAME,
+        cookie_value,
+        httponly=True,
+        samesite="strict",
+        max_age=max_age,
+        path="/",
+    )
+    return response
+
+
+@router.get("/app-status")
+async def app_status(request: Request) -> AppAuthStatus:
+    secret = settings.app_password
+    if not secret:
+        return AppAuthStatus(required=False, authenticated=False)
+
+    cookie = request.cookies.get(COOKIE_NAME)
+    authenticated = bool(cookie and verify_session_cookie(cookie, secret, settings.app_session_ttl))
+    return AppAuthStatus(required=True, authenticated=authenticated)
 
 
 @router.post("/login")

@@ -22,6 +22,66 @@ def db_path(tmp_path: Path) -> Path:
     return path
 
 
+class TestAiKeyFile:
+    def test_reads_key_from_file(self, db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        key_file = tmp_path / "ai_key.txt"
+        key_file.write_text("sk-from-file\n")
+        monkeypatch.setenv("AI_BASE_URL", "https://api.openai.com/v1")
+        monkeypatch.setenv("AI_API_KEY_FILE", str(key_file))
+        monkeypatch.setenv("AI_MODEL", "gpt-4o")
+        monkeypatch.delenv("AI_API_KEY", raising=False)
+
+        result = get_full_ai_config(db_path)
+        assert result is not None
+        assert result["api_key"] == "sk-from-file"
+
+    def test_env_var_takes_priority_over_file(self, db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        key_file = tmp_path / "ai_key.txt"
+        key_file.write_text("sk-from-file")
+        monkeypatch.setenv("AI_BASE_URL", "https://api.openai.com/v1")
+        monkeypatch.setenv("AI_API_KEY", "sk-from-env")
+        monkeypatch.setenv("AI_API_KEY_FILE", str(key_file))
+        monkeypatch.setenv("AI_MODEL", "gpt-4o")
+
+        result = get_full_ai_config(db_path)
+        assert result is not None
+        assert result["api_key"] == "sk-from-env"
+
+    def test_missing_file_falls_through_to_db(self, db_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AI_BASE_URL", "https://api.openai.com/v1")
+        monkeypatch.setenv("AI_API_KEY_FILE", "/nonexistent/path")
+        monkeypatch.setenv("AI_MODEL", "gpt-4o")
+        monkeypatch.delenv("AI_API_KEY", raising=False)
+
+        save_ai_config(db_path, "https://api.openai.com/v1", "sk-from-db", "gpt-4o", "openai")
+        result = get_full_ai_config(db_path)
+        assert result is not None
+        assert result["api_key"] == "sk-from-db"
+
+    def test_file_key_used_in_public_config(self, db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        key_file = tmp_path / "ai_key.txt"
+        key_file.write_text("sk-from-file")
+        monkeypatch.setenv("AI_BASE_URL", "https://api.openai.com/v1")
+        monkeypatch.setenv("AI_API_KEY_FILE", str(key_file))
+        monkeypatch.setenv("AI_MODEL", "gpt-4o")
+        monkeypatch.delenv("AI_API_KEY", raising=False)
+
+        result = get_ai_config(db_path)
+        assert result is not None
+        assert result["has_key"] is True
+        assert result["source"] == "env"
+
+    def test_no_file_env_var_returns_empty(self, db_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AI_API_KEY_FILE", raising=False)
+        monkeypatch.delenv("AI_API_KEY", raising=False)
+        monkeypatch.setenv("AI_BASE_URL", "https://api.openai.com/v1")
+        monkeypatch.setenv("AI_MODEL", "gpt-4o")
+
+        result = get_ai_config(db_path)
+        # No env key, no file, no db -- should be None
+        assert result is None
+
+
 class TestGetAiConfig:
     def test_returns_none_when_no_config(self, db_path: Path) -> None:
         result = get_ai_config(db_path)

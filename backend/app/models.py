@@ -84,3 +84,12 @@ class ZonePair(BaseModel):
     allow_count: int
     block_count: int
     analysis: ZonePairAnalysis | None = None
+
+
+class AppLoginInput(BaseModel):
+    password: str
+
+
+class AppAuthStatus(BaseModel):
+    required: bool
+    authenticated: bool

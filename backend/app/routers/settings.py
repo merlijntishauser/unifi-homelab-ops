@@ -119,14 +119,14 @@ async def test_connection() -> dict[str, str]:
             )
         resp.raise_for_status()
     except httpx.HTTPStatusError as e:
-        logger.debug("AI test failed: provider returned %s", e.response.status_code)
+        logger.debug("AI test failed: provider returned %s: %s", e.response.status_code, e.response.text[:200])
         raise HTTPException(
             status_code=502,
-            detail=f"Provider returned {e.response.status_code}: {e.response.text[:200]}",
+            detail=f"Provider returned HTTP {e.response.status_code}",
         ) from e
     except httpx.ConnectError as e:
         logger.debug("AI test failed: connection error: %s", e)
-        raise HTTPException(status_code=502, detail=f"Connection failed: {e}") from e
+        raise HTTPException(status_code=502, detail="Connection to provider failed") from e
     except httpx.TimeoutException as e:
         logger.debug("AI test failed: timeout")
         raise HTTPException(status_code=504, detail="Connection timed out") from e

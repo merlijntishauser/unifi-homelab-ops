@@ -10,10 +10,27 @@ from app.database import get_connection
 logger = logging.getLogger(__name__)
 
 
+def _read_key_from_file() -> str:
+    """Read AI API key from file path specified in AI_API_KEY_FILE env var."""
+    key_file = os.environ.get("AI_API_KEY_FILE")
+    if not key_file:
+        return ""
+    try:
+        return Path(key_file).read_text().strip()
+    except OSError:
+        logger.warning("Could not read AI_API_KEY_FILE at %s", key_file)
+        return ""
+
+
+def _get_env_api_key() -> str:
+    """Get AI API key from env var or file, with env var taking priority."""
+    return os.environ.get("AI_API_KEY") or _read_key_from_file()
+
+
 def get_ai_config(db_path: Path) -> dict[str, object] | None:
     """Get AI config. Returns dict with has_key (bool) instead of actual key, plus source field."""
     base_url = os.environ.get("AI_BASE_URL")
-    api_key = os.environ.get("AI_API_KEY")
+    api_key = _get_env_api_key()
     model = os.environ.get("AI_MODEL")
     provider_type = os.environ.get("AI_PROVIDER_TYPE", "openai")
 
@@ -49,7 +66,7 @@ def get_ai_config(db_path: Path) -> dict[str, object] | None:
 def get_full_ai_config(db_path: Path) -> dict[str, str] | None:
     """Get full AI config including API key (for internal use only)."""
     base_url = os.environ.get("AI_BASE_URL")
-    api_key = os.environ.get("AI_API_KEY")
+    api_key = _get_env_api_key()
     model = os.environ.get("AI_MODEL")
     provider_type = os.environ.get("AI_PROVIDER_TYPE", "openai")
 

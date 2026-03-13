@@ -50,6 +50,27 @@ describe("api client", () => {
     });
   });
 
+  describe("getAppAuthStatus", () => {
+    it("fetches app auth status from correct endpoint", async () => {
+      const data = { required: true, authenticated: false };
+      mockFetch.mockResolvedValue(mockOkResponse(data));
+      const result = await api.getAppAuthStatus();
+      expect(result).toEqual(data);
+      expect(mockFetch).toHaveBeenCalledWith("/api/auth/app-status", expect.objectContaining({}));
+    });
+  });
+
+  describe("appLogin", () => {
+    it("sends POST with password", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ status: "ok" }));
+      await api.appLogin("my-password");
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/auth/app-login");
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(init.body)).toEqual({ password: "my-password" });
+    });
+  });
+
   describe("getAuthStatus", () => {
     it("calls the correct endpoint", async () => {
       const data = { configured: true, source: "env", url: "https://example.com" };

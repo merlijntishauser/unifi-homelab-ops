@@ -55,4 +55,4 @@ async def test_zones_unifi_api_error_returns_502(client: AsyncClient) -> None:
     with patch("app.services.firewall.fetch_firewall_zones", side_effect=UnifiApiError("HTTP 404")):
         resp = await client.get("/api/zones")
     assert resp.status_code == 502
-    assert "HTTP 404" in resp.json()["detail"]
+    assert resp.json()["detail"] == "Failed to communicate with UniFi controller"

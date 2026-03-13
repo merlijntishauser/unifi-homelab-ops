@@ -9,7 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from unifi_topology.adapters.unifi_api import UnifiApiError
 
+from app.config import settings as app_settings
 from app.database import DEFAULT_DB_PATH, init_db
+from app.middleware import AppAuthMiddleware
 from app.routers.analyze import router as analyze_router
 from app.routers.auth import router as auth_router
 from app.routers.rules import router as rules_router
@@ -57,9 +59,29 @@ def _get_app_access_url() -> str:
     return f"http://localhost:{port}"
 
 
+def _check_plaintext_db_key() -> None:
+    """Warn if AI API key is stored in plaintext DB while app auth is enabled."""
+    if not app_settings.app_password:
+        return
+    import sqlite3
+    if not DEFAULT_DB_PATH.exists():
+        return
+    try:
+        conn = sqlite3.connect(DEFAULT_DB_PATH)
+        row = conn.execute("SELECT api_key FROM ai_config WHERE id = 1").fetchone()
+        conn.close()
+        if row and row[0]:
+            startup_logger.warning(
+                "AI API key stored in plaintext database. In production, use AI_API_KEY env var instead."
+            )
+    except sqlite3.OperationalError:
+        pass
+
+
 def _log_startup_banner() -> None:
     app_url = _get_app_access_url()
     log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    auth_status = "enabled" if app_settings.app_password else "disabled"
     banner = f"""\
     __  __      _ _______ _
    / / / /___  (_) ____(_) |
@@ -71,6 +93,7 @@ def _log_startup_banner() -> None:
   App:       {app_url}
   Health:    {app_url}/api/health
   Log level: {log_level}
+  App auth:  {auth_status}
 """
     for line in banner.splitlines():
         startup_logger.info(line)
@@ -115,6 +138,7 @@ def _get_frontend_response(frontend_path: str) -> FileResponse | None:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     init_db(DEFAULT_DB_PATH)
     _log_startup_banner()
+    _check_plaintext_db_key()
     yield
 
 
@@ -126,19 +150,24 @@ logging.getLogger("app").setLevel(getattr(logging, _log_level, logging.INFO))
 
 app = FastAPI(title="UniFi Firewall Analyser", lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(AppAuthMiddleware)
+
+# Only add CORS in dev mode (Vite on separate port). In production the frontend
+# is served from the same origin so cross-origin requests don't occur.
+if not os.environ.get("FRONTEND_DIST_DIR"):
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "http://localhost:5174"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.exception_handler(UnifiApiError)
 async def unifi_api_error_handler(request: Request, exc: UnifiApiError) -> JSONResponse:
     logger.error("UniFi API error: %s", exc)
-    return JSONResponse(status_code=502, content={"detail": str(exc)})
+    return JSONResponse(status_code=502, content={"detail": "Failed to communicate with UniFi controller"})
 
 app.include_router(analyze_router)
 app.include_router(auth_router)

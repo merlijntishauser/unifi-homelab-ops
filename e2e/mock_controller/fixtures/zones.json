@@ -1,0 +1,6 @@
+[
+  {"_id": "zone-external", "name": "External", "networkIds": []},
+  {"_id": "zone-internal", "name": "Internal", "networkIds": ["net-lan"]},
+  {"_id": "zone-guest", "name": "Guest", "networkIds": ["net-guest"]},
+  {"_id": "zone-iot", "name": "IoT", "networkIds": ["net-iot"]}
+]

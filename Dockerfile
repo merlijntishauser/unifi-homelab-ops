@@ -25,6 +25,7 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY backend/app ./app
+COPY backend/alembic ./alembic
 
 
 FROM python:3.13-slim AS runtime
@@ -42,6 +43,7 @@ RUN groupadd --system appuser && useradd --system --gid appuser --create-home ap
 
 COPY --from=backend-build --chown=appuser:appuser /app/backend/.venv /app/backend/.venv
 COPY --from=backend-build --chown=appuser:appuser /app/backend/app /app/backend/app
+COPY --from=backend-build --chown=appuser:appuser /app/backend/alembic /app/backend/alembic
 COPY --from=frontend-build --chown=appuser:appuser /app/frontend/dist /app/frontend/dist
 
 RUN mkdir -p /data && chown appuser:appuser /data

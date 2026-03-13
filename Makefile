@@ -1,4 +1,4 @@
-.PHONY: up down build build-prod build-prod-alpine run-prod run-prod-alpine smoke-prod smoke-prod-alpine quality complexity test react-doctor backend-install frontend-install ci help
+.PHONY: up down build build-prod build-prod-alpine run-prod run-prod-alpine smoke-prod smoke-prod-alpine quality complexity test react-doctor backend-install frontend-install ci e2e e2e-headed e2e-prod e2e-prod-up e2e-prod-down help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
@@ -60,6 +60,18 @@ e2e: ## Run Playwright e2e tests (starts Vite dev server automatically)
 
 e2e-headed: ## Run e2e tests with visible browser
 	cd frontend && npx playwright test --headed
+
+e2e-prod-up: build-prod ## Start production e2e stack (mock controller + prod image)
+	docker compose -f docker-compose.e2e.yml up -d --build --wait
+
+e2e-prod-down: ## Stop production e2e stack
+	docker compose -f docker-compose.e2e.yml down
+
+e2e-prod: e2e-prod-up ## Run production e2e tests against real Docker image
+	cd frontend && npx playwright test --config playwright.e2e-prod.config.ts; \
+	result=$$?; \
+	cd .. && docker compose -f docker-compose.e2e.yml down; \
+	exit $$result
 
 ci: ## Run all CI checks locally
 	@./scripts/ci-checks.sh

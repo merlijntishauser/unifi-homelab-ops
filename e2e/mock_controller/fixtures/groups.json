@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "group-dns-ports",
+    "name": "DNS Ports",
+    "group_type": "port-group",
+    "group_members": ["53"]
+  },
+  {
+    "_id": "group-dns-servers",
+    "name": "DNS Servers",
+    "group_type": "address-group",
+    "group_members": ["1.1.1.1", "8.8.8.8"]
+  }
+]

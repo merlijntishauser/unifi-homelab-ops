@@ -1,0 +1,24 @@
+[
+  {"_id": "net-wan", "name": "WAN", "purpose": "wan"},
+  {
+    "_id": "net-lan",
+    "name": "LAN",
+    "vlan": 1,
+    "vlan_enabled": true,
+    "ip_subnet": "192.168.1.0/24"
+  },
+  {
+    "_id": "net-guest",
+    "name": "Guest WiFi",
+    "vlan": 100,
+    "vlan_enabled": true,
+    "ip_subnet": "10.0.100.0/24"
+  },
+  {
+    "_id": "net-iot",
+    "name": "IoT Devices",
+    "vlan": 200,
+    "vlan_enabled": true,
+    "ip_subnet": "10.0.200.0/24"
+  }
+]

@@ -121,7 +121,7 @@ test.describe("traffic simulation", () => {
 
     await page.getByPlaceholder("Source IP").fill("10.0.100.5");
     await page.getByPlaceholder("Destination IP").fill("8.8.8.8");
-    await page.getByPlaceholder("Port").fill("443");
+    await page.getByPlaceholder("Port", { exact: true }).fill("443");
     await page.getByRole("button", { name: "Simulate" }).click();
 
     await expect(page.getByText("Evaluation Chain")).toBeVisible();

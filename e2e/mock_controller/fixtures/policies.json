@@ -1,0 +1,80 @@
+[
+  {
+    "_id": "rule-1",
+    "name": "Allow LAN to Internet",
+    "description": "Allow all traffic from LAN to WAN",
+    "enabled": true,
+    "action": "ALLOW",
+    "source_zone_id": "zone-internal",
+    "destination_zone_id": "zone-external",
+    "index": 100
+  },
+  {
+    "_id": "rule-2",
+    "name": "Allow Guest Web Access",
+    "description": "Allow Guest zone to access web on WAN",
+    "enabled": true,
+    "action": "ALLOW",
+    "source_zone_id": "zone-guest",
+    "destination_zone_id": "zone-external",
+    "protocol": "tcp",
+    "port_ranges": ["80", "443"],
+    "index": 200
+  },
+  {
+    "_id": "rule-3",
+    "name": "Allow Guest DNS",
+    "description": "Allow Guest zone to resolve DNS",
+    "enabled": true,
+    "action": "ALLOW",
+    "source_zone_id": "zone-guest",
+    "destination_zone_id": "zone-external",
+    "protocol": "udp",
+    "port_ranges": ["53"],
+    "destination": {
+      "port_group_id": "group-dns-ports",
+      "address_group_id": "group-dns-servers"
+    },
+    "index": 210
+  },
+  {
+    "_id": "rule-4",
+    "name": "Block Guest Other Traffic",
+    "description": "Block all other Guest traffic to WAN",
+    "enabled": true,
+    "action": "BLOCK",
+    "source_zone_id": "zone-guest",
+    "destination_zone_id": "zone-external",
+    "index": 290
+  },
+  {
+    "_id": "rule-5",
+    "name": "Block IoT to LAN",
+    "description": "Prevent IoT devices from reaching LAN",
+    "enabled": true,
+    "action": "BLOCK",
+    "source_zone_id": "zone-iot",
+    "destination_zone_id": "zone-internal",
+    "index": 300
+  },
+  {
+    "_id": "rule-6",
+    "name": "Allow IoT to Internet",
+    "description": "Allow IoT devices to reach the internet",
+    "enabled": true,
+    "action": "ALLOW",
+    "source_zone_id": "zone-iot",
+    "destination_zone_id": "zone-external",
+    "index": 310
+  },
+  {
+    "_id": "rule-7",
+    "name": "Block Guest to LAN",
+    "description": "Prevent Guest from reaching LAN",
+    "enabled": true,
+    "action": "BLOCK",
+    "source_zone_id": "zone-guest",
+    "destination_zone_id": "zone-internal",
+    "index": 400
+  }
+]

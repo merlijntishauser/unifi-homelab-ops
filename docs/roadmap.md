@@ -87,25 +87,20 @@ Related design:
 - Add HTTPS enforcement and domain allowlist for AI `base_url` to prevent credential leakage to unintended hosts.
 - Audit and redact sensitive data (API keys, response bodies) from server-side log output.
 
-### 3. Add end-to-end confidence and upgrade safety
+### 3. Add end-to-end confidence and upgrade safety -- DONE
 
 Priority: P1
 
-Why this comes before major expansion:
+Shipped:
 
-- The repo has excellent unit coverage and strong lint/type/complexity checks, but it still lacks protection for the real user journeys that matter most.
-- SQLite is used for persistent state, but there is no migration/versioning story yet.
-- Production image smoke tests are useful, but they do not cover login, fetch, graph, simulation, or AI configuration flows.
+- Production Playwright e2e suite (8 journeys) running against a mock UniFi controller and the real production Docker image, covering login, matrix, graph navigation, rule panel, traffic simulation, settings, and the app auth gate.
+- SQLAlchemy ORM (`models_db.py`) replacing raw sqlite3, with Alembic migrations running programmatically on startup via `init_db()`.
+- Structured logging via structlog across all routers, services, and middleware. JSON output in production, colored console in development. Custom `AccessLogMiddleware` replaces uvicorn access logs with structured key-value output.
+- CI `e2e-production` job building the production image, starting the e2e stack, and running Playwright with trace upload on failure. Local `make e2e-prod` target for the same flow.
 
-What to ship:
+Related design:
 
-- Add Playwright coverage in CI for the critical product paths: login, load rules, matrix, graph, rule panel, traffic simulation, and settings.
-- Introduce database schema versioning and migrations for persistent settings and caches.
-- Improve observability around startup, UniFi fetch failures, AI timeouts, cache behavior, and upgrade state.
-
-Done looks like:
-
-- A release is validated against the production image through end-to-end tests, and persisted data can evolve safely across versions.
+- [E2E Tests, Migrations, and Structured Logging Design](plans/2026-03-13-e2e-migrations-observability-design.md)
 
 ### 4. Add Prometheus metrics endpoint
 
@@ -125,32 +120,61 @@ Done looks like:
 
 - Operators can point a Prometheus scrape target at the app and get actionable dashboards without custom log parsing.
 
-### 5. Scale the frontend architecture and large-site UX
-
+### 5. Scale the frontend architecture for maintainability (A/B-scale)
 
 Priority: P1
 
 Why this matters now:
 
-- The frontend still concentrates a lot of orchestration in `frontend/src/App.tsx`, and `frontend/src/components/RulePanel.tsx` is carrying a lot of UI and workflow state.
-- Data loading is all-or-nothing, and the graph view still does more work than necessary for larger installations.
-- Larger UniFi sites are likely to stress interaction quality before they run out of core features.
+- `RulePanel.tsx` is 881 lines with 10+ nested sub-components and 3 independent workflows competing for state.
+- `App.tsx` orchestrates auth, filtering, navigation, and data loading in one place (325 lines, 13 state properties, 8 callbacks).
+- Data loading is all-or-nothing with no caching, cancellation, or deduplication.
+- The matrix has no sticky headers, making 30+ zone grids hard to navigate.
 
 What to ship:
 
-- Break the app shell into smaller feature hooks/components with clearer state ownership.
-- Introduce a query/cache layer, cancellation, and more targeted refresh behavior instead of refetching everything eagerly.
-- Improve large-site usability with graph clustering, search/focus tools, virtualization where appropriate, and matrix ergonomics for many zones.
+- Adopt TanStack Query as the data layer, replacing manual fetch/setState patterns with cached, deduplicated, cancellable queries.
+- Extract auth orchestration from App.tsx into an AuthProvider + useAuth hook.
+- Extract RulePanel's 10+ nested sub-components into separate files under `components/rule-panel/`.
+- Add sticky row/column headers and wider cells to ZoneMatrix for B-scale usability.
+
+Related design:
+
+- [Frontend Architecture Scaling Design](plans/2026-03-13-frontend-scaling-design.md)
 
 Done looks like:
 
-- Large rule sets remain responsive, and routine interactions do not require full remounts or full-data refreshes.
+- No component file exceeds 300 lines, data fetching is cached and cancellable, and 30-50 zone matrices are navigable.
 
-### 6. Turn the app from analyzer into operator workflow
+#### Future: RulePanel hook extraction
+
+- Split the two reducers in RulePanel into `useSimulation()`, `useAiAnalysis()`, `useRuleWrite()` hooks. Follow-up to the file extraction once it settles.
+
+### 6. Support enterprise-scale sites (100+ zones)
 
 Priority: P2
 
-Why this is fifth:
+Why this follows item 5:
+
+- A/B-scale refactoring (item 5) establishes the query layer and component structure that C-scale work builds on.
+- 100+ zones requires fundamentally different interaction patterns (search/filter vs. browse) and rendering strategies.
+
+What to ship:
+
+- Virtualized matrix rendering (TanStack Virtual or similar) for grids beyond 50 zones.
+- Graph viewport culling and lazy edge rendering for large topologies.
+- Zone search/filter input for both matrix and graph views.
+- Graph clustering for dense zone groups.
+
+Done looks like:
+
+- A 100+ zone site loads and navigates without noticeable lag, and users can find specific zones without scanning the full grid or graph.
+
+### 7. Turn the app from analyzer into operator workflow
+
+Priority: P2
+
+Why this is last:
 
 - This is the clearest product expansion area, but it should follow trust, security, and upgrade safety work.
 - The existing app is good at diagnosis, but it still stops short of helping users close the loop.
@@ -178,5 +202,6 @@ This ordering is deliberate:
 2. Secure the trust boundary.
 3. Protect releases and upgrades end-to-end.
 4. Add quantitative metrics for operators.
-5. Make the app hold up on larger, messier sites.
-6. Only then extend into change execution workflows.
+5. Refactor frontend for maintainability (A/B-scale).
+6. Scale to enterprise sites (C-scale, 100+ zones).
+7. Only then extend into change execution workflows.

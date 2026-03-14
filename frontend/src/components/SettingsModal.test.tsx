@@ -1,8 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor, fireEvent, act } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { render } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router-dom";
 import SettingsModal from "./SettingsModal";
 import type { AiConfig, AiPreset } from "../api/types";
-import { renderWithQuery } from "../test-utils";
+import type { AppContextValue } from "../hooks/useAppContext";
+import { AppContext } from "../hooks/useAppContext";
+import type { ColorMode } from "@xyflow/react";
 
 vi.mock("../api/client", () => ({
   api: {
@@ -13,6 +19,9 @@ vi.mock("../api/client", () => ({
     saveAiAnalysisSettings: vi.fn(),
     testAiConnection: vi.fn(),
     deleteAiConfig: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
+    getAuthStatus: vi.fn(),
   },
 }));
 
@@ -63,6 +72,65 @@ const existingConfig: AiConfig = {
   source: "db",
 };
 
+function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
+  return {
+    colorMode: "dark" as ColorMode,
+    themePreference: "dark",
+    onThemePreferenceChange: vi.fn(),
+    showHidden: false,
+    onShowHiddenChange: vi.fn(),
+    hasHiddenZones: false,
+    hasDisabledRules: false,
+    onRefresh: vi.fn(),
+    dataLoading: false,
+    onLogout: vi.fn(),
+    onOpenSettings: vi.fn(),
+    onCloseSettings: vi.fn(),
+    settingsOpen: true,
+    connectionInfo: { url: "https://unifi.local", username: "admin", source: "env" as const },
+    aiInfo: { configured: false, provider: "", model: "" },
+    aiConfigured: false,
+    zones: [],
+    zonePairs: [],
+    filteredZonePairs: [],
+    visibleZones: [],
+    hiddenZoneIds: new Set<string>(),
+    onToggleZone: vi.fn(),
+    dataError: null,
+    ...overrides,
+  };
+}
+
+function renderModal(onClose: () => void, ctxOverrides?: Partial<AppContextValue>) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <AppContext.Provider value={makeContext(ctxOverrides)}>
+          <SettingsModal onClose={onClose} />
+        </AppContext.Provider>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+function renderModalElement(ui: ReactElement, ctxOverrides?: Partial<AppContextValue>) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <AppContext.Provider value={makeContext(ctxOverrides)}>
+          {ui}
+        </AppContext.Provider>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe("SettingsModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -70,31 +138,140 @@ describe("SettingsModal", () => {
     mockSaveAiAnalysisSettings.mockResolvedValue({});
   });
 
-  it("renders modal with title", () => {
-    mockGetAiPresets.mockReturnValue(new Promise(() => {}));
-    mockGetAiConfig.mockReturnValue(new Promise(() => {}));
-    mockGetAiAnalysisSettings.mockReturnValue(new Promise(() => {}));
+  // --- Tab navigation ---
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
-
-    expect(screen.getByText("AI Provider Settings")).toBeInTheDocument();
+  it("renders Connection tab as default", () => {
+    renderModal(vi.fn());
+    expect(screen.getByRole("heading", { name: "Connection" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Controller URL")).toBeInTheDocument();
   });
 
-  it("shows loading state initially", () => {
+  it("switches to AI Provider tab", async () => {
     mockGetAiPresets.mockReturnValue(new Promise(() => {}));
     mockGetAiConfig.mockReturnValue(new Promise(() => {}));
     mockGetAiAnalysisSettings.mockReturnValue(new Promise(() => {}));
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
 
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
+
+    expect(screen.getByText("AI Provider Settings")).toBeInTheDocument();
     expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
 
-  it("shows provider dropdown after loading", async () => {
+  it("switches to User Settings tab", () => {
+    renderModal(vi.fn());
+
+    fireEvent.click(screen.getByRole("button", { name: "User Settings" }));
+
+    expect(screen.getByText("Appearance")).toBeInTheDocument();
+  });
+
+  // --- Connection pane ---
+
+  it("renders connection form fields", () => {
+    renderModal(vi.fn());
+    expect(screen.getByLabelText("Controller URL")).toBeInTheDocument();
+    expect(screen.getByLabelText("Username")).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+    expect(screen.getByLabelText("Site")).toBeInTheDocument();
+    expect(screen.getByLabelText("Verify SSL")).toBeInTheDocument();
+  });
+
+  it("pre-fills URL and username from connectionInfo", () => {
+    renderModal(vi.fn());
+    const urlInput = screen.getByLabelText("Controller URL") as HTMLInputElement;
+    const usernameInput = screen.getByLabelText("Username") as HTMLInputElement;
+    expect(urlInput.value).toBe("https://unifi.local");
+    expect(usernameInput.value).toBe("admin");
+  });
+
+  it("shows connected badge when connected", () => {
+    renderModal(vi.fn());
+    expect(screen.getByText(/Connected to https:\/\/unifi\.local/)).toBeInTheDocument();
+  });
+
+  it("shows Disconnect button when connected", () => {
+    renderModal(vi.fn());
+    expect(screen.getByRole("button", { name: "Disconnect" })).toBeInTheDocument();
+  });
+
+  it("does not show connected badge or Disconnect when not connected", () => {
+    renderModal(vi.fn(), { connectionInfo: null });
+    expect(screen.queryByText(/Connected to/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Disconnect" })).not.toBeInTheDocument();
+  });
+
+  it("calls onLogout when Disconnect is clicked", () => {
+    const onLogout = vi.fn();
+    renderModal(vi.fn(), { onLogout });
+    fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
+    expect(onLogout).toHaveBeenCalled();
+  });
+
+  it("allows editing connection form fields", () => {
+    renderModal(vi.fn());
+    fireEvent.change(screen.getByLabelText("Controller URL"), { target: { value: "https://new.url" } });
+    fireEvent.change(screen.getByLabelText("Username"), { target: { value: "newuser" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "newpass" } });
+    fireEvent.change(screen.getByLabelText("Site"), { target: { value: "mysite" } });
+    fireEvent.click(screen.getByLabelText("Verify SSL"));
+
+    expect((screen.getByLabelText("Controller URL") as HTMLInputElement).value).toBe("https://new.url");
+    expect((screen.getByLabelText("Username") as HTMLInputElement).value).toBe("newuser");
+    expect((screen.getByLabelText("Password") as HTMLInputElement).value).toBe("newpass");
+    expect((screen.getByLabelText("Site") as HTMLInputElement).value).toBe("mysite");
+    expect((screen.getByLabelText("Verify SSL") as HTMLInputElement).checked).toBe(true);
+  });
+
+  it("calls login mutation when Connect is clicked", async () => {
+    const mockLoginFn = vi.mocked(api.login);
+    mockLoginFn.mockResolvedValue(undefined);
+
+    renderModal(vi.fn());
+    fireEvent.change(screen.getByLabelText("Controller URL"), { target: { value: "https://192.168.1.1" } });
+    fireEvent.change(screen.getByLabelText("Username"), { target: { value: "admin" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pass" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Connect" }));
+    });
+
+    expect(mockLoginFn).toHaveBeenCalled();
+  });
+
+  it("switches back to Connection tab from another tab", () => {
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "User Settings" }));
+    expect(screen.getByText("Appearance")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Connection" }));
+    expect(screen.getByRole("heading", { name: "Connection" })).toBeInTheDocument();
+  });
+
+  it("shows connection error from login mutation", async () => {
+    const mockLoginFn = vi.mocked(api.login);
+    mockLoginFn.mockRejectedValue(new Error("Auth failed"));
+
+    renderModal(vi.fn());
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Connect" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Auth failed")).toBeInTheDocument();
+    });
+  });
+
+  // --- AI Provider pane ---
+
+  it("shows provider dropdown after loading on AI tab", async () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(noConfig);
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -107,19 +284,17 @@ describe("SettingsModal", () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(noConfig);
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "openai" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai" } });
     });
 
-    // Model dropdown should be populated with preset models
     const modelSelect = screen.getByLabelText("Model") as HTMLSelectElement;
     expect(modelSelect.value).toBe("gpt-4o");
   });
@@ -130,22 +305,19 @@ describe("SettingsModal", () => {
     mockSaveAiConfig.mockResolvedValue({ status: "ok" });
     const onClose = vi.fn();
 
-    renderWithQuery(<SettingsModal onClose={onClose} />);
+    renderModal(onClose);
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "openai" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai" } });
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("API Key"), {
-        target: { value: "sk-test-key" },
-      });
+      fireEvent.change(screen.getByLabelText("API Key"), { target: { value: "sk-test-key" } });
     });
 
     await act(async () => {
@@ -167,7 +339,8 @@ describe("SettingsModal", () => {
     mockGetAiConfig.mockResolvedValue(noConfig);
     mockTestAiConnection.mockResolvedValue({ status: "ok" });
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -189,7 +362,8 @@ describe("SettingsModal", () => {
     mockDeleteAiConfig.mockResolvedValue({ status: "ok" });
     const onClose = vi.fn();
 
-    renderWithQuery(<SettingsModal onClose={onClose} />);
+    renderModal(onClose);
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -203,42 +377,26 @@ describe("SettingsModal", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("calls onClose when backdrop is clicked", async () => {
-    mockGetAiPresets.mockResolvedValue(testPresets);
-    mockGetAiConfig.mockResolvedValue(noConfig);
+  it("calls onClose when backdrop is clicked", () => {
     const onClose = vi.fn();
-
-    renderWithQuery(<SettingsModal onClose={onClose} />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
-    });
-
-    // Click the backdrop (the outer div)
+    renderModal(onClose);
     fireEvent.click(screen.getByRole("dialog").parentElement!);
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("calls onClose when close button is clicked", async () => {
-    mockGetAiPresets.mockResolvedValue(testPresets);
-    mockGetAiConfig.mockResolvedValue(noConfig);
+  it("calls onClose when close button is clicked", () => {
     const onClose = vi.fn();
-
-    renderWithQuery(<SettingsModal onClose={onClose} />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
-    });
-
+    renderModal(onClose);
     fireEvent.click(screen.getByLabelText("Close settings"));
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("shows error when loading fails", async () => {
+  it("shows error when AI loading fails", async () => {
     mockGetAiPresets.mockRejectedValue(new Error("Network error"));
     mockGetAiConfig.mockRejectedValue(new Error("Network error"));
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByText("Failed to load settings")).toBeInTheDocument();
@@ -251,16 +409,15 @@ describe("SettingsModal", () => {
     mockSaveAiConfig.mockRejectedValue(new Error("Save failed"));
     const onClose = vi.fn();
 
-    renderWithQuery(<SettingsModal onClose={onClose} />);
+    renderModal(onClose);
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "openai" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai" } });
     });
 
     await act(async () => {
@@ -276,7 +433,8 @@ describe("SettingsModal", () => {
     mockGetAiConfig.mockResolvedValue(noConfig);
     mockTestAiConnection.mockRejectedValue(new Error("Connection error"));
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -297,7 +455,8 @@ describe("SettingsModal", () => {
     mockDeleteAiConfig.mockRejectedValue(new Error("Delete failed"));
     const onClose = vi.fn();
 
-    renderWithQuery(<SettingsModal onClose={onClose} />);
+    renderModal(onClose);
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -315,21 +474,19 @@ describe("SettingsModal", () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(noConfig);
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "custom" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "custom" } });
     });
 
     expect(screen.getByLabelText("Base URL")).toBeInTheDocument();
     expect(screen.getByLabelText("Provider Type")).toBeInTheDocument();
-    // Model should be a text input (no models list for custom)
     const modelInput = screen.getByLabelText("Model") as HTMLInputElement;
     expect(modelInput.type).toBe("text");
   });
@@ -340,37 +497,21 @@ describe("SettingsModal", () => {
     mockSaveAiConfig.mockResolvedValue({ status: "ok" });
     const onClose = vi.fn();
 
-    renderWithQuery(<SettingsModal onClose={onClose} />);
+    renderModal(onClose);
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "custom" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "custom" } });
     });
 
-    // Fill in Base URL
-    fireEvent.change(screen.getByLabelText("Base URL"), {
-      target: { value: "https://custom.api.com/v1" },
-    });
-
-    // Fill in Model (text input for custom)
-    fireEvent.change(screen.getByLabelText("Model"), {
-      target: { value: "custom-model" },
-    });
-
-    // Change Provider Type
-    fireEvent.change(screen.getByLabelText("Provider Type"), {
-      target: { value: "anthropic" },
-    });
-
-    // Fill in API Key
-    fireEvent.change(screen.getByLabelText("API Key"), {
-      target: { value: "custom-key" },
-    });
+    fireEvent.change(screen.getByLabelText("Base URL"), { target: { value: "https://custom.api.com/v1" } });
+    fireEvent.change(screen.getByLabelText("Model"), { target: { value: "custom-model" } });
+    fireEvent.change(screen.getByLabelText("Provider Type"), { target: { value: "anthropic" } });
+    fireEvent.change(screen.getByLabelText("API Key"), { target: { value: "custom-key" } });
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -390,26 +531,19 @@ describe("SettingsModal", () => {
     mockSaveAiConfig.mockResolvedValue({ status: "ok" });
     const onClose = vi.fn();
 
-    renderWithQuery(<SettingsModal onClose={onClose} />);
+    renderModal(onClose);
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "openai" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai" } });
     });
 
-    // Change model in the dropdown
-    fireEvent.change(screen.getByLabelText("Model"), {
-      target: { value: "gpt-4o-mini" },
-    });
-
-    fireEvent.change(screen.getByLabelText("API Key"), {
-      target: { value: "sk-key" },
-    });
+    fireEvent.change(screen.getByLabelText("Model"), { target: { value: "gpt-4o-mini" } });
+    fireEvent.change(screen.getByLabelText("API Key"), { target: { value: "sk-key" } });
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -427,7 +561,8 @@ describe("SettingsModal", () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(noConfig);
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -436,48 +571,23 @@ describe("SettingsModal", () => {
     expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
   });
 
-  it("calls onClose when Escape is pressed on backdrop", async () => {
-    mockGetAiPresets.mockResolvedValue(testPresets);
-    mockGetAiConfig.mockResolvedValue(noConfig);
+  it("calls onClose when Escape is pressed on backdrop", () => {
     const onClose = vi.fn();
-
-    renderWithQuery(<SettingsModal onClose={onClose} />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
-    });
-
+    renderModal(onClose);
     fireEvent.keyDown(screen.getByLabelText("Close dialog"), { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("does not call onClose for non-Escape keys on backdrop", async () => {
-    mockGetAiPresets.mockResolvedValue(testPresets);
-    mockGetAiConfig.mockResolvedValue(noConfig);
+  it("does not call onClose for non-Escape keys on backdrop", () => {
     const onClose = vi.fn();
-
-    renderWithQuery(<SettingsModal onClose={onClose} />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
-    });
-
+    renderModal(onClose);
     fireEvent.keyDown(screen.getByLabelText("Close dialog"), { key: "Tab" });
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("stops keyboard event propagation on dialog content", async () => {
-    mockGetAiPresets.mockResolvedValue(testPresets);
-    mockGetAiConfig.mockResolvedValue(noConfig);
+  it("stops keyboard event propagation on dialog content", () => {
     const onClose = vi.fn();
-
-    renderWithQuery(<SettingsModal onClose={onClose} />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("Provider")).toBeInTheDocument();
-    });
-
-    // Pressing Escape on the dialog content should NOT close (event is stopped)
+    renderModal(onClose);
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -486,17 +596,16 @@ describe("SettingsModal", () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(existingConfig);
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
-    // Should have matched the openai preset
     const providerSelect = screen.getByLabelText("Provider") as HTMLSelectElement;
     expect(providerSelect.value).toBe("openai");
 
-    // Model should be populated
     const modelSelect = screen.getByLabelText("Model") as HTMLSelectElement;
     expect(modelSelect.value).toBe("gpt-4o");
   });
@@ -512,17 +621,16 @@ describe("SettingsModal", () => {
       source: "db",
     });
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
-    // No preset matched, so provider dropdown should show placeholder
     const providerSelect = screen.getByLabelText("Provider") as HTMLSelectElement;
     expect(providerSelect.value).toBe("");
 
-    // Model field should not be visible since no preset is selected
     expect(screen.queryByLabelText("Model")).not.toBeInTheDocument();
   });
 
@@ -530,30 +638,24 @@ describe("SettingsModal", () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(noConfig);
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
-    // First select openai to populate fields
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "openai" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai" } });
     });
 
     const modelSelect = screen.getByLabelText("Model") as HTMLSelectElement;
     expect(modelSelect.value).toBe("gpt-4o");
 
-    // Now select a non-existent preset id (not "custom", not a valid preset)
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "nonexistent" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "nonexistent" } });
     });
 
-    // Fields should remain unchanged since the preset was not found
     const modelAfter = screen.getByLabelText("Model") as HTMLSelectElement;
     expect(modelAfter.value).toBe("gpt-4o");
   });
@@ -563,7 +665,8 @@ describe("SettingsModal", () => {
     mockGetAiConfig.mockResolvedValue(noConfig);
     mockGetAiAnalysisSettings.mockResolvedValue({ site_profile: "smb" });
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Site Profile")).toBeInTheDocument();
@@ -579,25 +682,19 @@ describe("SettingsModal", () => {
     mockSaveAiConfig.mockResolvedValue({ status: "ok" });
     const onClose = vi.fn();
 
-    renderWithQuery(<SettingsModal onClose={onClose} />);
+    renderModal(onClose);
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     await act(async () => {
-      fireEvent.change(screen.getByLabelText("Provider"), {
-        target: { value: "openai" },
-      });
+      fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai" } });
     });
 
-    fireEvent.change(screen.getByLabelText("Site Profile"), {
-      target: { value: "enterprise" },
-    });
-
-    fireEvent.change(screen.getByLabelText("API Key"), {
-      target: { value: "sk-key" },
-    });
+    fireEvent.change(screen.getByLabelText("Site Profile"), { target: { value: "enterprise" } });
+    fireEvent.change(screen.getByLabelText("API Key"), { target: { value: "sk-key" } });
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -610,14 +707,15 @@ describe("SettingsModal", () => {
     mockGetAiPresets.mockResolvedValue(testPresets);
     mockGetAiConfig.mockResolvedValue(existingConfig);
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
     const keyInput = screen.getByLabelText("API Key") as HTMLInputElement;
-    expect(keyInput.placeholder).toBe("Key configured — leave blank to keep");
+    expect(keyInput.placeholder).toBe("Key configured \u2014 leave blank to keep");
   });
 
   it("shows env key placeholder when key comes from environment", async () => {
@@ -629,7 +727,8 @@ describe("SettingsModal", () => {
       source: "db",
     });
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -644,7 +743,8 @@ describe("SettingsModal", () => {
     mockGetAiConfig.mockResolvedValue(noConfig);
     mockTestAiConnection.mockRejectedValue("string error");
 
-    renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     await waitFor(() => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -673,7 +773,8 @@ describe("SettingsModal", () => {
       mockGetAiPresets.mockResolvedValue(testPresets);
       mockGetAiConfig.mockResolvedValue(envConfig);
 
-      renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+      renderModal(vi.fn());
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByText(/Configured via environment variables/)).toBeInTheDocument();
@@ -684,7 +785,8 @@ describe("SettingsModal", () => {
       mockGetAiPresets.mockResolvedValue(testPresets);
       mockGetAiConfig.mockResolvedValue(envConfig);
 
-      renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+      renderModal(vi.fn());
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -697,13 +799,13 @@ describe("SettingsModal", () => {
       mockGetAiPresets.mockResolvedValue(testPresets);
       mockGetAiConfig.mockResolvedValue(envConfig);
 
-      renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+      renderModal(vi.fn());
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByText("OpenAI key configured via environment")).toBeInTheDocument();
       });
 
-      // API Key input should not exist
       expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
     });
 
@@ -711,7 +813,8 @@ describe("SettingsModal", () => {
       mockGetAiPresets.mockResolvedValue(testPresets);
       mockGetAiConfig.mockResolvedValue(envConfig);
 
-      renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+      renderModal(vi.fn());
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByLabelText("Model")).toBeInTheDocument();
@@ -724,7 +827,8 @@ describe("SettingsModal", () => {
       mockGetAiPresets.mockResolvedValue(testPresets);
       mockGetAiConfig.mockResolvedValue(envConfig);
 
-      renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+      renderModal(vi.fn());
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -739,7 +843,8 @@ describe("SettingsModal", () => {
       mockSaveAiAnalysisSettings.mockResolvedValue({});
       const onClose = vi.fn();
 
-      renderWithQuery(<SettingsModal onClose={onClose} />);
+      renderModal(onClose);
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByLabelText("Provider")).toBeInTheDocument();
@@ -758,7 +863,8 @@ describe("SettingsModal", () => {
       mockGetAiPresets.mockResolvedValue(testPresets);
       mockGetAiConfig.mockResolvedValue(envConfig);
 
-      renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+      renderModal(vi.fn());
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "Test Connection" })).toBeInTheDocument();
@@ -769,7 +875,8 @@ describe("SettingsModal", () => {
       mockGetAiPresets.mockResolvedValue(testPresets);
       mockGetAiConfig.mockResolvedValue(envConfig);
 
-      renderWithQuery(<SettingsModal onClose={vi.fn()} />);
+      renderModal(vi.fn());
+      fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
       await waitFor(() => {
         expect(screen.getByLabelText("Site Profile")).toBeInTheDocument();
@@ -777,5 +884,42 @@ describe("SettingsModal", () => {
 
       expect(screen.getByLabelText("Site Profile")).not.toBeDisabled();
     });
+  });
+
+  // --- User Settings pane ---
+
+  it("renders theme selector on User Settings tab", () => {
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: "User Settings" }));
+
+    expect(screen.getByText("Appearance")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Theme: Light" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Theme: Dark" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Theme: System" })).toBeInTheDocument();
+  });
+
+  it("calls onThemePreferenceChange when theme option is clicked", () => {
+    const onThemePreferenceChange = vi.fn();
+    renderModal(vi.fn(), { themePreference: "dark", onThemePreferenceChange });
+
+    fireEvent.click(screen.getByRole("button", { name: "User Settings" }));
+    fireEvent.click(screen.getByRole("button", { name: "Theme: Light" }));
+
+    expect(onThemePreferenceChange).toHaveBeenCalledWith("light");
+  });
+
+  it("highlights current theme preference in User Settings", () => {
+    renderModal(vi.fn(), { themePreference: "system" });
+    fireEvent.click(screen.getByRole("button", { name: "User Settings" }));
+
+    const systemBtn = screen.getByRole("button", { name: "Theme: System" });
+    expect(systemBtn.className).toContain("bg-ub-blue");
+  });
+
+  // --- Unused helper suppression ---
+
+  it("renderModalElement helper works", () => {
+    renderModalElement(<SettingsModal onClose={vi.fn()} />);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

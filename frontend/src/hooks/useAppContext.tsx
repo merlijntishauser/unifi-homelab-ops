@@ -14,9 +14,12 @@ interface AiInfo {
   model: string;
 }
 
+export type ThemePreference = "light" | "dark" | "system";
+
 export interface AppContextValue {
   colorMode: ColorMode;
-  onColorModeChange: (mode: ColorMode) => void;
+  themePreference: ThemePreference;
+  onThemePreferenceChange: (pref: ThemePreference) => void;
   showHidden: boolean;
   onShowHiddenChange: (show: boolean) => void;
   hasHiddenZones: boolean;

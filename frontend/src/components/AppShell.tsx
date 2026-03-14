@@ -10,9 +10,8 @@ export default function AppShell() {
   return (
     <div className="h-screen flex flex-col">
       <Toolbar
-        colorMode={ctx.colorMode}
-        onColorModeChange={ctx.onColorModeChange}
-        onLogout={ctx.onLogout}
+        themePreference={ctx.themePreference}
+        onThemePreferenceChange={ctx.onThemePreferenceChange}
         connectionInfo={ctx.connectionInfo}
         aiInfo={ctx.aiInfo}
       />

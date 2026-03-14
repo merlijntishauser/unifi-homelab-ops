@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ColorMode } from "@xyflow/react";
 import { RouterProvider } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,28 +12,30 @@ import { useAuthFlow } from "./hooks/useAuth";
 import { useFirewallQueries } from "./hooks/useFirewallQueries";
 import { useAiInfo } from "./hooks/useAiInfo";
 import { AppContext } from "./hooks/useAppContext";
+import type { ThemePreference } from "./hooks/useAppContext";
 import { createAppRouter } from "./router";
 import LoginScreen from "./components/LoginScreen";
 import PassphraseScreen from "./components/PassphraseScreen";
 
 interface AppState {
-  colorMode: ColorMode;
+  themePreference: ThemePreference;
   showHidden: boolean;
   settingsOpen: boolean;
   hiddenZoneIds: Set<string>;
 }
 
 const initialAppState: AppState = {
-  colorMode: "dark" as ColorMode,
+  themePreference: "dark",
   showHidden: false,
   settingsOpen: false,
   hiddenZoneIds: new Set<string>(),
 };
 
 function initAppState(): AppState {
-  const stored = localStorage.getItem("colorMode");
-  const colorMode: ColorMode = stored === "light" || stored === "dark" ? stored : "dark";
-  return { ...initialAppState, colorMode };
+  const stored = localStorage.getItem("themePreference");
+  const themePreference: ThemePreference =
+    stored === "light" || stored === "dark" || stored === "system" ? stored : "dark";
+  return { ...initialAppState, themePreference };
 }
 
 type AppAction = Partial<AppState> | ((prev: AppState) => Partial<AppState>);
@@ -41,6 +43,11 @@ type AppAction = Partial<AppState> | ((prev: AppState) => Partial<AppState>);
 function appReducer(state: AppState, action: AppAction): AppState {
   const update = typeof action === "function" ? action(state) : action;
   return { ...state, ...update };
+}
+
+function resolveColorMode(preference: ThemePreference, systemDark: boolean): ColorMode {
+  if (preference === "system") return systemDark ? "dark" : "light";
+  return preference;
 }
 
 function LoadingOverlay({ message }: { message: string | null }) {
@@ -58,8 +65,21 @@ const router = createAppRouter();
 
 function App() {
   const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
-  const { colorMode, showHidden, settingsOpen, hiddenZoneIds } = state;
+  const { themePreference, showHidden, settingsOpen, hiddenZoneIds } = state;
   const qc = useQueryClient();
+
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    function handler(e: MediaQueryListEvent) {
+      setSystemDark(e.matches);
+    }
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  const colorMode = resolveColorMode(themePreference, systemDark);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", colorMode === "dark");
@@ -131,9 +151,9 @@ function App() {
     });
   }, [saveZoneFilterMutation]);
 
-  const handleColorModeChange = useCallback((mode: ColorMode) => {
-    localStorage.setItem("colorMode", mode);
-    dispatch({ colorMode: mode });
+  const handleThemePreferenceChange = useCallback((pref: ThemePreference) => {
+    localStorage.setItem("themePreference", pref);
+    dispatch({ themePreference: pref });
   }, []);
 
   const handleCloseSettings = useCallback(() => {
@@ -162,7 +182,8 @@ function App() {
 
   const contextValue = {
     colorMode,
-    onColorModeChange: handleColorModeChange,
+    themePreference,
+    onThemePreferenceChange: handleThemePreferenceChange,
     showHidden,
     onShowHiddenChange: (val: boolean) => dispatch({ showHidden: val }),
     hasHiddenZones,

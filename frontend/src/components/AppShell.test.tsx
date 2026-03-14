@@ -12,7 +12,8 @@ vi.mock("./SettingsModal", () => ({
 function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
   return {
     colorMode: "dark" as ColorMode,
-    onColorModeChange: vi.fn(),
+    themePreference: "dark",
+    onThemePreferenceChange: vi.fn(),
     showHidden: false,
     onShowHiddenChange: vi.fn(),
     hasHiddenZones: false,

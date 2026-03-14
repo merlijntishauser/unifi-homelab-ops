@@ -4,9 +4,8 @@ import Toolbar from "./Toolbar";
 
 describe("Toolbar", () => {
   const defaultProps = {
-    colorMode: "light" as const,
-    onColorModeChange: vi.fn(),
-    onLogout: vi.fn(),
+    themePreference: "dark" as const,
+    onThemePreferenceChange: vi.fn(),
     connectionInfo: { url: "https://unifi.local", username: "admin", source: "runtime" as const },
     aiInfo: { configured: false, provider: "", model: "" },
   };
@@ -20,40 +19,40 @@ describe("Toolbar", () => {
     expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
   });
 
-  it("shows 'Dark' button when colorMode is light", () => {
-    renderToolbar({ colorMode: "light" });
-    expect(screen.getByRole("button", { name: "Dark" })).toBeInTheDocument();
+  it("shows moon icon with 'Theme: Dark' aria-label when dark", () => {
+    renderToolbar({ themePreference: "dark" });
+    expect(screen.getByRole("button", { name: "Theme: Dark" })).toBeInTheDocument();
   });
 
-  it("shows 'Light' button when colorMode is dark", () => {
-    renderToolbar({ colorMode: "dark" });
-    expect(screen.getByRole("button", { name: "Light" })).toBeInTheDocument();
+  it("shows sun icon with 'Theme: Light' aria-label when light", () => {
+    renderToolbar({ themePreference: "light" });
+    expect(screen.getByRole("button", { name: "Theme: Light" })).toBeInTheDocument();
   });
 
-  it("calls onColorModeChange with 'dark' when clicking Dark button", () => {
+  it("shows monitor icon with 'Theme: System' aria-label when system", () => {
+    renderToolbar({ themePreference: "system" });
+    expect(screen.getByRole("button", { name: "Theme: System" })).toBeInTheDocument();
+  });
+
+  it("cycles dark -> system on click", () => {
     const handler = vi.fn();
-    renderToolbar({ colorMode: "light", onColorModeChange: handler });
-    fireEvent.click(screen.getByRole("button", { name: "Dark" }));
-    expect(handler).toHaveBeenCalledWith("dark");
+    renderToolbar({ themePreference: "dark", onThemePreferenceChange: handler });
+    fireEvent.click(screen.getByRole("button", { name: "Theme: Dark" }));
+    expect(handler).toHaveBeenCalledWith("system");
   });
 
-  it("calls onColorModeChange with 'light' when clicking Light button", () => {
+  it("cycles system -> light on click", () => {
     const handler = vi.fn();
-    renderToolbar({ colorMode: "dark", onColorModeChange: handler });
-    fireEvent.click(screen.getByRole("button", { name: "Light" }));
+    renderToolbar({ themePreference: "system", onThemePreferenceChange: handler });
+    fireEvent.click(screen.getByRole("button", { name: "Theme: System" }));
     expect(handler).toHaveBeenCalledWith("light");
   });
 
-  it("renders Disconnect button", () => {
-    renderToolbar();
-    expect(screen.getByRole("button", { name: "Disconnect" })).toBeInTheDocument();
-  });
-
-  it("calls onLogout when Disconnect is clicked", () => {
+  it("cycles light -> dark on click", () => {
     const handler = vi.fn();
-    renderToolbar({ onLogout: handler });
-    fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
-    expect(handler).toHaveBeenCalledTimes(1);
+    renderToolbar({ themePreference: "light", onThemePreferenceChange: handler });
+    fireEvent.click(screen.getByRole("button", { name: "Theme: Light" }));
+    expect(handler).toHaveBeenCalledWith("dark");
   });
 
   it("shows connected Controller badge with tooltip", () => {
@@ -87,5 +86,10 @@ describe("Toolbar", () => {
     renderToolbar();
     expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Refresh" })).not.toBeInTheDocument();
+  });
+
+  it("shows tooltip with current theme mode", () => {
+    renderToolbar({ themePreference: "system" });
+    expect(screen.getByText("Theme: System")).toBeInTheDocument();
   });
 });

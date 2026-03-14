@@ -1,6 +1,6 @@
 # Product Roadmap
 
-Last updated: 2026-03-13
+Last updated: 2026-03-14
 
 ## Current Assessment
 
@@ -120,31 +120,21 @@ Done looks like:
 
 - Operators can point a Prometheus scrape target at the app and get actionable dashboards without custom log parsing.
 
-### 5. Scale the frontend architecture for maintainability (A/B-scale)
+### 5. Scale the frontend architecture for maintainability (A/B-scale) -- DONE
 
 Priority: P1
 
-Why this matters now:
+Shipped:
 
-- `RulePanel.tsx` is 881 lines with 10+ nested sub-components and 3 independent workflows competing for state.
-- `App.tsx` orchestrates auth, filtering, navigation, and data loading in one place (325 lines, 13 state properties, 8 callbacks).
-- Data loading is all-or-nothing with no caching, cancellation, or deduplication.
-- The matrix has no sticky headers, making 30+ zone grids hard to navigate.
-
-What to ship:
-
-- Adopt TanStack Query as the data layer, replacing manual fetch/setState patterns with cached, deduplicated, cancellable queries.
-- Extract auth orchestration from App.tsx into an AuthProvider + useAuth hook.
-- Extract RulePanel's 10+ nested sub-components into separate files under `components/rule-panel/`.
-- Add sticky row/column headers and wider cells to ZoneMatrix for B-scale usability.
+- Adopted TanStack Query as the data layer with 6 query hooks and 10 mutation hooks, replacing all manual fetch/setState patterns with cached, deduplicated, cancellable queries.
+- Extracted auth orchestration from App.tsx into `useAuthFlow`, `useFirewallQueries`, and `useAiInfo` hooks. App.tsx reduced from 325 to 289 lines with 6 state properties.
+- Extracted RulePanel's sub-components into `components/rule-panel/` directory (7 files: RuleCard, RuleDetails, SimulationForm, SimulationResult, FindingsList, AiAnalysisStatus, utils). RulePanel.tsx reduced from 881 to 213 lines.
+- Added sticky column headers (`top-0 z-10`), row headers (`left-0 z-10`), and corner cell (`z-20`) to ZoneMatrix. Widened cells from `minmax(52px, 84px)` to `minmax(72px, 108px)`.
+- Added API healthcheck and `depends_on: condition: service_healthy` to eliminate frontend startup race. Added startup banner to frontend dev server.
 
 Related design:
 
 - [Frontend Architecture Scaling Design](plans/2026-03-13-frontend-scaling-design.md)
-
-Done looks like:
-
-- No component file exceeds 300 lines, data fetching is cached and cancellable, and 30-50 zone matrices are navigable.
 
 #### Future: RulePanel hook extraction
 

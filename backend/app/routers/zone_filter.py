@@ -8,7 +8,7 @@ from app.services.zone_filter import get_hidden_zone_ids, save_hidden_zone_ids
 
 log = structlog.get_logger()
 
-router = APIRouter(prefix="/api/settings", tags=["settings"])
+router = APIRouter(tags=["zone-filter"])
 
 
 class ZoneFilterInput(BaseModel):

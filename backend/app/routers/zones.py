@@ -7,7 +7,7 @@ from app.services.firewall import get_zones
 
 log = structlog.get_logger()
 
-router = APIRouter(prefix="/api", tags=["zones"])
+router = APIRouter(tags=["zones"])
 
 
 @router.get("/zones")

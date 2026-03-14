@@ -123,7 +123,7 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse(zones));
       const result = await api.getZones();
       expect(result).toEqual(zones);
-      expect(mockFetch).toHaveBeenCalledWith("/api/zones", expect.objectContaining({}));
+      expect(mockFetch).toHaveBeenCalledWith("/api/firewall/zones", expect.objectContaining({}));
     });
   });
 
@@ -133,7 +133,7 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse(rules));
       const result = await api.getRules();
       expect(result).toEqual(rules);
-      expect(mockFetch).toHaveBeenCalledWith("/api/rules", expect.objectContaining({}));
+      expect(mockFetch).toHaveBeenCalledWith("/api/firewall/rules", expect.objectContaining({}));
     });
   });
 
@@ -143,7 +143,7 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse(pairs));
       const result = await api.getZonePairs();
       expect(result).toEqual(pairs);
-      expect(mockFetch).toHaveBeenCalledWith("/api/zone-pairs", expect.objectContaining({}));
+      expect(mockFetch).toHaveBeenCalledWith("/api/firewall/zone-pairs", expect.objectContaining({}));
     });
   });
 
@@ -155,7 +155,7 @@ describe("api client", () => {
       const result = await api.simulate(req);
       expect(result).toEqual(response);
       const [url, init] = mockFetch.mock.calls[0];
-      expect(url).toBe("/api/simulate");
+      expect(url).toBe("/api/firewall/simulate");
       expect(init.method).toBe("POST");
       expect(JSON.parse(init.body)).toEqual(req);
     });
@@ -246,7 +246,7 @@ describe("api client", () => {
       const result = await api.analyzeWithAi(req);
       expect(result).toEqual(response);
       const [url, init] = mockFetch.mock.calls[0];
-      expect(url).toBe("/api/analyze");
+      expect(url).toBe("/api/firewall/analyze");
       expect(init.method).toBe("POST");
       expect(JSON.parse(init.body)).toEqual(req);
     });
@@ -258,7 +258,7 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse(data));
       const result = await api.getZoneFilter();
       expect(result).toEqual(data);
-      expect(mockFetch).toHaveBeenCalledWith("/api/settings/zone-filter", expect.objectContaining({}));
+      expect(mockFetch).toHaveBeenCalledWith("/api/firewall/zone-filter", expect.objectContaining({}));
     });
   });
 
@@ -267,7 +267,7 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse({ status: "ok" }));
       await api.saveZoneFilter(["z1", "z2"]);
       const [url, init] = mockFetch.mock.calls[0];
-      expect(url).toBe("/api/settings/zone-filter");
+      expect(url).toBe("/api/firewall/zone-filter");
       expect(init.method).toBe("PUT");
       expect(JSON.parse(init.body)).toEqual({ hidden_zone_ids: ["z1", "z2"] });
     });
@@ -278,7 +278,7 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse({ status: "ok" }));
       await api.toggleRule("r1", false);
       const [url, init] = mockFetch.mock.calls[0];
-      expect(url).toBe("/api/rules/r1/toggle");
+      expect(url).toBe("/api/firewall/rules/r1/toggle");
       expect(init.method).toBe("PATCH");
       expect(JSON.parse(init.body)).toEqual({ enabled: false });
     });
@@ -289,7 +289,7 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse({ status: "ok" }));
       await api.swapRuleOrder("r1", "r2");
       const [url, init] = mockFetch.mock.calls[0];
-      expect(url).toBe("/api/rules/reorder");
+      expect(url).toBe("/api/firewall/rules/reorder");
       expect(init.method).toBe("PUT");
       expect(JSON.parse(init.body)).toEqual({ policy_id_a: "r1", policy_id_b: "r2" });
     });

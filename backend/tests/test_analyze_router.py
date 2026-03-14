@@ -20,7 +20,7 @@ def _use_test_db(tmp_path: Path) -> Iterator[None]:
 async def test_analyze_no_config_returns_error_status(client: AsyncClient) -> None:
     """When no AI config exists, the service returns status=error (not HTTP 400)."""
     resp = await client.post(
-        "/api/analyze",
+        "/api/firewall/analyze",
         json={
             "source_zone_name": "LAN",
             "destination_zone_name": "WAN",
@@ -45,7 +45,7 @@ async def test_analyze_returns_findings(client: AsyncClient) -> None:
 
     with patch("app.routers.analyze.analyze_with_ai", new_callable=AsyncMock, return_value=mock_result):
         resp = await client.post(
-            "/api/analyze",
+            "/api/firewall/analyze",
             json={
                 "source_zone_name": "LAN",
                 "destination_zone_name": "WAN",
@@ -76,7 +76,7 @@ async def test_analyze_returns_ok_with_no_findings(client: AsyncClient) -> None:
 
     with patch("app.routers.analyze.analyze_with_ai", new_callable=AsyncMock, return_value=mock_result):
         resp = await client.post(
-            "/api/analyze",
+            "/api/firewall/analyze",
             json={
                 "source_zone_name": "LAN",
                 "destination_zone_name": "WAN",
@@ -101,7 +101,7 @@ async def test_analyze_cached_result(client: AsyncClient) -> None:
 
     with patch("app.routers.analyze.analyze_with_ai", new_callable=AsyncMock, return_value=mock_result):
         resp = await client.post(
-            "/api/analyze",
+            "/api/firewall/analyze",
             json={
                 "source_zone_name": "LAN",
                 "destination_zone_name": "WAN",
@@ -122,7 +122,7 @@ async def test_analyze_passes_static_findings(client: AsyncClient) -> None:
 
     with patch("app.routers.analyze.analyze_with_ai", new_callable=AsyncMock, return_value=mock_result) as mock_ai:
         await client.post(
-            "/api/analyze",
+            "/api/firewall/analyze",
             json={
                 "source_zone_name": "LAN",
                 "destination_zone_name": "WAN",

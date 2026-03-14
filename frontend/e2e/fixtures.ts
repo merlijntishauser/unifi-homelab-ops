@@ -148,15 +148,15 @@ export async function mockApi(page: Page, options: { authenticated?: boolean } =
     route.fulfill({ json: { status: "ok" } }),
   );
 
-  await page.route("**/api/zones", (route) =>
+  await page.route("**/api/firewall/zones", (route) =>
     route.fulfill({ json: ZONES }),
   );
 
-  await page.route("**/api/zone-pairs", (route) =>
+  await page.route("**/api/firewall/zone-pairs", (route) =>
     route.fulfill({ json: ZONE_PAIRS }),
   );
 
-  await page.route("**/api/simulate", (route) =>
+  await page.route("**/api/firewall/simulate", (route) =>
     route.fulfill({ json: SIMULATE_RESPONSE }),
   );
 
@@ -167,16 +167,16 @@ export async function mockApi(page: Page, options: { authenticated?: boolean } =
   );
 
   // Toggle rule
-  await page.route("**/api/rules/*/toggle", (route) =>
+  await page.route("**/api/firewall/rules/*/toggle", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "ok" }) }),
   );
 
   // Swap rule order
-  await page.route("**/api/rules/reorder", (route) =>
+  await page.route("**/api/firewall/rules/reorder", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "ok" }) }),
   );
 
-  await page.route("**/api/settings/zone-filter", (route) => {
+  await page.route("**/api/firewall/zone-filter", (route) => {
     if (route.request().method() === "GET") {
       return route.fulfill({ json: { hidden_zone_ids: [] } });
     }

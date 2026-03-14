@@ -9,7 +9,7 @@ from app.services.firewall_writer import WriteError, swap_policy_order, toggle_p
 
 log = structlog.get_logger()
 
-router = APIRouter(prefix="/api", tags=["rules"])
+router = APIRouter(tags=["rules"])
 
 
 @router.get("/rules")

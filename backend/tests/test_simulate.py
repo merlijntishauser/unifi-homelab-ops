@@ -15,7 +15,7 @@ def _login() -> None:
 @pytest.mark.anyio
 async def test_simulate_requires_credentials(client: AsyncClient) -> None:
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={"src_ip": "192.168.1.10", "dst_ip": "10.0.100.5"},
     )
     assert resp.status_code == 401
@@ -26,7 +26,7 @@ async def test_simulate_lan_to_guest_blocked(client: AsyncClient) -> None:
     """LAN to Guest has no explicit allow rule, so default policy blocks."""
     _login()
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={"src_ip": "192.168.1.10", "dst_ip": "10.0.100.5"},
     )
     assert resp.status_code == 200
@@ -41,7 +41,7 @@ async def test_simulate_lan_to_guest_blocked(client: AsyncClient) -> None:
 async def test_simulate_iot_to_lan_blocked(client: AsyncClient) -> None:
     _login()
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={"src_ip": "10.0.200.50", "dst_ip": "192.168.1.100"},
     )
     assert resp.status_code == 200
@@ -56,7 +56,7 @@ async def test_simulate_iot_to_lan_blocked(client: AsyncClient) -> None:
 async def test_simulate_unknown_source_ip(client: AsyncClient) -> None:
     _login()
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={"src_ip": "8.8.8.8", "dst_ip": "192.168.1.10"},
     )
     assert resp.status_code == 400
@@ -67,7 +67,7 @@ async def test_simulate_unknown_source_ip(client: AsyncClient) -> None:
 async def test_simulate_unknown_destination_ip(client: AsyncClient) -> None:
     _login()
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={"src_ip": "192.168.1.10", "dst_ip": "8.8.8.8"},
     )
     assert resp.status_code == 400
@@ -78,7 +78,7 @@ async def test_simulate_unknown_destination_ip(client: AsyncClient) -> None:
 async def test_simulate_with_protocol_and_port(client: AsyncClient) -> None:
     _login()
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={
             "src_ip": "10.0.100.5",
             "dst_ip": "10.0.200.50",
@@ -96,7 +96,7 @@ async def test_simulate_with_protocol_and_port(client: AsyncClient) -> None:
 async def test_simulate_with_source_port(client: AsyncClient) -> None:
     _login()
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={
             "src_ip": "192.168.1.50",
             "dst_ip": "10.0.100.10",
@@ -117,7 +117,7 @@ async def test_simulate_with_source_port(client: AsyncClient) -> None:
 async def test_simulate_response_includes_zone_names(client: AsyncClient) -> None:
     _login()
     resp = await client.post(
-        "/api/simulate",
+        "/api/firewall/simulate",
         json={"src_ip": "10.0.200.50", "dst_ip": "192.168.1.100"},
     )
     assert resp.status_code == 200

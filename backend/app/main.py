@@ -147,13 +147,16 @@ async def unifi_api_error_handler(request: Request, exc: UnifiApiError) -> JSONR
     log.error("unifi_api_error", error=str(exc))
     return JSONResponse(status_code=502, content={"detail": "Failed to communicate with UniFi controller"})
 
-app.include_router(analyze_router)
+# Firewall module
+app.include_router(zones_router, prefix="/api/firewall")
+app.include_router(rules_router, prefix="/api/firewall")
+app.include_router(simulate_router, prefix="/api/firewall")
+app.include_router(analyze_router, prefix="/api/firewall")
+app.include_router(zone_filter_router, prefix="/api/firewall")
+
+# Shared (cross-module)
 app.include_router(auth_router)
-app.include_router(zones_router)
-app.include_router(rules_router)
-app.include_router(simulate_router)
 app.include_router(settings_router)
-app.include_router(zone_filter_router)
 
 
 @app.get("/api/health")

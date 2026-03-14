@@ -10,7 +10,7 @@ from app.services.analyzer import analyze_zone_pair
 
 log = structlog.get_logger()
 
-router = APIRouter(prefix="/api", tags=["analyze"])
+router = APIRouter(tags=["analyze"])
 
 
 class AnalyzeRequest(BaseModel):

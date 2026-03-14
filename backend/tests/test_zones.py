@@ -17,14 +17,14 @@ def _login() -> None:
 
 @pytest.mark.anyio
 async def test_zones_requires_credentials(client: AsyncClient) -> None:
-    resp = await client.get("/api/zones")
+    resp = await client.get("/api/firewall/zones")
     assert resp.status_code == 401
 
 
 @pytest.mark.anyio
 async def test_zones_returns_list(client: AsyncClient) -> None:
     _login()
-    resp = await client.get("/api/zones")
+    resp = await client.get("/api/firewall/zones")
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
@@ -40,7 +40,7 @@ async def test_zones_returns_list(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_zones_contain_expected_zones(client: AsyncClient) -> None:
     _login()
-    resp = await client.get("/api/zones")
+    resp = await client.get("/api/firewall/zones")
     data = resp.json()
     zone_names = {z["name"] for z in data}
     assert "External" in zone_names
@@ -53,7 +53,7 @@ async def test_zones_contain_expected_zones(client: AsyncClient) -> None:
 async def test_zones_unifi_api_error_returns_502(client: AsyncClient) -> None:
     _login()
     with patch("app.services.firewall.fetch_firewall_zones", side_effect=UnifiApiError("HTTP 404")):
-        resp = await client.get("/api/zones")
+        resp = await client.get("/api/firewall/zones")
     assert resp.status_code == 502
     assert resp.json()["detail"] == "Failed to communicate with UniFi controller"
 
@@ -62,6 +62,6 @@ async def test_zones_unifi_api_error_returns_502(client: AsyncClient) -> None:
 async def test_zones_unifi_auth_error_returns_401(client: AsyncClient) -> None:
     _login()
     with patch("app.services.firewall.fetch_firewall_zones", side_effect=UnifiAuthError("AUTHENTICATION_FAILED_LIMIT_REACHED")):
-        resp = await client.get("/api/zones")
+        resp = await client.get("/api/firewall/zones")
     assert resp.status_code == 401
     assert "AUTHENTICATION_FAILED_LIMIT_REACHED" in resp.json()["detail"]

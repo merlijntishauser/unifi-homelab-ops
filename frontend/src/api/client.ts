@@ -55,11 +55,11 @@ export const api = {
       }),
     }),
   logout: () => fetchJson("/auth/logout", { method: "POST" }),
-  getZones: () => fetchJson<Zone[]>("/zones"),
-  getRules: () => fetchJson<Rule[]>("/rules"),
-  getZonePairs: () => fetchJson<ZonePair[]>("/zone-pairs"),
+  getZones: () => fetchJson<Zone[]>("/firewall/zones"),
+  getRules: () => fetchJson<Rule[]>("/firewall/rules"),
+  getZonePairs: () => fetchJson<ZonePair[]>("/firewall/zone-pairs"),
   simulate: (req: SimulateRequest) =>
-    fetchJson<SimulateResponse>("/simulate", {
+    fetchJson<SimulateResponse>("/firewall/simulate", {
       method: "POST",
       body: JSON.stringify(req),
     }),
@@ -84,23 +84,23 @@ export const api = {
       body: JSON.stringify(settings),
     }),
   analyzeWithAi: (req: AiAnalyzeRequest) =>
-    fetchJson<AiAnalyzeResponse>("/analyze", {
+    fetchJson<AiAnalyzeResponse>("/firewall/analyze", {
       method: "POST",
       body: JSON.stringify(req),
     }),
-  getZoneFilter: () => fetchJson<ZoneFilter>("/settings/zone-filter"),
+  getZoneFilter: () => fetchJson<ZoneFilter>("/firewall/zone-filter"),
   saveZoneFilter: (hiddenZoneIds: string[]) =>
-    fetchJson("/settings/zone-filter", {
+    fetchJson("/firewall/zone-filter", {
       method: "PUT",
       body: JSON.stringify({ hidden_zone_ids: hiddenZoneIds }),
     }),
   toggleRule: (ruleId: string, enabled: boolean) =>
-    fetchJson(`/rules/${ruleId}/toggle`, {
+    fetchJson(`/firewall/rules/${ruleId}/toggle`, {
       method: "PATCH",
       body: JSON.stringify({ enabled }),
     }),
   swapRuleOrder: (policyIdA: string, policyIdB: string) =>
-    fetchJson("/rules/reorder", {
+    fetchJson("/firewall/rules/reorder", {
       method: "PUT",
       body: JSON.stringify({ policy_id_a: policyIdA, policy_id_b: policyIdB }),
     }),

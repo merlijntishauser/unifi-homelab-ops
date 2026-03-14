@@ -17,14 +17,14 @@ def _login() -> None:
 
 @pytest.mark.anyio
 async def test_rules_requires_credentials(client: AsyncClient) -> None:
-    resp = await client.get("/api/rules")
+    resp = await client.get("/api/firewall/rules")
     assert resp.status_code == 401
 
 
 @pytest.mark.anyio
 async def test_rules_returns_list(client: AsyncClient) -> None:
     _login()
-    resp = await client.get("/api/rules")
+    resp = await client.get("/api/firewall/rules")
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
@@ -42,7 +42,7 @@ async def test_rules_returns_list(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_rules_filter_by_source_zone(client: AsyncClient) -> None:
     _login()
-    resp = await client.get("/api/rules", params={"source_zone": "zone-guest"})
+    resp = await client.get("/api/firewall/rules", params={"source_zone": "zone-guest"})
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) > 0
@@ -53,7 +53,7 @@ async def test_rules_filter_by_source_zone(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_rules_filter_by_destination_zone(client: AsyncClient) -> None:
     _login()
-    resp = await client.get("/api/rules", params={"destination_zone": "zone-internal"})
+    resp = await client.get("/api/firewall/rules", params={"destination_zone": "zone-internal"})
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) > 0
@@ -65,7 +65,7 @@ async def test_rules_filter_by_destination_zone(client: AsyncClient) -> None:
 async def test_rules_filter_by_both_zones(client: AsyncClient) -> None:
     _login()
     resp = await client.get(
-        "/api/rules",
+        "/api/firewall/rules",
         params={"source_zone": "zone-iot", "destination_zone": "zone-internal"},
     )
     assert resp.status_code == 200
@@ -80,7 +80,7 @@ async def test_rules_filter_by_both_zones(client: AsyncClient) -> None:
 async def test_rules_filter_returns_empty_for_no_match(client: AsyncClient) -> None:
     _login()
     resp = await client.get(
-        "/api/rules",
+        "/api/firewall/rules",
         params={"source_zone": "nonexistent-zone"},
     )
     assert resp.status_code == 200
@@ -90,14 +90,14 @@ async def test_rules_filter_returns_empty_for_no_match(client: AsyncClient) -> N
 
 @pytest.mark.anyio
 async def test_zone_pairs_requires_credentials(client: AsyncClient) -> None:
-    resp = await client.get("/api/zone-pairs")
+    resp = await client.get("/api/firewall/zone-pairs")
     assert resp.status_code == 401
 
 
 @pytest.mark.anyio
 async def test_zone_pairs_returns_list(client: AsyncClient) -> None:
     _login()
-    resp = await client.get("/api/zone-pairs")
+    resp = await client.get("/api/firewall/zone-pairs")
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
@@ -119,7 +119,7 @@ async def test_zone_pairs_returns_list(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_zone_pairs_counts_are_correct(client: AsyncClient) -> None:
     _login()
-    resp = await client.get("/api/zone-pairs")
+    resp = await client.get("/api/firewall/zone-pairs")
     data = resp.json()
 
     for pair in data:
@@ -136,7 +136,7 @@ async def test_zone_pairs_counts_are_correct(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_toggle_requires_credentials(client: AsyncClient) -> None:
-    resp = await client.patch("/api/rules/rule-1/toggle", json={"enabled": False})
+    resp = await client.patch("/api/firewall/rules/rule-1/toggle", json={"enabled": False})
     assert resp.status_code == 401
 
 
@@ -144,7 +144,7 @@ async def test_toggle_requires_credentials(client: AsyncClient) -> None:
 async def test_toggle_calls_writer(client: AsyncClient) -> None:
     _login()
     with patch("app.routers.rules.toggle_policy") as mock_toggle:
-        resp = await client.patch("/api/rules/rule-1/toggle", json={"enabled": False})
+        resp = await client.patch("/api/firewall/rules/rule-1/toggle", json={"enabled": False})
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
     mock_toggle.assert_called_once()
@@ -157,7 +157,7 @@ async def test_toggle_calls_writer(client: AsyncClient) -> None:
 async def test_toggle_returns_502_on_write_error(client: AsyncClient) -> None:
     _login()
     with patch("app.routers.rules.toggle_policy", side_effect=WriteError("controller error")):
-        resp = await client.patch("/api/rules/rule-1/toggle", json={"enabled": True})
+        resp = await client.patch("/api/firewall/rules/rule-1/toggle", json={"enabled": True})
     assert resp.status_code == 502
     assert "controller error" in resp.json()["detail"]
 
@@ -165,7 +165,7 @@ async def test_toggle_returns_502_on_write_error(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_swap_order_requires_credentials(client: AsyncClient) -> None:
     resp = await client.put(
-        "/api/rules/reorder",
+        "/api/firewall/rules/reorder",
         json={"policy_id_a": "rule-1", "policy_id_b": "rule-2"},
     )
     assert resp.status_code == 401
@@ -176,7 +176,7 @@ async def test_swap_order_calls_writer(client: AsyncClient) -> None:
     _login()
     with patch("app.routers.rules.swap_policy_order") as mock_swap:
         resp = await client.put(
-            "/api/rules/reorder",
+            "/api/firewall/rules/reorder",
             json={"policy_id_a": "rule-1", "policy_id_b": "rule-2"},
         )
     assert resp.status_code == 200
@@ -192,7 +192,7 @@ async def test_swap_order_returns_502_on_write_error(client: AsyncClient) -> Non
     _login()
     with patch("app.routers.rules.swap_policy_order", side_effect=WriteError("swap failed")):
         resp = await client.put(
-            "/api/rules/reorder",
+            "/api/firewall/rules/reorder",
             json={"policy_id_a": "rule-1", "policy_id_b": "rule-2"},
         )
     assert resp.status_code == 502

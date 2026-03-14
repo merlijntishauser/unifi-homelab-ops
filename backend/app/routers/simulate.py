@@ -8,7 +8,7 @@ from app.services.simulator import SimulationResult, evaluate_rules, resolve_zon
 
 log = structlog.get_logger()
 
-router = APIRouter(prefix="/api", tags=["simulate"])
+router = APIRouter(tags=["simulate"])
 
 
 class SimulateRequest(BaseModel):

@@ -65,8 +65,7 @@ export default function MatrixCell({
     <button
       data-testid="matrix-cell"
       onClick={onClick}
-      title={tooltip || undefined}
-      className={`relative w-full h-full flex items-center justify-center text-xs font-medium rounded-lg border hover:ring-2 hover:ring-ub-blue/40 cursor-pointer transition-all ${color}`}
+      className={`group relative w-full h-full flex items-center justify-center text-xs font-medium rounded-lg border hover:ring-2 hover:ring-ub-blue/40 cursor-pointer transition-all ${color}`}
     >
       {actionLabel ? (
         <span className="flex items-center gap-1">
@@ -83,6 +82,14 @@ export default function MatrixCell({
           data-testid="grade-dot"
           className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${dotColor}`}
         />
+      )}
+      {tooltip && (
+        <span
+          data-testid="cell-tooltip"
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-gray-900 dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg"
+        >
+          {tooltip}
+        </span>
       )}
     </button>
   );

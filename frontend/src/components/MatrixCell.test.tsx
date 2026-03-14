@@ -98,22 +98,22 @@ describe("MatrixCell", () => {
   describe("tooltip", () => {
     it("shows user and predefined counts", () => {
       render(<MatrixCell {...baseProps} userRuleCount={3} predefinedRuleCount={2} />);
-      expect(screen.getByRole("button")).toHaveAttribute("title", "3 user rules, 2 built-in rules");
+      expect(screen.getByTestId("cell-tooltip")).toHaveTextContent("3 user rules, 2 built-in rules");
     });
 
     it("shows only user count when no predefined", () => {
       render(<MatrixCell {...baseProps} userRuleCount={1} predefinedRuleCount={0} />);
-      expect(screen.getByRole("button")).toHaveAttribute("title", "1 user rule");
+      expect(screen.getByTestId("cell-tooltip")).toHaveTextContent("1 user rule");
     });
 
     it("shows only predefined count when no user rules", () => {
       render(<MatrixCell {...baseProps} userRuleCount={0} predefinedRuleCount={1} />);
-      expect(screen.getByRole("button")).toHaveAttribute("title", "1 built-in rule");
+      expect(screen.getByTestId("cell-tooltip")).toHaveTextContent("1 built-in rule");
     });
 
     it("shows no tooltip when no rules", () => {
       render(<MatrixCell {...baseProps} actionLabel={null} userRuleCount={0} predefinedRuleCount={0} />);
-      expect(screen.getByRole("button")).not.toHaveAttribute("title");
+      expect(screen.queryByTestId("cell-tooltip")).not.toBeInTheDocument();
     });
   });
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ModuleSidebar from "./ModuleSidebar";
@@ -10,6 +10,10 @@ function renderSidebar(currentPath = "/firewall", onOpenSettings = vi.fn()) {
     </MemoryRouter>,
   );
 }
+
+beforeEach(() => {
+  try { localStorage.clear(); } catch { /* noop */ }
+});
 
 describe("ModuleSidebar", () => {
   it("renders navigation with all module links", () => {
@@ -42,10 +46,9 @@ describe("ModuleSidebar", () => {
     expect(screen.getByText("Health").closest("a")).toHaveAttribute("href", "/health");
   });
 
-  it("renders Settings button in bottom section", () => {
+  it("renders Settings button", () => {
     renderSidebar();
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
-    expect(screen.getByText("Settings")).toBeInTheDocument();
   });
 
   it("calls onOpenSettings when Settings is clicked", () => {
@@ -53,5 +56,48 @@ describe("ModuleSidebar", () => {
     renderSidebar("/firewall", handler);
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts expanded by default", () => {
+    renderSidebar();
+    expect(screen.getByText("Firewall")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collapse sidebar" })).toBeInTheDocument();
+  });
+
+  it("collapses when toggle is clicked", () => {
+    renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeInTheDocument();
+    expect(screen.queryByText("Firewall")).not.toBeInTheDocument();
+  });
+
+  it("expands when toggle is clicked again", () => {
+    renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }));
+    expect(screen.getByText("Firewall")).toBeInTheDocument();
+  });
+
+  it("persists collapsed state in localStorage", () => {
+    renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(localStorage.getItem("sidebarExpanded")).toBe("false");
+  });
+
+  it("shows tooltips on links when collapsed", () => {
+    renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    const links = screen.getAllByRole("link");
+    expect(links[0]).toHaveAttribute("title", "Firewall");
+  });
+
+  it("links remain clickable when collapsed", () => {
+    renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    const links = screen.getAllByRole("link");
+    expect(links.length).toBe(4);
+    for (const link of links) {
+      expect(link).toHaveAttribute("href");
+    }
   });
 });

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 interface ModuleSidebarProps {
@@ -11,13 +12,13 @@ interface NavItem {
 }
 
 const shieldIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 
 const networkIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
     <line x1="6" y1="3" x2="6" y2="15" />
     <circle cx="18" cy="6" r="3" />
     <circle cx="6" cy="18" r="3" />
@@ -26,22 +27,28 @@ const networkIcon = (
 );
 
 const activityIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 );
 
 const heartPulseIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
     <path d="M19.5 12.572l-7.5 7.428-7.5-7.428A5 5 0 1 1 12 6.006a5 5 0 1 1 7.5 6.572" />
     <path d="M12 6l-2 4h4l-2 4" />
   </svg>
 );
 
 const settingsIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
     <circle cx="12" cy="12" r="3" />
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+);
+
+const chevronIcon = (expanded: boolean) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 shrink-0 transition-transform duration-200 ${expanded ? "" : "rotate-180"}`}>
+    <polyline points="11 17 6 12 11 7" />
   </svg>
 );
 
@@ -59,10 +66,26 @@ const navLinkClass = (isActive: boolean) =>
       : "text-gray-500 dark:text-noc-text-dim hover:text-gray-900 dark:hover:text-noc-text hover:bg-gray-100 dark:hover:bg-noc-raised"
   }`;
 
+function readExpanded(): boolean {
+  try {
+    return localStorage.getItem("sidebarExpanded") !== "false";
+  } catch {
+    return true;
+  }
+}
+
 export default function ModuleSidebar({ onOpenSettings }: ModuleSidebarProps) {
+  const [expanded, setExpanded] = useState(readExpanded);
+
+  const toggle = () => {
+    const next = !expanded;
+    setExpanded(next);
+    try { localStorage.setItem("sidebarExpanded", String(next)); } catch { /* noop */ }
+  };
+
   return (
     <nav
-      className="group/sidebar flex flex-col w-12 hover:w-45 bg-white dark:bg-noc-surface border-r border-gray-200 dark:border-noc-border transition-[width] duration-200 overflow-hidden shrink-0 z-20"
+      className={`flex flex-col ${expanded ? "w-45" : "w-12"} bg-white dark:bg-noc-surface border-r border-gray-200 dark:border-noc-border transition-[width] duration-200 overflow-hidden shrink-0 z-20`}
       aria-label="Module navigation"
     >
       <div className="flex-1 flex flex-col gap-1 py-2 px-1.5">
@@ -71,24 +94,29 @@ export default function ModuleSidebar({ onOpenSettings }: ModuleSidebarProps) {
             key={item.to}
             to={item.to}
             className={({ isActive }) => navLinkClass(isActive)}
+            title={expanded ? undefined : item.label}
           >
             {item.icon}
-            <span className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200">
-              {item.label}
-            </span>
+            {expanded && <span>{item.label}</span>}
           </NavLink>
         ))}
       </div>
-      <div className="border-t border-gray-200 dark:border-noc-border py-2 px-1.5">
+      <div className="border-t border-gray-200 dark:border-noc-border py-2 px-1.5 flex flex-col gap-1">
         <button
           onClick={onOpenSettings}
           className={navLinkClass(false) + " w-full"}
           aria-label="Settings"
+          title={expanded ? undefined : "Settings"}
         >
           {settingsIcon}
-          <span className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200">
-            Settings
-          </span>
+          {expanded && <span>Settings</span>}
+        </button>
+        <button
+          onClick={toggle}
+          className="flex items-center justify-center px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised transition-colors"
+          aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {chevronIcon(expanded)}
         </button>
       </div>
     </nav>

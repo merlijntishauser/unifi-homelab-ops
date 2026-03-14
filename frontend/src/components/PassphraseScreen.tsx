@@ -33,7 +33,7 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
         <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-ub-blue/50 to-transparent" />
 
         <h2 className="text-2xl font-display font-semibold text-gray-900 dark:text-noc-text text-center tracking-tight">
-          UniFi Firewall Analyser
+          UniFi Homelab Ops
         </h2>
         <p className="text-sm text-gray-500 dark:text-noc-text-secondary text-center">
           Enter the application password to continue.

@@ -16,7 +16,7 @@ function startupBanner(): Plugin {
   / / / / __ \\/ / /_  / /| |
  / /_/ / / / / / __/ / / | |
  \\____/_/ /_/_/_/   /_/  |_|
-  Firewall Analyser  [frontend]
+  Homelab Ops  [frontend]
 
   API proxy: ${apiTarget}
 `;

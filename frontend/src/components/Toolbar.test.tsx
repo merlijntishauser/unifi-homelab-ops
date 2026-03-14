@@ -24,7 +24,7 @@ describe("Toolbar", () => {
 
   it("renders the title", () => {
     renderToolbar();
-    expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
+    expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
   });
 
   it("does not show toggle when neither hidden zones nor disabled rules", () => {

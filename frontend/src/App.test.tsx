@@ -222,7 +222,7 @@ describe("App", () => {
     renderWithQuery(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
+      expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
     });
   });
 
@@ -255,7 +255,7 @@ describe("App", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
+      expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
     });
   });
 
@@ -268,7 +268,7 @@ describe("App", () => {
     renderWithQuery(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
+      expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
     });
 
     // After logout, auth status should return not configured
@@ -389,7 +389,7 @@ describe("App", () => {
     renderWithQuery(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
+      expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
     });
 
     // The toolbar toggle should not show any of these labels

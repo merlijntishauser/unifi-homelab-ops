@@ -20,7 +20,7 @@ describe("PassphraseScreen", () => {
 
   it("renders the passphrase form", () => {
     renderWithQuery(<PassphraseScreen onAuthenticated={vi.fn()} />);
-    expect(screen.getByText("UniFi Firewall Analyser")).toBeInTheDocument();
+    expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Unlock" })).toBeInTheDocument();
   });

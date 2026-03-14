@@ -75,7 +75,7 @@ export default function Toolbar({
   return (
     <div className="flex items-center gap-3 px-5 py-2.5 border-b border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface">
       <h1 className="text-base font-display font-semibold text-gray-900 dark:text-noc-text tracking-tight">
-        UniFi Firewall Analyser
+        UniFi Homelab Ops
       </h1>
 
       <StatusBadge active={connectionInfo !== null} label="Controller" tooltip={connectionTooltip} />

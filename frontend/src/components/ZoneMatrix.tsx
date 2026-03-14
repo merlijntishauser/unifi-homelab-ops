@@ -22,8 +22,8 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
       <div
         className="grid gap-1"
         style={{
-          gridTemplateColumns: `auto auto repeat(${size}, minmax(180px, 220px))`,
-          gridTemplateRows: `auto auto repeat(${size}, minmax(52px, 72px))`,
+          gridTemplateColumns: `auto auto repeat(${size}, minmax(130px, 160px))`,
+          gridTemplateRows: `auto auto repeat(${size}, minmax(38px, 52px))`,
         }}
       >
         {/* Row 1: empty corner cells + "Destination" label spanning columns */}
@@ -31,7 +31,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
         <div className="sticky top-0 left-0 z-30 bg-gray-50 dark:bg-noc-bg" />
         {size > 0 && (
           <div
-            className="sticky top-0 z-20 bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-lg flex items-end justify-center pb-2 pt-1 text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
+            className="sticky top-0 z-20 bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
             style={{ gridColumn: `3 / span ${size}` }}
           >
             Destination
@@ -40,7 +40,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
 
         {/* Row 2: "Source" label cell + empty cell + column headers */}
         <div
-          className="sticky left-0 z-20 bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-lg flex items-center justify-center text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
+          className="sticky left-0 z-20 bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
           style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
           data-testid="source-label"
         >

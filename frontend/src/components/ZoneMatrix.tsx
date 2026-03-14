@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import type { Zone, ZonePair } from "../api/types";
 import MatrixCell from "./MatrixCell";
+import { deriveCellSummary } from "../utils/matrixUtils";
 
 interface ZoneMatrixProps {
   zones: Zone[];
@@ -21,34 +22,50 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
       <div
         className="grid gap-1"
         style={{
-          gridTemplateColumns: `auto repeat(${size}, minmax(80px, 120px))`,
-          gridTemplateRows: `auto repeat(${size}, minmax(56px, 80px))`,
+          gridTemplateColumns: `auto auto repeat(${size}, minmax(180px, 220px))`,
+          gridTemplateRows: `auto auto repeat(${size}, minmax(52px, 72px))`,
         }}
       >
-        {/* Top-left empty corner */}
-        <div className="sticky top-0 left-0 z-20 bg-gray-50 dark:bg-noc-bg" />
+        {/* Row 1: empty corner cells + "Destination" label spanning columns */}
+        <div className="sticky top-0 left-0 z-30 bg-gray-50 dark:bg-noc-bg" />
+        <div className="sticky top-0 left-0 z-30 bg-gray-50 dark:bg-noc-bg" />
+        {size > 0 && (
+          <div
+            className="sticky top-0 z-20 bg-gray-50 dark:bg-noc-bg flex items-end justify-center pb-1 text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
+            style={{ gridColumn: `3 / span ${size}` }}
+          >
+            Destination
+          </div>
+        )}
 
-        {/* Column headers */}
+        {/* Row 2: "Source" label cell + empty cell + column headers */}
+        <div
+          className="sticky left-0 z-20 bg-gray-50 dark:bg-noc-bg flex items-center justify-center text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
+          style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+          data-testid="source-label"
+        >
+          {size > 0 ? "Source" : ""}
+        </div>
+        <div className="sticky top-0 z-20 bg-gray-50 dark:bg-noc-bg" />
         {zones.map((zone) => (
           <button
             key={`col-${zone.id}`}
             data-testid={`col-header-${zone.id}`}
             onClick={() => onZoneClick(zone.id)}
-            className="sticky top-0 z-10 bg-gray-50 dark:bg-noc-bg text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary truncate px-1 pb-2 hover:text-ub-blue cursor-pointer text-center transition-colors"
-            style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+            className="sticky top-0 z-10 bg-gray-50 dark:bg-noc-bg text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary truncate px-2 pb-2 hover:text-ub-blue cursor-pointer text-center transition-colors"
           >
             {zone.name}
           </button>
         ))}
 
-        {/* Rows */}
+        {/* Data rows */}
         {zones.map((srcZone) => (
           <Fragment key={srcZone.id}>
             {/* Row header */}
             <button
               data-testid={`row-header-${srcZone.id}`}
               onClick={() => onZoneClick(srcZone.id)}
-              className="sticky left-0 z-10 bg-gray-50 dark:bg-noc-bg text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary truncate pr-3 flex items-center hover:text-ub-blue cursor-pointer transition-colors"
+              className="sticky left-0 z-10 bg-gray-50 dark:bg-noc-bg text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary truncate pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"
             >
               {srcZone.name}
             </button>
@@ -57,14 +74,17 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             {zones.map((dstZone) => {
               const pair = findPair(zonePairs, srcZone.id, dstZone.id);
               const isSelf = srcZone.id === dstZone.id;
+              const summary = pair ? deriveCellSummary(pair) : null;
 
               return (
                 <MatrixCell
                   key={`${srcZone.id}-${dstZone.id}`}
-                  totalRules={pair?.rules.length ?? 0}
+                  actionLabel={summary?.actionLabel ?? null}
+                  userRuleCount={summary?.userRuleCount ?? 0}
+                  predefinedRuleCount={summary?.predefinedRuleCount ?? 0}
                   grade={pair?.analysis?.grade ?? null}
                   onClick={() => {
-                    if (pair) {
+                    if (pair && !isSelf) {
                       onCellClick(pair);
                     }
                   }}

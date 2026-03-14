@@ -2,67 +2,145 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import MatrixCell from "./MatrixCell";
 
+const baseProps = {
+  actionLabel: "Allow All" as const,
+  userRuleCount: 0,
+  predefinedRuleCount: 1,
+  grade: null,
+  onClick: vi.fn(),
+  isSelfPair: false,
+};
+
 describe("MatrixCell", () => {
-  it("renders green when grade is A", () => {
-    render(<MatrixCell totalRules={3} grade="A" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-green-50");
+  describe("action colors", () => {
+    it("renders green for Allow All", () => {
+      render(<MatrixCell {...baseProps} actionLabel="Allow All" />);
+      expect(screen.getByRole("button")).toHaveClass("bg-green-50");
+    });
+
+    it("renders blue for Allow Return", () => {
+      render(<MatrixCell {...baseProps} actionLabel="Allow Return" />);
+      expect(screen.getByRole("button")).toHaveClass("bg-blue-50");
+    });
+
+    it("renders red for Block All", () => {
+      render(<MatrixCell {...baseProps} actionLabel="Block All" />);
+      expect(screen.getByRole("button")).toHaveClass("bg-red-50");
+    });
+
+    it("renders amber for Mixed", () => {
+      render(<MatrixCell {...baseProps} actionLabel="Mixed" />);
+      expect(screen.getByRole("button")).toHaveClass("bg-amber-50");
+    });
+
+    it("renders gray when actionLabel is null", () => {
+      render(<MatrixCell {...baseProps} actionLabel={null} userRuleCount={0} predefinedRuleCount={0} />);
+      expect(screen.getByRole("button")).toHaveClass("bg-gray-50");
+    });
   });
 
-  it("renders green when grade is B", () => {
-    render(<MatrixCell totalRules={3} grade="B" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-green-50");
+  describe("action label text", () => {
+    it("shows action label", () => {
+      render(<MatrixCell {...baseProps} actionLabel="Block All" />);
+      expect(screen.getByText("Block All")).toBeInTheDocument();
+    });
+
+    it("shows dash when no action", () => {
+      render(<MatrixCell {...baseProps} actionLabel={null} userRuleCount={0} predefinedRuleCount={0} />);
+      expect(screen.getByText("\u2014")).toBeInTheDocument();
+    });
   });
 
-  it("renders amber when grade is C", () => {
-    render(<MatrixCell totalRules={2} grade="C" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-amber-50");
+  describe("user rule count", () => {
+    it("shows user rule count when > 0", () => {
+      render(<MatrixCell {...baseProps} userRuleCount={3} />);
+      expect(screen.getByText("(3)")).toBeInTheDocument();
+    });
+
+    it("hides user rule count when 0", () => {
+      render(<MatrixCell {...baseProps} userRuleCount={0} />);
+      expect(screen.queryByText("(0)")).not.toBeInTheDocument();
+    });
   });
 
-  it("renders red when grade is D", () => {
-    render(<MatrixCell totalRules={1} grade="D" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-red-50");
+  describe("grade dot", () => {
+    it("shows green dot for grade A", () => {
+      render(<MatrixCell {...baseProps} grade="A" />);
+      expect(screen.getByTestId("grade-dot")).toHaveClass("bg-green-500");
+    });
+
+    it("shows green dot for grade B", () => {
+      render(<MatrixCell {...baseProps} grade="B" />);
+      expect(screen.getByTestId("grade-dot")).toHaveClass("bg-green-500");
+    });
+
+    it("shows amber dot for grade C", () => {
+      render(<MatrixCell {...baseProps} grade="C" />);
+      expect(screen.getByTestId("grade-dot")).toHaveClass("bg-amber-500");
+    });
+
+    it("shows red dot for grade D", () => {
+      render(<MatrixCell {...baseProps} grade="D" />);
+      expect(screen.getByTestId("grade-dot")).toHaveClass("bg-red-500");
+    });
+
+    it("shows red dot for grade F", () => {
+      render(<MatrixCell {...baseProps} grade="F" />);
+      expect(screen.getByTestId("grade-dot")).toHaveClass("bg-red-500");
+    });
+
+    it("shows no dot when grade is null", () => {
+      render(<MatrixCell {...baseProps} grade={null} />);
+      expect(screen.queryByTestId("grade-dot")).not.toBeInTheDocument();
+    });
   });
 
-  it("renders red when grade is F", () => {
-    render(<MatrixCell totalRules={2} grade="F" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-red-50");
+  describe("tooltip", () => {
+    it("shows user and predefined counts", () => {
+      render(<MatrixCell {...baseProps} userRuleCount={3} predefinedRuleCount={2} />);
+      expect(screen.getByRole("button")).toHaveAttribute("title", "3 user rules, 2 built-in rules");
+    });
+
+    it("shows only user count when no predefined", () => {
+      render(<MatrixCell {...baseProps} userRuleCount={1} predefinedRuleCount={0} />);
+      expect(screen.getByRole("button")).toHaveAttribute("title", "1 user rule");
+    });
+
+    it("shows only predefined count when no user rules", () => {
+      render(<MatrixCell {...baseProps} userRuleCount={0} predefinedRuleCount={1} />);
+      expect(screen.getByRole("button")).toHaveAttribute("title", "1 built-in rule");
+    });
+
+    it("shows no tooltip when no rules", () => {
+      render(<MatrixCell {...baseProps} actionLabel={null} userRuleCount={0} predefinedRuleCount={0} />);
+      expect(screen.getByRole("button")).not.toHaveAttribute("title");
+    });
   });
 
-  it("renders gray when no rules exist", () => {
-    render(<MatrixCell totalRules={0} grade={null} onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).toHaveClass("bg-gray-50");
-  });
+  describe("self-pair", () => {
+    it("renders inert div instead of button", () => {
+      render(<MatrixCell {...baseProps} isSelfPair />);
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+      expect(screen.getByTestId("matrix-cell")).toBeInTheDocument();
+    });
 
-  it("shows rule count and grade", () => {
-    render(<MatrixCell totalRules={3} grade="B" onClick={vi.fn()} />);
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("B")).toBeInTheDocument();
-  });
+    it("shows dash", () => {
+      render(<MatrixCell {...baseProps} isSelfPair />);
+      expect(screen.getByText("\u2014")).toBeInTheDocument();
+    });
 
-  it("shows dash when no rules", () => {
-    render(<MatrixCell totalRules={0} grade={null} onClick={vi.fn()} />);
-    expect(screen.getByText("\u2014")).toBeInTheDocument();
+    it("does not fire onClick", () => {
+      const onClick = vi.fn();
+      render(<MatrixCell {...baseProps} isSelfPair onClick={onClick} />);
+      fireEvent.click(screen.getByTestId("matrix-cell"));
+      expect(onClick).not.toHaveBeenCalled();
+    });
   });
 
   it("calls onClick when clicked", () => {
     const onClick = vi.fn();
-    render(<MatrixCell totalRules={1} grade="A" onClick={onClick} />);
+    render(<MatrixCell {...baseProps} onClick={onClick} />);
     fireEvent.click(screen.getByRole("button"));
     expect(onClick).toHaveBeenCalledOnce();
-  });
-
-  it("applies dimmed style when isSelfPair is true", () => {
-    render(<MatrixCell totalRules={0} grade={null} onClick={vi.fn()} isSelfPair />);
-    expect(screen.getByRole("button")).toHaveClass("opacity-30");
-  });
-
-  it("does not apply dimmed style when isSelfPair is false", () => {
-    render(<MatrixCell totalRules={1} grade="A" onClick={vi.fn()} />);
-    expect(screen.getByRole("button")).not.toHaveClass("opacity-40");
-  });
-
-  it("renders gray grade text for unrecognized grade", () => {
-    render(<MatrixCell totalRules={1} grade="X" onClick={vi.fn()} />);
-    expect(screen.getByText("X")).toHaveClass("text-gray-500");
   });
 });

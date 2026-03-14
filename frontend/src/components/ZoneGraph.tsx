@@ -112,6 +112,15 @@ function buildElements(
     );
   }
 
+  // Deduplicate pairs by source->destination to prevent duplicate React keys
+  const seenPairs = new Set<string>();
+  filteredPairs = filteredPairs.filter((pair) => {
+    const key = `${pair.source_zone_id}|${pair.destination_zone_id}`;
+    if (seenPairs.has(key)) return false;
+    seenPairs.add(key);
+    return true;
+  });
+
   const rawNodes: Node<ZoneNodeData>[] = filteredZones.map((zone) => ({
     id: zone.id,
     type: "zone" as const,
@@ -196,6 +205,7 @@ function ZoneGraphInner({
     <PinnedEdgeContext.Provider value={{ pinnedId, setPinnedId }}>
       <div ref={containerRef} className="w-full h-full">
         <ReactFlow
+          id="firewall-graph"
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}

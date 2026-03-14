@@ -319,6 +319,27 @@ describe("ZoneGraph", () => {
     expect(screen.getByTestId("edge-z2->z1")).toBeInTheDocument();
   });
 
+  it("deduplicates zone pairs with the same source and destination", () => {
+    const dupPairs: ZonePair[] = [
+      {
+        source_zone_id: "z1", destination_zone_id: "z2",
+        rules: [{ id: "r1", name: "Allow HTTP", description: "", enabled: true, action: "ALLOW", source_zone_id: "z1", destination_zone_id: "z2", protocol: "TCP", port_ranges: ["80"], ip_ranges: [], index: 1, predefined: false }],
+        allow_count: 1, block_count: 0, analysis: null,
+      },
+      {
+        source_zone_id: "z1", destination_zone_id: "z2",
+        rules: [{ id: "r2", name: "Duplicate", description: "", enabled: true, action: "ALLOW", source_zone_id: "z1", destination_zone_id: "z2", protocol: "TCP", port_ranges: [], ip_ranges: [], index: 2, predefined: false }],
+        allow_count: 1, block_count: 0, analysis: null,
+      },
+    ];
+
+    render(
+      <ZoneGraph zones={zones} zonePairs={dupPairs} colorMode="light" onEdgeSelect={onEdgeSelect} />,
+    );
+    // Should deduplicate to 1 edge, not 2
+    expect(screen.getByTestId("edges-count").textContent).toBe("1");
+  });
+
   it("filters out hidden zones when showHidden is false", () => {
     const threeZones: Zone[] = [
       { id: "z1", name: "External", networks: [] },

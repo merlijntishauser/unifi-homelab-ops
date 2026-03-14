@@ -12,14 +12,7 @@ export default function AppShell() {
       <Toolbar
         colorMode={ctx.colorMode}
         onColorModeChange={ctx.onColorModeChange}
-        showHidden={ctx.showHidden}
-        onShowHiddenChange={ctx.onShowHiddenChange}
-        hasHiddenZones={ctx.hasHiddenZones}
-        hasDisabledRules={ctx.hasDisabledRules}
-        onRefresh={ctx.onRefresh}
-        loading={ctx.dataLoading}
         onLogout={ctx.onLogout}
-        onOpenSettings={ctx.onOpenSettings}
         connectionInfo={ctx.connectionInfo}
         aiInfo={ctx.aiInfo}
       />
@@ -27,7 +20,7 @@ export default function AppShell() {
         <SettingsModal onClose={ctx.onCloseSettings} />
       )}
       <div className="flex-1 flex overflow-hidden">
-        <ModuleSidebar />
+        <ModuleSidebar onOpenSettings={ctx.onOpenSettings} />
         <div className="flex-1 flex overflow-hidden bg-gray-50 dark:bg-noc-bg">
           <Outlet />
         </div>

@@ -15,14 +15,7 @@ interface AiInfo {
 interface ToolbarProps {
   colorMode: ColorMode;
   onColorModeChange: (mode: ColorMode) => void;
-  showHidden: boolean;
-  onShowHiddenChange: (show: boolean) => void;
-  hasHiddenZones: boolean;
-  hasDisabledRules: boolean;
-  onRefresh: () => void;
-  loading: boolean;
   onLogout: () => void;
-  onOpenSettings: () => void;
   connectionInfo: ConnectionInfo | null;
   aiInfo: AiInfo;
 }
@@ -50,14 +43,7 @@ function StatusBadge({ active, label, tooltip }: { active: boolean; label: strin
 export default function Toolbar({
   colorMode,
   onColorModeChange,
-  showHidden,
-  onShowHiddenChange,
-  hasHiddenZones,
-  hasDisabledRules,
-  onRefresh,
-  loading,
   onLogout,
-  onOpenSettings,
   connectionInfo,
   aiInfo,
 }: ToolbarProps) {
@@ -83,22 +69,6 @@ export default function Toolbar({
 
       <div className="mr-auto" />
 
-      {(hasHiddenZones || hasDisabledRules) && (
-        <label className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-noc-text-secondary cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={showHidden}
-            onChange={(e) => onShowHiddenChange(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
-          />
-          {hasHiddenZones && hasDisabledRules
-            ? "Show filtered zones and disabled rules"
-            : hasHiddenZones
-              ? "Show filtered zones"
-              : "Show disabled rules"}
-        </label>
-      )}
-
       <button
         onClick={() =>
           onColorModeChange(colorMode === "dark" ? "light" : "dark")
@@ -106,21 +76,6 @@ export default function Toolbar({
         className={btnClass}
       >
         {colorMode === "dark" ? "Light" : "Dark"}
-      </button>
-
-      <button
-        onClick={onRefresh}
-        disabled={loading}
-        className={`${btnClass} disabled:opacity-40 disabled:cursor-not-allowed`}
-      >
-        {loading ? "Refreshing..." : "Refresh"}
-      </button>
-
-      <button
-        onClick={onOpenSettings}
-        className={btnClass}
-      >
-        Settings
       </button>
 
       <button

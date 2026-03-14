@@ -126,6 +126,38 @@ describe("FirewallModule", () => {
     expect(screen.getByText("Connection refused")).toBeInTheDocument();
   });
 
+  it("renders Refresh button in local toolbar", () => {
+    renderModule();
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+  });
+
+  it("shows Refreshing state when data is loading", () => {
+    renderModule({ dataLoading: true });
+    expect(screen.getByRole("button", { name: "Refreshing..." })).toBeDisabled();
+  });
+
+  it("calls onRefresh when Refresh is clicked", () => {
+    const handler = vi.fn();
+    renderModule({ onRefresh: handler });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows toggle when hidden zones exist", () => {
+    renderModule({ hasHiddenZones: true });
+    expect(screen.getByLabelText("Show filtered zones")).toBeInTheDocument();
+  });
+
+  it("shows toggle when disabled rules exist", () => {
+    renderModule({ hasDisabledRules: true });
+    expect(screen.getByLabelText("Show disabled rules")).toBeInTheDocument();
+  });
+
+  it("does not show toggle when no hidden zones or disabled rules", () => {
+    renderModule();
+    expect(screen.queryByLabelText(/Show (filtered zones|disabled rules)/)).not.toBeInTheDocument();
+  });
+
   it("navigates to graph view when zone is clicked", async () => {
     renderModule();
     fireEvent.click(screen.getByTestId("matrix-zone-z1"));

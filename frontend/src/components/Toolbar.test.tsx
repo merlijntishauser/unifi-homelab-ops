@@ -6,14 +6,7 @@ describe("Toolbar", () => {
   const defaultProps = {
     colorMode: "light" as const,
     onColorModeChange: vi.fn(),
-    showHidden: false,
-    onShowHiddenChange: vi.fn(),
-    hasHiddenZones: false,
-    hasDisabledRules: false,
-    onRefresh: vi.fn(),
-    loading: false,
     onLogout: vi.fn(),
-    onOpenSettings: vi.fn(),
     connectionInfo: { url: "https://unifi.local", username: "admin", source: "runtime" as const },
     aiInfo: { configured: false, provider: "", model: "" },
   };
@@ -25,38 +18,6 @@ describe("Toolbar", () => {
   it("renders the title", () => {
     renderToolbar();
     expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
-  });
-
-  it("does not show toggle when neither hidden zones nor disabled rules", () => {
-    renderToolbar();
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-  });
-
-  it("shows 'Show disabled rules' when only disabled rules exist", () => {
-    renderToolbar({ hasDisabledRules: true });
-    expect(screen.getByLabelText("Show disabled rules")).toBeInTheDocument();
-  });
-
-  it("shows 'Show filtered zones' when only zones are hidden", () => {
-    renderToolbar({ hasHiddenZones: true });
-    expect(screen.getByLabelText("Show filtered zones")).toBeInTheDocument();
-  });
-
-  it("shows combined label when both hidden zones and disabled rules", () => {
-    renderToolbar({ hasHiddenZones: true, hasDisabledRules: true });
-    expect(screen.getByLabelText("Show filtered zones and disabled rules")).toBeInTheDocument();
-  });
-
-  it("checkbox reflects showHidden prop", () => {
-    renderToolbar({ hasDisabledRules: true, showHidden: true });
-    expect(screen.getByRole("checkbox")).toBeChecked();
-  });
-
-  it("calls onShowHiddenChange when checkbox is toggled", () => {
-    const handler = vi.fn();
-    renderToolbar({ hasDisabledRules: true, onShowHiddenChange: handler });
-    fireEvent.click(screen.getByRole("checkbox"));
-    expect(handler).toHaveBeenCalledWith(true);
   });
 
   it("shows 'Dark' button when colorMode is light", () => {
@@ -83,27 +44,6 @@ describe("Toolbar", () => {
     expect(handler).toHaveBeenCalledWith("light");
   });
 
-  it("shows 'Refresh' button when not loading", () => {
-    renderToolbar({ loading: false });
-    const btn = screen.getByRole("button", { name: "Refresh" });
-    expect(btn).toBeInTheDocument();
-    expect(btn).not.toBeDisabled();
-  });
-
-  it("shows 'Refreshing...' and disables button when loading", () => {
-    renderToolbar({ loading: true });
-    const btn = screen.getByRole("button", { name: "Refreshing..." });
-    expect(btn).toBeInTheDocument();
-    expect(btn).toBeDisabled();
-  });
-
-  it("calls onRefresh when Refresh button is clicked", () => {
-    const handler = vi.fn();
-    renderToolbar({ onRefresh: handler });
-    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
-    expect(handler).toHaveBeenCalledTimes(1);
-  });
-
   it("renders Disconnect button", () => {
     renderToolbar();
     expect(screen.getByRole("button", { name: "Disconnect" })).toBeInTheDocument();
@@ -113,18 +53,6 @@ describe("Toolbar", () => {
     const handler = vi.fn();
     renderToolbar({ onLogout: handler });
     fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
-    expect(handler).toHaveBeenCalledTimes(1);
-  });
-
-  it("renders Settings button", () => {
-    renderToolbar();
-    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
-  });
-
-  it("calls onOpenSettings when Settings is clicked", () => {
-    const handler = vi.fn();
-    renderToolbar({ onOpenSettings: handler });
-    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
@@ -153,5 +81,11 @@ describe("Toolbar", () => {
     renderToolbar({ aiInfo: { configured: false, provider: "", model: "" } });
     expect(screen.getByText("AI")).toBeInTheDocument();
     expect(screen.getByText("Not configured")).toBeInTheDocument();
+  });
+
+  it("does not render Settings or Refresh buttons", () => {
+    renderToolbar();
+    expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh" })).not.toBeInTheDocument();
   });
 });

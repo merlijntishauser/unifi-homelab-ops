@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ModuleSidebar from "./ModuleSidebar";
 
-function renderSidebar(currentPath = "/firewall") {
+function renderSidebar(currentPath = "/firewall", onOpenSettings = vi.fn()) {
   return render(
     <MemoryRouter initialEntries={[currentPath]}>
-      <ModuleSidebar />
+      <ModuleSidebar onOpenSettings={onOpenSettings} />
     </MemoryRouter>,
   );
 }
@@ -40,5 +40,18 @@ describe("ModuleSidebar", () => {
     expect(screen.getByText("Topology").closest("a")).toHaveAttribute("href", "/topology");
     expect(screen.getByText("Metrics").closest("a")).toHaveAttribute("href", "/metrics");
     expect(screen.getByText("Health").closest("a")).toHaveAttribute("href", "/health");
+  });
+
+  it("renders Settings button in bottom section", () => {
+    renderSidebar();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    expect(screen.getByText("Settings")).toBeInTheDocument();
+  });
+
+  it("calls onOpenSettings when Settings is clicked", () => {
+    const handler = vi.fn();
+    renderSidebar("/firewall", handler);
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(handler).toHaveBeenCalledTimes(1);
   });
 });

@@ -888,7 +888,7 @@ wheels = [
 ]
 
 [[package]]
-name = "unifi-firewall-analyser"
+name = "unifi-homelab-ops"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

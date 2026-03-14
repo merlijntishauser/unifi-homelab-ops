@@ -5,12 +5,12 @@
 ```bash
 docker run -d \
   -p 8080:8080 \
-  -v analyser-data:/data \
+  -v homelab-ops-data:/data \
   -e APP_PASSWORD=your-secret-passphrase \
   -e AI_API_KEY=sk-your-api-key \
   -e AI_BASE_URL=https://api.openai.com/v1 \
   -e AI_MODEL=gpt-4o \
-  ghcr.io/your-org/unifi-firewall-analyser:latest
+  ghcr.io/your-org/unifi-homelab-ops:latest
 ```
 
 ## Environment variables
@@ -54,13 +54,13 @@ docker run -d \
 
 ```yaml
 services:
-  analyser:
-    image: ghcr.io/your-org/unifi-firewall-analyser:latest
+  homelab-ops:
+    image: ghcr.io/your-org/unifi-homelab-ops:latest
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - analyser-data:/data
+      - homelab-ops-data:/data
     environment:
       # App auth (optional)
       - APP_PASSWORD=your-secret-passphrase
@@ -75,7 +75,7 @@ services:
       # - AI_PROVIDER_TYPE=openai
 
 volumes:
-  analyser-data:
+  homelab-ops-data:
 ```
 
 ## Docker Compose with secrets
@@ -84,13 +84,13 @@ For environments where environment variables are logged or visible in process li
 
 ```yaml
 services:
-  analyser:
-    image: ghcr.io/your-org/unifi-firewall-analyser:latest
+  homelab-ops:
+    image: ghcr.io/your-org/unifi-homelab-ops:latest
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - analyser-data:/data
+      - homelab-ops-data:/data
     environment:
       - APP_PASSWORD=your-secret-passphrase
       - AI_API_KEY_FILE=/run/secrets/ai_api_key
@@ -104,7 +104,7 @@ secrets:
     file: ./secrets/ai_api_key.txt
 
 volumes:
-  analyser-data:
+  homelab-ops-data:
 ```
 
 ## Traefik reverse proxy
@@ -113,11 +113,11 @@ When running behind Traefik, both the frontend and API are served from the same 
 
 ```yaml
 services:
-  analyser:
-    image: ghcr.io/your-org/unifi-firewall-analyser:latest
+  homelab-ops:
+    image: ghcr.io/your-org/unifi-homelab-ops:latest
     restart: unless-stopped
     volumes:
-      - analyser-data:/data
+      - homelab-ops-data:/data
     environment:
       - APP_PASSWORD=your-secret-passphrase
       - AI_API_KEY=sk-your-api-key
@@ -126,12 +126,12 @@ services:
       - APP_ACCESS_URL=https://firewall.example.com
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.analyser.rule=Host(`firewall.example.com`)"
-      - "traefik.http.routers.analyser.entrypoints=websecure"
-      - "traefik.http.routers.analyser.tls.certresolver=letsencrypt"
-      - "traefik.http.services.analyser.loadbalancer.server.port=8080"
-      - "traefik.http.services.analyser.loadbalancer.healthcheck.path=/api/health"
-      - "traefik.http.services.analyser.loadbalancer.healthcheck.interval=30s"
+      - "traefik.http.routers.homelab-ops.rule=Host(`firewall.example.com`)"
+      - "traefik.http.routers.homelab-ops.entrypoints=websecure"
+      - "traefik.http.routers.homelab-ops.tls.certresolver=letsencrypt"
+      - "traefik.http.services.homelab-ops.loadbalancer.server.port=8080"
+      - "traefik.http.services.homelab-ops.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.homelab-ops.loadbalancer.healthcheck.interval=30s"
     networks:
       - traefik
 
@@ -140,7 +140,7 @@ networks:
     external: true
 
 volumes:
-  analyser-data:
+  homelab-ops-data:
 ```
 
 Key points:

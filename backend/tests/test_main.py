@@ -55,7 +55,7 @@ def test_log_startup_banner_logs_ascii_art(monkeypatch: pytest.MonkeyPatch) -> N
         _log_startup_banner()
 
     logged_lines = [call.args[0] for call in mock_info.call_args_list]
-    assert any("Firewall Analyser" in line for line in logged_lines)
+    assert any("Homelab Ops" in line for line in logged_lines)
     assert any("http://localhost:8081" in line for line in logged_lines)
     assert any("/api/health" in line for line in logged_lines)
     assert any("DEBUG" in line for line in logged_lines)
@@ -141,7 +141,7 @@ def test_get_frontend_response_rejects_path_traversal(
 ) -> None:
     dist_dir = tmp_path / "dist"
     dist_dir.mkdir()
-    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Homelab Ops</title>", encoding="utf-8")
     monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
 
     response = _get_frontend_response("../secret.txt")
@@ -170,14 +170,14 @@ async def test_root_serves_index_when_frontend_dist_exists(
 ) -> None:
     dist_dir = tmp_path / "dist"
     dist_dir.mkdir()
-    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Homelab Ops</title>", encoding="utf-8")
     monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
 
     response = await client.get("/")
 
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert "UniFi Firewall Analyser" in response.text
+    assert "UniFi Homelab Ops" in response.text
 
 
 @pytest.mark.anyio
@@ -188,14 +188,14 @@ async def test_serves_index_for_spa_routes(
 ) -> None:
     dist_dir = tmp_path / "dist"
     dist_dir.mkdir()
-    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Homelab Ops</title>", encoding="utf-8")
     monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
 
     response = await client.get("/zone/internal")
 
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert "UniFi Firewall Analyser" in response.text
+    assert "UniFi Homelab Ops" in response.text
 
 
 @pytest.mark.anyio
@@ -207,7 +207,7 @@ async def test_serves_existing_static_assets(
     dist_dir = tmp_path / "dist"
     assets_dir = dist_dir / "assets"
     assets_dir.mkdir(parents=True)
-    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Homelab Ops</title>", encoding="utf-8")
     (assets_dir / "app.js").write_text("console.log('ok');", encoding="utf-8")
     monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
 
@@ -225,7 +225,7 @@ async def test_missing_static_assets_return_404(
 ) -> None:
     dist_dir = tmp_path / "dist"
     dist_dir.mkdir()
-    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Homelab Ops</title>", encoding="utf-8")
     monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
 
     response = await client.get("/assets/missing.js")
@@ -241,7 +241,7 @@ async def test_api_paths_are_not_handled_by_frontend_catchall(
 ) -> None:
     dist_dir = tmp_path / "dist"
     dist_dir.mkdir()
-    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Firewall Analyser</title>", encoding="utf-8")
+    (dist_dir / "index.html").write_text("<!doctype html><title>UniFi Homelab Ops</title>", encoding="utf-8")
     monkeypatch.setenv("FRONTEND_DIST_DIR", str(dist_dir))
 
     response = await client.get("/api/not-real")

@@ -41,7 +41,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: merlijntishauser/unifi-firewall-analyser
+          images: merlijntishauser/unifi-homelab-ops
           tags: ${{ matrix.tags }}
       - uses: docker/login-action@v3
         if: github.event_name != 'pull_request'

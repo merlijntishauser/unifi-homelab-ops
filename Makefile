@@ -19,26 +19,26 @@ build: ## Build containers
 	docker compose build
 
 build-prod: ## Build the production single-container image locally
-	docker build -t unifi-firewall-analyser:local .
+	docker build -t unifi-homelab-ops:local .
 
 build-prod-alpine: ## Build the experimental Alpine production image locally
-	docker build -f Dockerfile.alpine -t unifi-firewall-analyser:alpine-local .
+	docker build -f Dockerfile.alpine -t unifi-homelab-ops:alpine-local .
 
 run-prod: build-prod ## Build and run the production single-container image on localhost:8080
 	@env_args=""; \
 	if [ -f .env ]; then env_args="--env-file .env"; fi; \
-	docker run --rm --name unifi-firewall-analyser-prod -p 8080:8080 -v unifi-firewall-analyser-data:/data -e APP_ACCESS_URL=http://localhost:8080 $$env_args unifi-firewall-analyser:local
+	docker run --rm --name unifi-homelab-ops-prod -p 8080:8080 -v unifi-homelab-ops-data:/data -e APP_ACCESS_URL=http://localhost:8080 $$env_args unifi-homelab-ops:local
 
 run-prod-alpine: build-prod-alpine ## Build and run the Alpine image on localhost:8081
 	@env_args=""; \
 	if [ -f .env ]; then env_args="--env-file .env"; fi; \
-	docker run --rm --name unifi-firewall-analyser-prod-alpine -p 8081:8080 -v unifi-firewall-analyser-alpine-data:/data -e APP_ACCESS_URL=http://localhost:8081 $$env_args unifi-firewall-analyser:alpine-local
+	docker run --rm --name unifi-homelab-ops-prod-alpine -p 8081:8080 -v unifi-homelab-ops-alpine-data:/data -e APP_ACCESS_URL=http://localhost:8081 $$env_args unifi-homelab-ops:alpine-local
 
 smoke-prod: ## Smoke-test the production single-container image locally
-	./scripts/smoke-test-image.sh unifi-firewall-analyser:local unifi-firewall-analyser-smoke 18080
+	./scripts/smoke-test-image.sh unifi-homelab-ops:local unifi-homelab-ops-smoke 18080
 
 smoke-prod-alpine: ## Smoke-test the experimental Alpine image locally
-	./scripts/smoke-test-image.sh unifi-firewall-analyser:alpine-local unifi-firewall-analyser-alpine-smoke 18081
+	./scripts/smoke-test-image.sh unifi-homelab-ops:alpine-local unifi-homelab-ops-alpine-smoke 18081
 
 quality: ## Run linters via Docker (ruff, mypy, tsc)
 	docker compose exec api uv run ruff check app/

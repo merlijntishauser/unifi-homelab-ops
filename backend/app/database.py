@@ -8,9 +8,12 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.models_db import Base
 
-# Keep both spellings for convenience in container environments.
+# HOMELAB_OPS_DB_PATH is preferred; keep legacy spellings as fallbacks.
 DEFAULT_DB_PATH = Path(
-    os.environ.get("ANALYSER_DB_PATH", os.environ.get("ANALYZER_DB_PATH", "data/analyser.db"))
+    os.environ.get(
+        "HOMELAB_OPS_DB_PATH",
+        os.environ.get("ANALYSER_DB_PATH", os.environ.get("ANALYZER_DB_PATH", "data/homelab-ops.db")),
+    )
 )
 
 _engine: Engine | None = None

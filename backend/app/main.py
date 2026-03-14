@@ -63,7 +63,7 @@ def _log_startup_banner() -> None:
   / / / / __ \\/ / /_  / /| |
  / /_/ / / / / / __/ / / | |
  \\____/_/ /_/_/_/   /_/  |_|
-  Firewall Analyser
+  Homelab Ops
 
   App:       {app_url}
   Health:    {app_url}/api/health
@@ -119,7 +119,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 configure_logging()
 
-app = FastAPI(title="UniFi Firewall Analyser", lifespan=lifespan)
+app = FastAPI(title="UniFi Homelab Ops", lifespan=lifespan)
 
 app.add_middleware(AppAuthMiddleware)
 app.add_middleware(AccessLogMiddleware)

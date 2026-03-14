@@ -1,7 +1,7 @@
 [project]
-name = "unifi-firewall-analyser"
+name = "unifi-homelab-ops"
 version = "0.1.0"
-description = "UniFi Firewall Analyser API"
+description = "UniFi Homelab Ops API"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115.0",

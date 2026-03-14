@@ -1,6 +1,6 @@
-# UniFi Firewall Analyser
+# UniFi Homelab Ops
 
-Visualise your UniFi Network 9.x+ zone-based firewall rules as an interactive graph. Connect to your controller, see every zone as a node and every rule as an edge, then simulate traffic to understand which rule matches.
+A self-hosted web application that extends the native UniFi dashboard with firewall analysis, network topology visualization, and device metrics monitoring. Connect to your controller and get deeper visibility into your UniFi network.
 
 ## What it does
 
@@ -24,15 +24,15 @@ Run the published single-container image:
 
 ```bash
 docker run -d \
-  --name unifi-firewall-analyser \
+  --name unifi-homelab-ops \
   -p 8080:8080 \
-  -v unifi-firewall-analyser-data:/data \
+  -v unifi-homelab-ops-data:/data \
   -e UNIFI_URL=https://192.168.1.1 \
   -e UNIFI_SITE=default \
   -e UNIFI_USER=admin \
   -e UNIFI_PASS=yourpassword \
   -e UNIFI_VERIFY_SSL=false \
-  merlijntishauser/unifi-firewall-analyser:latest
+  merlijntishauser/unifi-homelab-ops:latest
 ```
 
 Open [http://localhost:8080](http://localhost:8080) in your browser.
@@ -46,8 +46,8 @@ Notes:
 ### Development with Docker Compose
 
 ```bash
-git clone https://github.com/merlijntishauser/unifi-firewall-analyser.git
-cd unifi-firewall-analyser
+git clone https://github.com/merlijntishauser/unifi-homelab-ops.git
+cd unifi-homelab-ops
 cp .env.example .env
 make build
 make up
@@ -70,18 +70,18 @@ make down
 | `UNIFI_USER`       | Controller username     | --        |
 | `UNIFI_PASS`       | Controller password     | --        |
 | `UNIFI_VERIFY_SSL` | Verify SSL certificates | `false`   |
-| `ANALYSER_DB_PATH` | SQLite database path    | `/data/analyser.db` in the production image |
+| `HOMELAB_OPS_DB_PATH` | SQLite database path | `/data/homelab-ops.db` in the production image |
 | `APP_ACCESS_URL`   | URL shown in the production startup banner | `http://localhost:8080` |
 
 AI analysis is optional. You can configure an OpenAI or Anthropic API key in the Settings modal within the app.
 
 ## Docker Hub publishing
 
-The root [Dockerfile](/Users/merlijn/Development/personal/unifi-firewall-analyser/Dockerfile) builds the production single-container image. The workflow at [.github/workflows/docker-publish.yml](/Users/merlijn/Development/personal/unifi-firewall-analyser/.github/workflows/docker-publish.yml) builds multi-arch `linux/amd64` and `linux/arm64` images and pushes them to Docker Hub on pushes to `main` and version tags.
+The root [Dockerfile](./Dockerfile) builds the production single-container image. The workflow at [.github/workflows/docker-publish.yml](./.github/workflows/docker-publish.yml) builds multi-arch `linux/amd64` and `linux/arm64` images and pushes them to Docker Hub on pushes to `main` and version tags.
 
-An experimental high-risk Alpine runtime prototype is available in [Dockerfile.alpine](/Users/merlijn/Development/personal/unifi-firewall-analyser/Dockerfile.alpine). CI now publishes it as `merlijntishauser/unifi-firewall-analyser:alpine`. It is smaller, but uses `python:3.13-alpine` and `musl`, so dependency compatibility is less predictable than the main `slim` image.
+An experimental high-risk Alpine runtime prototype is available in [Dockerfile.alpine](./Dockerfile.alpine). CI now publishes it as `merlijntishauser/unifi-homelab-ops:alpine`. It is smaller, but uses `python:3.13-alpine` and `musl`, so dependency compatibility is less predictable than the main `slim` image.
 
-The main CI workflow at [.github/workflows/ci.yml](/Users/merlijn/Development/personal/unifi-firewall-analyser/.github/workflows/ci.yml) also:
+The main CI workflow at [.github/workflows/ci.yml](./.github/workflows/ci.yml) also:
 
 - builds the standard and Alpine images for `linux/amd64`
 - smoke-tests container startup plus `/api/health` and `/`

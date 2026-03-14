@@ -83,14 +83,14 @@ jobs:
         include:
           - variant: standard
             dockerfile: ./Dockerfile
-            image_tag: unifi-firewall-analyser:ci-standard
-            container_name: unifi-firewall-analyser-ci-standard
+            image_tag: unifi-homelab-ops:ci-standard
+            container_name: unifi-homelab-ops-ci-standard
             host_port: "18080"
             cache_scope: ci-docker-standard
           - variant: alpine
             dockerfile: ./Dockerfile.alpine
-            image_tag: unifi-firewall-analyser:ci-alpine
-            container_name: unifi-firewall-analyser-ci-alpine
+            image_tag: unifi-homelab-ops:ci-alpine
+            container_name: unifi-homelab-ops-ci-alpine
             host_port: "18081"
             cache_scope: ci-docker-alpine
     steps:
@@ -163,7 +163,7 @@ jobs:
           context: .
           file: ./Dockerfile
           load: true
-          tags: unifi-firewall-analyser:local
+          tags: unifi-homelab-ops:local
           cache-from: type=gha,scope=ci-docker-standard
       - name: Start e2e stack
         run: docker compose -f docker-compose.e2e.yml up -d --build --wait

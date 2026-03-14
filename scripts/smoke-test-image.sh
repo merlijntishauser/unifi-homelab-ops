@@ -48,7 +48,7 @@ if [ "$health_response" != '{"status":"ok"}' ]; then
 fi
 
 index_response="$(curl --fail --silent --show-error "http://127.0.0.1:${host_port}/")"
-if ! grep -q "UniFi Firewall Analyser" <<<"$index_response"; then
+if ! grep -q "UniFi Homelab Ops" <<<"$index_response"; then
     echo "Frontend root did not return expected HTML" >&2
     exit 1
 fi

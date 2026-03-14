@@ -2,7 +2,7 @@
 
 ## Project overview
 
-UniFi Firewall Analyser -- a full-stack web app that visualises UniFi Network 9.x+ zone-based firewall rules. Users connect to a UniFi controller, see zones in a matrix or interactive graph, inspect rules, simulate traffic, and optionally get AI-powered risk analysis.
+UniFi Homelab Ops -- a self-hosted web application that extends the native UniFi dashboard with firewall analysis, network topology visualization, and device metrics monitoring. Users connect to a UniFi controller, see zones in a matrix or interactive graph, inspect rules, simulate traffic, and optionally get AI-powered risk analysis.
 
 ## Architecture
 

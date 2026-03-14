@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import type { ColorMode } from "@xyflow/react";
-import type { ZonePair } from "./api/types";
+import { RouterProvider } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   queryKeys,
@@ -11,20 +11,14 @@ import {
 import { useAuthFlow } from "./hooks/useAuth";
 import { useFirewallQueries } from "./hooks/useFirewallQueries";
 import { useAiInfo } from "./hooks/useAiInfo";
+import { AppContext } from "./hooks/useAppContext";
+import { createAppRouter } from "./router";
 import LoginScreen from "./components/LoginScreen";
-import MatrixSidebar from "./components/MatrixSidebar";
 import PassphraseScreen from "./components/PassphraseScreen";
-import SettingsModal from "./components/SettingsModal";
-import Toolbar from "./components/Toolbar";
-import ZoneGraph from "./components/ZoneGraph";
-import ZoneMatrix from "./components/ZoneMatrix";
-import RulePanel from "./components/RulePanel";
 
 interface AppState {
   colorMode: ColorMode;
   showHidden: boolean;
-  selectedPair: ZonePair | null;
-  focusZoneIds: string[] | null;
   settingsOpen: boolean;
   hiddenZoneIds: Set<string>;
 }
@@ -32,8 +26,6 @@ interface AppState {
 const initialAppState: AppState = {
   colorMode: "dark" as ColorMode,
   showHidden: false,
-  selectedPair: null,
-  focusZoneIds: null,
   settingsOpen: false,
   hiddenZoneIds: new Set<string>(),
 };
@@ -51,20 +43,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
   return { ...state, ...update };
 }
 
-function getLoadingMessage(authLoading: boolean, dataLoading: boolean): string | null {
-  if (authLoading) return "Checking authentication...";
-  if (dataLoading) return "Connecting to controller...";
-  return null;
-}
-
-function formatError(error: Error | null): string | null {
-  if (!error) return null;
-  return error instanceof Error ? error.message : String(error);
-}
-
 function LoadingOverlay({ message }: { message: string | null }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+    <div className="h-screen flex flex-col items-center justify-center gap-3 bg-gray-50 dark:bg-noc-bg">
       <div className="h-6 w-6 rounded-full border-2 border-gray-300 dark:border-noc-border border-t-ub-blue animate-spin" />
       {message && (
         <p className="text-sm text-gray-500 dark:text-noc-text-secondary font-body animate-pulse">{message}</p>
@@ -73,9 +54,11 @@ function LoadingOverlay({ message }: { message: string | null }) {
   );
 }
 
+const router = createAppRouter();
+
 function App() {
   const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
-  const { colorMode, showHidden, selectedPair, focusZoneIds, settingsOpen, hiddenZoneIds } = state;
+  const { colorMode, showHidden, settingsOpen, hiddenZoneIds } = state;
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -98,39 +81,17 @@ function App() {
     }
   }, [zoneFilterQuery.data]);
 
-  // --- Mutations ---
   const logoutMutation = useLogout();
   const saveZoneFilterMutation = useSaveZoneFilter();
 
   const handleLogout = useCallback(async () => {
     await logoutMutation.mutateAsync();
-    dispatch({ selectedPair: null, focusZoneIds: null });
   }, [logoutMutation]);
 
   const handleRefresh = useCallback(() => {
     qc.invalidateQueries({ queryKey: queryKeys.zones });
     qc.invalidateQueries({ queryKey: queryKeys.zonePairs });
   }, [qc]);
-
-  // Keep selectedPair in sync when zonePairs refreshes (e.g. after toggle/reorder)
-  useEffect(() => {
-    if (selectedPair && zonePairs.length > 0) {
-      const updated = zonePairs.find(
-        (zp) => zp.source_zone_id === selectedPair.source_zone_id && zp.destination_zone_id === selectedPair.destination_zone_id,
-      );
-      if (updated && updated !== selectedPair) {
-        dispatch({ selectedPair: updated });
-      }
-    }
-  }, [zonePairs, selectedPair]);
-
-  const getZoneName = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const z of zones) {
-      map.set(z.id, z.name);
-    }
-    return (id: string) => map.get(id) ?? "Unknown";
-  }, [zones]);
 
   const filteredZonePairs = useMemo(() => {
     if (showHidden) return zonePairs;
@@ -170,28 +131,17 @@ function App() {
     });
   }, [saveZoneFilterMutation]);
 
-  const handleEdgeSelect = useCallback((pair: ZonePair) => {
-    dispatch({ selectedPair: pair });
+  const handleColorModeChange = useCallback((mode: ColorMode) => {
+    localStorage.setItem("colorMode", mode);
+    dispatch({ colorMode: mode });
   }, []);
 
-  const handleCellClick = useCallback((pair: ZonePair) => {
-    dispatch({ focusZoneIds: [pair.source_zone_id, pair.destination_zone_id], selectedPair: pair });
-    history.pushState({ view: "graph" }, "");
-  }, []);
+  const handleCloseSettings = useCallback(() => {
+    dispatch({ settingsOpen: false });
+    qc.invalidateQueries({ queryKey: queryKeys.aiConfig });
+  }, [qc]);
 
-  const handleZoneClick = useCallback((zoneId: string) => {
-    dispatch({ focusZoneIds: [zoneId], selectedPair: null });
-    history.pushState({ view: "graph" }, "");
-  }, []);
-
-  useEffect(() => {
-    const onPopState = () => {
-      dispatch({ focusZoneIds: null, selectedPair: null });
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
-
+  // Auth gates
   if (appAuthRequired && !appAuthenticated && !authLoading) {
     return (
       <PassphraseScreen
@@ -206,83 +156,39 @@ function App() {
     return <LoginScreen onLoggedIn={() => refetchAuth()} />;
   }
 
-  const showLoadingOverlay = authLoading || (dataLoading && zones.length === 0);
-  const loadingMessage = getLoadingMessage(authLoading, dataLoading);
-  const errorMessage = formatError(dataError);
+  if (authLoading) {
+    return <LoadingOverlay message="Checking authentication..." />;
+  }
+
+  const contextValue = {
+    colorMode,
+    onColorModeChange: handleColorModeChange,
+    showHidden,
+    onShowHiddenChange: (val: boolean) => dispatch({ showHidden: val }),
+    hasHiddenZones,
+    hasDisabledRules,
+    onRefresh: handleRefresh,
+    dataLoading,
+    onLogout: handleLogout,
+    onOpenSettings: () => dispatch({ settingsOpen: true }),
+    onCloseSettings: handleCloseSettings,
+    settingsOpen,
+    connectionInfo,
+    aiInfo,
+    aiConfigured,
+    zones,
+    zonePairs,
+    filteredZonePairs,
+    visibleZones,
+    hiddenZoneIds,
+    onToggleZone: handleToggleZone,
+    dataError,
+  };
 
   return (
-    <div
-      className="h-screen flex flex-col"
-    >
-      <Toolbar
-        colorMode={colorMode}
-        onColorModeChange={(mode: ColorMode) => { localStorage.setItem("colorMode", mode); dispatch({ colorMode: mode }); }}
-        showHidden={showHidden}
-        onShowHiddenChange={(val: boolean) => dispatch({ showHidden: val })}
-        hasHiddenZones={hasHiddenZones}
-        hasDisabledRules={hasDisabledRules}
-        onRefresh={handleRefresh}
-        loading={dataLoading}
-        onLogout={handleLogout}
-        onOpenSettings={() => dispatch({ settingsOpen: true })}
-        connectionInfo={connectionInfo}
-        aiInfo={aiInfo}
-      />
-      {settingsOpen && <SettingsModal onClose={() => { dispatch({ settingsOpen: false }); qc.invalidateQueries({ queryKey: queryKeys.aiConfig }); }} />}
-      {errorMessage && (
-        <div className="bg-red-50 dark:bg-status-danger-dim border-b border-red-200 dark:border-status-danger/20 px-4 py-2 text-sm text-red-700 dark:text-status-danger">
-          {errorMessage}
-        </div>
-      )}
-      <div className="flex-1 flex overflow-hidden bg-gray-50 dark:bg-noc-bg">
-        {showLoadingOverlay ? (
-          <LoadingOverlay message={loadingMessage} />
-        ) : focusZoneIds ? (
-          <div className="flex-1 relative">
-            <button
-              onClick={() => history.back()}
-              className="absolute top-3 left-3 z-10 rounded-lg bg-white dark:bg-noc-surface border border-gray-300 dark:border-noc-border px-3 py-1.5 text-sm text-gray-700 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm dark:shadow-lg cursor-pointer transition-all"
-            >
-              Back to matrix
-            </button>
-            <ZoneGraph
-              zones={zones}
-              zonePairs={filteredZonePairs}
-              colorMode={colorMode}
-              onEdgeSelect={handleEdgeSelect}
-              focusZoneIds={focusZoneIds}
-              hiddenZoneIds={hiddenZoneIds}
-              showHidden={showHidden}
-            />
-          </div>
-        ) : (
-          <>
-            <MatrixSidebar
-              zones={zones}
-              hiddenZoneIds={hiddenZoneIds}
-              onToggleZone={handleToggleZone}
-            />
-            <ZoneMatrix
-              zones={visibleZones}
-              zonePairs={filteredZonePairs}
-              onCellClick={handleCellClick}
-              onZoneClick={handleZoneClick}
-            />
-          </>
-        )}
-        {selectedPair && (
-          <RulePanel
-            key={`${selectedPair.source_zone_id}-${selectedPair.destination_zone_id}`}
-            pair={selectedPair}
-            sourceZoneName={getZoneName(selectedPair.source_zone_id)}
-            destZoneName={getZoneName(selectedPair.destination_zone_id)}
-            aiConfigured={aiConfigured}
-            onClose={() => dispatch({ selectedPair: null })}
-            onRuleUpdated={handleRefresh}
-          />
-        )}
-      </div>
-    </div>
+    <AppContext.Provider value={contextValue}>
+      <RouterProvider router={router} />
+    </AppContext.Provider>
   );
 }
 

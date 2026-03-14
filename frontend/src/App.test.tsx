@@ -168,6 +168,10 @@ function authedDefaults() {
   });
 }
 
+function renderApp() {
+  return renderWithQuery(<App />, { withRouter: false });
+}
+
 describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -187,7 +191,7 @@ describe("App", () => {
 
   it("shows loading spinner with status while authenticating", () => {
     mockGetAuthStatus.mockReturnValue(new Promise(() => {}));
-    renderWithQuery(<App />);
+    renderApp();
     expect(screen.getByText("Checking authentication...")).toBeInTheDocument();
   });
 
@@ -198,7 +202,7 @@ describe("App", () => {
       url: "",
       username: "",
     });
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("Connect to UniFi Controller")).toBeInTheDocument();
@@ -207,7 +211,7 @@ describe("App", () => {
 
   it("shows login screen when auth status check fails", async () => {
     mockGetAuthStatus.mockRejectedValue(new Error("Network error"));
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("Connect to UniFi Controller")).toBeInTheDocument();
@@ -219,7 +223,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
@@ -234,7 +238,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("Connect to UniFi Controller")).toBeInTheDocument();
@@ -265,7 +269,7 @@ describe("App", () => {
     mockGetZonePairs.mockResolvedValue([]);
     mockLogout.mockResolvedValue(undefined);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
@@ -288,7 +292,7 @@ describe("App", () => {
     mockGetZones.mockRejectedValue(new Error("Fetch failed"));
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("Fetch failed")).toBeInTheDocument();
@@ -300,7 +304,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Light" })).toBeInTheDocument();
@@ -318,7 +322,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       // Light mode shows "Dark" button to switch back
@@ -369,7 +373,7 @@ describe("App", () => {
       },
     ]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByLabelText("Show disabled rules")).toBeInTheDocument();
@@ -386,7 +390,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
@@ -403,7 +407,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     // Wait for zones to load and render in sidebar
     await waitFor(() => {
@@ -422,7 +426,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(mockGetZoneFilter).toHaveBeenCalled();
@@ -440,7 +444,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     // Wait for initial data load to complete (button shows "Refresh" not "Refreshing...")
     await waitFor(() => {
@@ -463,7 +467,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     // First navigate to graph view by clicking a zone in the matrix
     await waitFor(() => {
@@ -502,7 +506,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     // First navigate to graph view by clicking a zone in the matrix
     await waitFor(() => {
@@ -556,7 +560,7 @@ describe("App", () => {
       },
     ]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     // Click the matrix cell to open the RulePanel directly
     await waitFor(() => {
@@ -577,7 +581,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("zone-matrix")).toBeInTheDocument();
@@ -590,7 +594,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("matrix-zone-z1")).toBeInTheDocument();
@@ -610,7 +614,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("matrix-zone-z1")).toBeInTheDocument();
@@ -634,7 +638,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("matrix-cell-z1-z2")).toBeInTheDocument();
@@ -654,7 +658,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
@@ -678,7 +682,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
@@ -705,7 +709,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(mockGetAiConfig).toHaveBeenCalled();
@@ -725,7 +729,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("matrix-cell-z1-z2")).toBeInTheDocument();
@@ -745,7 +749,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("Zones")).toBeInTheDocument();
@@ -759,7 +763,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue([]);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("matrix-zone-z1")).toBeInTheDocument();
@@ -785,7 +789,7 @@ describe("App", () => {
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue(testZonePairs);
 
-    renderWithQuery(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByTestId("matrix-cell-z1-z2")).toBeInTheDocument();
@@ -798,5 +802,23 @@ describe("App", () => {
     });
 
     expect(screen.queryByRole("button", { name: "Analyze with AI" })).not.toBeInTheDocument();
+  });
+
+  it("renders module sidebar with navigation links", async () => {
+    authedDefaults();
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("navigation", { name: "Module navigation" })).toBeInTheDocument();
+    expect(screen.getByText("Firewall")).toBeInTheDocument();
+    expect(screen.getByText("Topology")).toBeInTheDocument();
+    expect(screen.getByText("Metrics")).toBeInTheDocument();
+    expect(screen.getByText("Health")).toBeInTheDocument();
   });
 });

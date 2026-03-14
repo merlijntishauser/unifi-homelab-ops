@@ -95,10 +95,14 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
     devices = normalize_devices(raw_devices)
     raw_lookup = _raw_device_lookup(raw_devices)
 
-    gateway_macs = [d.mac for d in devices if d.type == "gateway"]
+    gateway_types = {"gateway", "udm", "ugw"}
+    gateway_macs = [d.mac for d in devices if d.type in gateway_types]
     topology = build_topology(
         devices, include_ports=True, only_unifi=False, gateways=gateway_macs,
     )
+
+    # Use raw_edges if tree_edges is empty (tree requires gateway identification)
+    topo_edges = topology.tree_edges if topology.tree_edges else topology.raw_edges
 
     lldp_connected = {d.mac.lower(): d.name for d in devices}
     name_to_mac = {d.name: d.mac for d in devices}
@@ -109,7 +113,7 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
         device_models.append(_build_device_model(device, raw, lldp_connected))
 
     edge_models = []
-    for edge in topology.tree_edges:
+    for edge in topo_edges:
         from_mac = name_to_mac.get(edge.left)
         to_mac = name_to_mac.get(edge.right)
         if from_mac is None or to_mac is None:
@@ -143,7 +147,8 @@ def get_topology_svg(
     raw_clients = fetch_clients(config, site=credentials.site)
     devices = normalize_devices(raw_devices)
 
-    gateway_macs = [d.mac for d in devices if d.type == "gateway"]
+    gw_types = {"gateway", "udm", "ugw"}
+    gateway_macs = [d.mac for d in devices if d.type in gw_types]
     topology = build_topology(
         devices, include_ports=True, only_unifi=True, gateways=gateway_macs,
     )
@@ -152,9 +157,10 @@ def get_topology_svg(
     client_edges = build_client_edges(
         raw_clients, device_index, only_unifi=True,
     )
-    edges = topology.tree_edges + client_edges
+    topo_edges = topology.tree_edges if topology.tree_edges else topology.raw_edges
+    edges = topo_edges + client_edges
 
-    gateway = next((d for d in devices if d.type == "gateway"), None)
+    gateway = next((d for d in devices if d.type in gw_types), None)
     wan_info = extract_wan_info(gateway) if gateway else None
     vpn_tunnels = extract_vpn_tunnels(gateway) if gateway else []
 

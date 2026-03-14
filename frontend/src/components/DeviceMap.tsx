@@ -13,7 +13,7 @@ import {
 } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 import type { TopologyDevice, TopologyEdge } from "../api/types";
-import DeviceNodeComponent, { type DeviceNodeData } from "./DeviceNode";
+import DeviceNode, { type DeviceNodeData } from "./DeviceNode";
 
 interface DeviceMapProps {
   devices: TopologyDevice[];
@@ -22,7 +22,7 @@ interface DeviceMapProps {
   onDeviceSelect: (device: TopologyDevice) => void;
 }
 
-const nodeTypes = { device: DeviceNodeComponent };
+const nodeTypes = { device: DeviceNode };
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 120;

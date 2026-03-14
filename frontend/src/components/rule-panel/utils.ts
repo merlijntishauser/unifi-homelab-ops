@@ -94,7 +94,7 @@ export function buildSimulateRequest(form: SimFormState): SimulateRequest {
   };
 }
 
-export function deriveAiError(error: Error | null, data: { status: string; message?: string } | undefined): string | null {
+export function deriveAiError(error: Error | null, data: { status: string; message?: string | null } | undefined): string | null {
   if (error) return error instanceof Error ? error.message : "AI analysis failed";
   if (data?.status === "error") return data.message ?? "AI analysis failed";
   return null;

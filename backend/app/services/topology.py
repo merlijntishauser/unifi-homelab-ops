@@ -101,6 +101,7 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
     )
 
     lldp_connected = {d.mac.lower(): d.name for d in devices}
+    name_to_mac = {d.name: d.mac for d in devices}
 
     device_models = []
     for device in devices:
@@ -109,9 +110,13 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
 
     edge_models = []
     for edge in topology.tree_edges:
+        from_mac = name_to_mac.get(edge.left)
+        to_mac = name_to_mac.get(edge.right)
+        if from_mac is None or to_mac is None:
+            continue
         edge_models.append(TopologyEdge(
-            from_mac=edge.left,
-            to_mac=edge.right,
+            from_mac=from_mac,
+            to_mac=to_mac,
             speed=edge.speed,
             poe=edge.poe,
             wireless=edge.wireless,

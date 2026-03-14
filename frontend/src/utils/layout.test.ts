@@ -8,8 +8,7 @@ vi.mock("@dagrejs/dagre", () => {
     private edges: Array<{ source: string; target: string }> = [];
     private graphConfig: Record<string, unknown> = {};
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(opts?: Record<string, unknown>) {}
+    constructor() {}
 
     setDefaultEdgeLabel(fn: () => Record<string, unknown>) {
       fn(); // exercise the callback
@@ -24,8 +23,7 @@ vi.mock("@dagrejs/dagre", () => {
       this.nodes.set(id, { width: dims.width, height: dims.height, x: 0, y: 0 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    setEdge(source: string, target: string, label?: Record<string, unknown>, name?: string) {
+    setEdge(source: string, target: string) {
       this.edges.push({ source, target });
     }
 

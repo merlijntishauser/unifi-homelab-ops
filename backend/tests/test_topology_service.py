@@ -156,7 +156,7 @@ class TestGetTopologyDevices:
 
     def test_returns_edges(self) -> None:
         mock_edge = type("Edge", (), {
-            "left": "aa:bb:cc:dd:ee:01", "right": "aa:bb:cc:dd:ee:02",
+            "left": "Gateway", "right": "Switch",
             "speed": 1000, "poe": True, "wireless": False,
             "label": None, "channel": None, "vlans": (), "active_vlans": (),
             "is_trunk": False, "connection": None,

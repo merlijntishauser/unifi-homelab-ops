@@ -47,7 +47,7 @@ function formatEdgeSpeed(speed: number | null): string {
   return `${speed}M`;
 }
 
-function layoutDevices(nodes: Node[], edges: Edge[]): { nodes: Node[]; edges: Edge[] } {
+function layoutDevices<T extends Record<string, unknown>>(nodes: Node<T>[], edges: Edge[]): { nodes: Node<T>[]; edges: Edge[] } {
   const g = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
   g.setGraph({ rankdir: "TB", ranksep: 120, nodesep: 80 });
 

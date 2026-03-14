@@ -128,21 +128,22 @@ const SIMULATE_RESPONSE = {
 // ---------------------------------------------------------------------------
 
 export async function mockApi(page: Page, options: { authenticated?: boolean } = {}): Promise<void> {
-  const { authenticated = true } = options;
+  let loggedIn = options.authenticated ?? true;
 
   await page.route("**/api/auth/status", (route) =>
     route.fulfill({
       json: {
-        configured: authenticated,
-        source: authenticated ? "runtime" : "none",
-        url: authenticated ? "https://unifi.local" : "",
+        configured: loggedIn,
+        source: loggedIn ? "runtime" : "none",
+        url: loggedIn ? "https://unifi.local" : "",
       },
     }),
   );
 
-  await page.route("**/api/auth/login", (route) =>
-    route.fulfill({ json: { status: "ok" } }),
-  );
+  await page.route("**/api/auth/login", (route) => {
+    loggedIn = true;
+    return route.fulfill({ json: { status: "ok" } });
+  });
 
   await page.route("**/api/auth/logout", (route) =>
     route.fulfill({ json: { status: "ok" } }),

@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router-dom";
-import { createBrowserRouter, createMemoryRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppShell from "./components/AppShell";
 import FirewallModule from "./components/FirewallModule";
 import TopologyPlaceholder from "./components/TopologyPlaceholder";
@@ -21,8 +21,4 @@ const routes: RouteObject[] = [
 
 export function createAppRouter() {
   return createBrowserRouter(routes);
-}
-
-export function createTestRouter(initialEntries?: string[]) {
-  return createMemoryRouter(routes, { initialEntries: initialEntries ?? ["/firewall"] });
 }

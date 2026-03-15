@@ -22,16 +22,20 @@ jobs:
             dockerfile: ./Dockerfile
             cache_scope: docker-standard
             tags: |
+              type=semver,pattern={{version}}
+              type=semver,pattern={{major}}.{{minor}}
+              type=semver,pattern={{major}}
               type=ref,event=branch
-              type=ref,event=tag
               type=sha,prefix=sha-
               type=raw,value=latest,enable={{is_default_branch}}
           - variant: alpine
             dockerfile: ./Dockerfile.alpine
             cache_scope: docker-alpine
             tags: |
+              type=semver,pattern={{version}},suffix=-alpine
+              type=semver,pattern={{major}}.{{minor}},suffix=-alpine
+              type=semver,pattern={{major}},suffix=-alpine
               type=ref,event=branch,suffix=-alpine
-              type=ref,event=tag,suffix=-alpine
               type=sha,prefix=sha-,suffix=-alpine
               type=raw,value=alpine,enable={{is_default_branch}}
     steps:

@@ -165,12 +165,12 @@ test.describe("settings", () => {
     await page.getByRole("button", { name: "Settings" }).click();
 
     // Settings modal should show tabbed panes
-    await expect(page.getByText("Connection")).toBeVisible();
-    await expect(page.getByText("AI Provider")).toBeVisible();
-    await expect(page.getByText("User Settings")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Connection" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "AI Provider" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "User Settings" })).toBeVisible();
 
     // Navigate to AI Provider tab and verify it has the Save button
-    await page.getByText("AI Provider").click();
+    await page.getByRole("button", { name: "AI Provider" }).click();
     await expect(page.getByRole("button", { name: "Save" })).toBeVisible();
   });
 });

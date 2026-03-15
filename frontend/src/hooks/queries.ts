@@ -11,6 +11,9 @@ export const queryKeys = {
   zoneFilter: ["zone-filter"] as const,
   topologySvg: (colorMode: string, projection: string) => ["topology-svg", colorMode, projection] as const,
   topologyDevices: ["topology-devices"] as const,
+  metricsDevices: ["metrics-devices"] as const,
+  metricsHistory: (mac: string) => ["metrics-history", mac] as const,
+  notifications: ["notifications"] as const,
 };
 
 // --- Queries ---
@@ -78,6 +81,36 @@ export function useTopologyDevices(enabled: boolean) {
     queryFn: api.getTopologyDevices,
     enabled,
     staleTime: 30 * 1000,
+  });
+}
+
+export function useMetricsDevices(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.metricsDevices,
+    queryFn: api.getMetricsDevices,
+    enabled,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useMetricsHistory(mac: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.metricsHistory(mac ?? ""),
+    queryFn: () => api.getMetricsHistory(mac!),
+    enabled: enabled && mac !== null,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useNotifications(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.notifications,
+    queryFn: api.getNotifications,
+    enabled,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
   });
 }
 /* v8 ignore stop */
@@ -163,5 +196,13 @@ export function useSimulate() {
 export function useAnalyzeWithAi() {
   return useMutation({
     mutationFn: (req: AiAnalyzeRequest) => api.analyzeWithAi(req),
+  });
+}
+
+export function useDismissNotification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.dismissNotification(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notifications }),
   });
 }

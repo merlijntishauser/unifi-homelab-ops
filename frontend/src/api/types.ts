@@ -209,3 +209,53 @@ export interface TopologyDevicesResponse {
   devices: TopologyDevice[];
   edges: TopologyEdge[];
 }
+
+export interface MetricsSnapshot {
+  mac: string;
+  name: string;
+  model: string;
+  type: string;
+  cpu: number;
+  mem: number;
+  temperature: number | null;
+  uptime: number;
+  tx_bytes: number;
+  rx_bytes: number;
+  num_sta: number;
+  version: string;
+  poe_consumption: number | null;
+  status: string;
+}
+
+export interface MetricsHistoryPoint {
+  timestamp: string;
+  cpu: number;
+  mem: number;
+  temperature: number | null;
+  uptime: number;
+  tx_bytes: number;
+  rx_bytes: number;
+  num_sta: number;
+  poe_consumption: number | null;
+}
+
+export interface MetricsDevicesResponse {
+  devices: MetricsSnapshot[];
+}
+
+export interface MetricsHistoryResponse {
+  mac: string;
+  history: MetricsHistoryPoint[];
+}
+
+export interface AppNotification {
+  id: number;
+  device_mac: string;
+  check_id: string;
+  severity: string;
+  title: string;
+  message: string;
+  created_at: string;
+  resolved_at: string | null;
+  dismissed: boolean;
+}

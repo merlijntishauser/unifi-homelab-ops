@@ -316,4 +316,48 @@ describe("api client", () => {
       expect(mockFetch).toHaveBeenCalledWith("/api/topology/devices", expect.objectContaining({}));
     });
   });
+
+  describe("getMetricsDevices", () => {
+    it("fetches metrics devices from correct endpoint", async () => {
+      const data = { devices: [] };
+      mockFetch.mockResolvedValue(mockOkResponse(data));
+      const result = await api.getMetricsDevices();
+      expect(result).toEqual(data);
+      expect(mockFetch).toHaveBeenCalledWith("/api/metrics/devices", expect.objectContaining({}));
+    });
+  });
+
+  describe("getMetricsHistory", () => {
+    it("fetches history for a device by MAC", async () => {
+      const data = { mac: "aa:bb", history: [] };
+      mockFetch.mockResolvedValue(mockOkResponse(data));
+      const result = await api.getMetricsHistory("aa:bb");
+      expect(result).toEqual(data);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/metrics/devices/aa%3Abb/history",
+        expect.objectContaining({}),
+      );
+    });
+  });
+
+  describe("getNotifications", () => {
+    it("fetches notifications from correct endpoint", async () => {
+      const data = [{ id: 1, title: "High CPU" }];
+      mockFetch.mockResolvedValue(mockOkResponse(data));
+      const result = await api.getNotifications();
+      expect(result).toEqual(data);
+      expect(mockFetch).toHaveBeenCalledWith("/api/metrics/notifications", expect.objectContaining({}));
+    });
+  });
+
+  describe("dismissNotification", () => {
+    it("sends POST to dismiss endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ status: "ok" }));
+      await api.dismissNotification(42);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/metrics/notifications/42/dismiss",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+  });
 });

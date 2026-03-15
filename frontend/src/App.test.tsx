@@ -25,6 +25,10 @@ vi.mock("./api/client", () => ({
     swapRuleOrder: vi.fn(),
     getZoneFilter: vi.fn(),
     saveZoneFilter: vi.fn(),
+    getNotifications: vi.fn(),
+    dismissNotification: vi.fn(),
+    getMetricsDevices: vi.fn(),
+    getMetricsHistory: vi.fn(),
   },
 }));
 
@@ -38,7 +42,11 @@ const mockGetZonePairs = vi.mocked(api.getZonePairs);
 const mockLogin = vi.mocked(api.login);
 const mockGetAiConfig = vi.mocked(api.getAiConfig);
 const mockGetZoneFilter = vi.mocked(api.getZoneFilter);
+const mockGetNotifications = vi.mocked(api.getNotifications);
 vi.mocked(api.simulate);
+vi.mocked(api.dismissNotification);
+vi.mocked(api.getMetricsDevices);
+vi.mocked(api.getMetricsHistory);
 
 // Mock @xyflow/react for ZoneGraph
 vi.mock("@xyflow/react", () => ({
@@ -187,6 +195,9 @@ describe("App", () => {
     });
     mockGetZoneFilter.mockResolvedValue({ hidden_zone_ids: [] });
     vi.mocked(api.saveZoneFilter).mockResolvedValue({ status: "ok" });
+    mockGetNotifications.mockResolvedValue([]);
+    vi.mocked(api.getMetricsDevices).mockResolvedValue({ devices: [] });
+    vi.mocked(api.getMetricsHistory).mockResolvedValue({ mac: "", history: [] });
   });
 
   it("shows loading spinner with status while authenticating", () => {

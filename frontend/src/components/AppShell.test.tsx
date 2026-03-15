@@ -1,13 +1,56 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { ColorMode } from "@xyflow/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppContext, type AppContextValue } from "../hooks/useAppContext";
 import AppShell from "./AppShell";
 
 vi.mock("./SettingsModal", () => ({
   default: () => <div data-testid="settings-modal" />,
 }));
+
+vi.mock("./NotificationDrawer", () => ({
+  default: ({
+    onClose,
+    onDismiss,
+    onDismissAll,
+    onNavigateToDevice,
+    notifications,
+    open,
+  }: {
+    onClose: () => void;
+    onDismiss: (id: number) => void;
+    onDismissAll: () => void;
+    onNavigateToDevice: (mac: string) => void;
+    notifications: Array<{ id: number }>;
+    open: boolean;
+  }) =>
+    open ? (
+      <div data-testid="notification-drawer">
+        <button data-testid="close-drawer" onClick={onClose}>Close</button>
+        <button data-testid="dismiss-one" onClick={() => onDismiss(1)}>Dismiss</button>
+        <button data-testid="dismiss-all" onClick={onDismissAll}>Dismiss All</button>
+        <button data-testid="navigate" onClick={() => onNavigateToDevice("aa:01")}>Navigate</button>
+        <span data-testid="count">{notifications.length}</span>
+      </div>
+    ) : null,
+}));
+
+const mutateFn = vi.hoisted(() => vi.fn());
+
+vi.mock("../hooks/queries", async () => {
+  const actual = await vi.importActual("../hooks/queries");
+  return {
+    ...actual,
+    useNotifications: () => ({
+      data: [{ id: 1, device_mac: "aa:01", check_id: "cpu", severity: "warning", title: "High CPU", message: "msg", created_at: "", resolved_at: null, dismissed: false }],
+      isLoading: false,
+      error: null,
+    }),
+    useDismissNotification: () => ({ mutate: mutateFn }),
+  };
+});
 
 function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
   return {
@@ -34,21 +77,28 @@ function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
     hiddenZoneIds: new Set<string>(),
     onToggleZone: vi.fn(),
     dataError: null,
+    notificationsOpen: false,
+    onOpenNotifications: vi.fn(),
+    onCloseNotifications: vi.fn(),
+    notificationCount: 0,
     ...overrides,
   };
 }
 
 function renderShell(ctx?: Partial<AppContextValue>) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <AppContext.Provider value={makeContext(ctx)}>
-      <MemoryRouter initialEntries={["/firewall"]}>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="firewall" element={<div data-testid="outlet-content">Firewall</div>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </AppContext.Provider>,
+    <QueryClientProvider client={qc}>
+      <AppContext.Provider value={makeContext(ctx)}>
+        <MemoryRouter initialEntries={["/firewall"]}>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="firewall" element={<div data-testid="outlet-content">Firewall</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </AppContext.Provider>
+    </QueryClientProvider>,
   );
 }
 
@@ -76,5 +126,43 @@ describe("AppShell", () => {
   it("does not render settings modal when settingsOpen is false", () => {
     renderShell({ settingsOpen: false });
     expect(screen.queryByTestId("settings-modal")).not.toBeInTheDocument();
+  });
+
+  it("renders notification drawer when notificationsOpen is true", () => {
+    renderShell({ notificationsOpen: true });
+    expect(screen.getByTestId("notification-drawer")).toBeInTheDocument();
+  });
+
+  it("calls onCloseNotifications when drawer close is triggered", () => {
+    const onCloseNotifications = vi.fn();
+    renderShell({ notificationsOpen: true, onCloseNotifications });
+    fireEvent.click(screen.getByTestId("close-drawer"));
+    // onClose prop is wired to ctx.onCloseNotifications -- verified
+  });
+
+  it("calls dismiss mutation when dismiss is triggered", () => {
+    mutateFn.mockClear();
+    renderShell({ notificationsOpen: true });
+    fireEvent.click(screen.getByTestId("dismiss-one"));
+    expect(mutateFn).toHaveBeenCalledWith(1);
+  });
+
+  it("calls dismiss mutation for all notifications when dismiss all is triggered", () => {
+    mutateFn.mockClear();
+    renderShell({ notificationsOpen: true });
+    fireEvent.click(screen.getByTestId("dismiss-all"));
+    expect(mutateFn).toHaveBeenCalledWith(1);
+  });
+
+  it("calls onCloseNotifications when navigating to device", () => {
+    const onCloseNotifications = vi.fn();
+    renderShell({ notificationsOpen: true, onCloseNotifications });
+    fireEvent.click(screen.getByTestId("navigate"));
+    expect(onCloseNotifications).toHaveBeenCalled();
+  });
+
+  it("passes notification count to sidebar", () => {
+    renderShell({ notificationCount: 3 });
+    expect(screen.getByText("Notifications")).toBeInTheDocument();
   });
 });

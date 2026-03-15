@@ -6,7 +6,10 @@ import type {
   AiConfigInput,
   AiPreset,
   AppAuthStatus,
+  AppNotification,
   AuthStatus,
+  MetricsDevicesResponse,
+  MetricsHistoryResponse,
   Rule,
   SimulateRequest,
   SimulateResponse,
@@ -111,4 +114,10 @@ export const api = {
       `/topology/svg?color_mode=${encodeURIComponent(colorMode)}&projection=${encodeURIComponent(projection)}`,
     ),
   getTopologyDevices: () => fetchJson<TopologyDevicesResponse>("/topology/devices"),
+  getMetricsDevices: () => fetchJson<MetricsDevicesResponse>("/metrics/devices"),
+  getMetricsHistory: (mac: string) =>
+    fetchJson<MetricsHistoryResponse>(`/metrics/devices/${encodeURIComponent(mac)}/history`),
+  getNotifications: () => fetchJson<AppNotification[]>("/metrics/notifications"),
+  dismissNotification: (id: number) =>
+    fetchJson(`/metrics/notifications/${id}/dismiss`, { method: "POST" }),
 };

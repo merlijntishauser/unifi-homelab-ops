@@ -3,10 +3,18 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ModuleSidebar from "./ModuleSidebar";
 
-function renderSidebar(currentPath = "/firewall", onOpenSettings = vi.fn()) {
+function renderSidebar(
+  currentPath = "/firewall",
+  onOpenSettings = vi.fn(),
+  extra?: { notificationCount?: number; onOpenNotifications?: () => void },
+) {
   return render(
     <MemoryRouter initialEntries={[currentPath]}>
-      <ModuleSidebar onOpenSettings={onOpenSettings} />
+      <ModuleSidebar
+        onOpenSettings={onOpenSettings}
+        notificationCount={extra?.notificationCount}
+        onOpenNotifications={extra?.onOpenNotifications}
+      />
     </MemoryRouter>,
   );
 }
@@ -99,5 +107,37 @@ describe("ModuleSidebar", () => {
     for (const link of links) {
       expect(link).toHaveAttribute("href");
     }
+  });
+
+  it("renders Notifications button when onOpenNotifications is provided", () => {
+    renderSidebar("/firewall", vi.fn(), { onOpenNotifications: vi.fn() });
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+  });
+
+  it("does not render Notifications button when onOpenNotifications is not provided", () => {
+    renderSidebar();
+    expect(screen.queryByRole("button", { name: "Notifications" })).not.toBeInTheDocument();
+  });
+
+  it("calls onOpenNotifications when Notifications button is clicked", () => {
+    const handler = vi.fn();
+    renderSidebar("/firewall", vi.fn(), { onOpenNotifications: handler });
+    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows notification badge when count > 0", () => {
+    renderSidebar("/firewall", vi.fn(), { notificationCount: 3, onOpenNotifications: vi.fn() });
+    expect(screen.getByText("3")).toBeInTheDocument();
+  });
+
+  it("shows 9+ for counts above 9", () => {
+    renderSidebar("/firewall", vi.fn(), { notificationCount: 15, onOpenNotifications: vi.fn() });
+    expect(screen.getByText("9+")).toBeInTheDocument();
+  });
+
+  it("does not show badge when count is 0", () => {
+    renderSidebar("/firewall", vi.fn(), { notificationCount: 0, onOpenNotifications: vi.fn() });
+    expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 });

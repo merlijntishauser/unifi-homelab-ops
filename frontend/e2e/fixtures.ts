@@ -206,4 +206,30 @@ export async function mockApi(page: Page, options: { authenticated?: boolean } =
       },
     }),
   );
+
+  // Metrics module
+  await page.route("**/api/metrics/devices", (route) =>
+    route.fulfill({
+      json: {
+        devices: [
+          { mac: "aa:01", name: "Gateway", model: "UDM-Pro", type: "gateway", cpu: 12, mem: 45, temperature: 52, uptime: 86400, tx_bytes: 1024000, rx_bytes: 2048000, num_sta: 5, version: "4.0.6", poe_consumption: null, status: "online" },
+          { mac: "aa:02", name: "Switch", model: "USW-24", type: "switch", cpu: 8, mem: 30, temperature: null, uptime: 43200, tx_bytes: 512000, rx_bytes: 768000, num_sta: 10, version: "7.1.0", poe_consumption: 45.2, status: "online" },
+        ],
+      },
+    }),
+  );
+
+  await page.route("**/api/metrics/devices/*/history", (route) =>
+    route.fulfill({
+      json: { mac: "aa:01", history: [] },
+    }),
+  );
+
+  await page.route("**/api/metrics/notifications", (route) =>
+    route.fulfill({ json: [] }),
+  );
+
+  await page.route("**/api/metrics/notifications/*/dismiss", (route) =>
+    route.fulfill({ json: { status: "ok" } }),
+  );
 }

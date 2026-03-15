@@ -40,6 +40,10 @@ export interface AppContextValue {
   hiddenZoneIds: Set<string>;
   onToggleZone: (zoneId: string) => void;
   dataError: Error | null;
+  notificationsOpen: boolean;
+  onOpenNotifications: () => void;
+  onCloseNotifications: () => void;
+  notificationCount: number;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

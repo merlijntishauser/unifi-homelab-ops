@@ -75,7 +75,8 @@ const testZonePairs: ZonePair[] = [
 function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
   return {
     colorMode: "dark" as ColorMode,
-    onColorModeChange: vi.fn(),
+    themePreference: "dark",
+    onThemePreferenceChange: vi.fn(),
     showHidden: false,
     onShowHiddenChange: vi.fn(),
     hasHiddenZones: false,
@@ -96,6 +97,10 @@ function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
     hiddenZoneIds: new Set<string>(),
     onToggleZone: vi.fn(),
     dataError: null,
+    notificationsOpen: false,
+    onOpenNotifications: vi.fn(),
+    onCloseNotifications: vi.fn(),
+    notificationCount: 0,
     ...overrides,
   };
 }

@@ -7,6 +7,7 @@ import {
   useZoneFilter,
   useLogout,
   useSaveZoneFilter,
+  useNotifications,
 } from "./hooks/queries";
 import { useAuthFlow } from "./hooks/useAuth";
 import { useFirewallQueries } from "./hooks/useFirewallQueries";
@@ -22,6 +23,7 @@ interface AppState {
   showHidden: boolean;
   settingsOpen: boolean;
   hiddenZoneIds: Set<string>;
+  notificationsOpen: boolean;
 }
 
 const initialAppState: AppState = {
@@ -29,6 +31,7 @@ const initialAppState: AppState = {
   showHidden: false,
   settingsOpen: false,
   hiddenZoneIds: new Set<string>(),
+  notificationsOpen: false,
 };
 
 function initAppState(): AppState {
@@ -65,7 +68,7 @@ const router = createAppRouter();
 
 function App() {
   const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
-  const { themePreference, showHidden, settingsOpen, hiddenZoneIds } = state;
+  const { themePreference, showHidden, settingsOpen, hiddenZoneIds, notificationsOpen } = state;
   const qc = useQueryClient();
 
   const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -90,6 +93,8 @@ function App() {
   const { aiConfigured, aiInfo } = useAiInfo(authed);
 
   const zoneFilterQuery = useZoneFilter(authed);
+  const notificationsQuery = useNotifications(authed);
+  const notificationCount = notificationsQuery.data?.filter((n) => !n.dismissed).length ?? 0;
 
   // Sync hiddenZoneIds from server when filter data arrives
   const lastFilterRef = useRef<string[] | undefined>(undefined);
@@ -204,6 +209,10 @@ function App() {
     hiddenZoneIds,
     onToggleZone: handleToggleZone,
     dataError,
+    notificationsOpen,
+    onOpenNotifications: () => dispatch({ notificationsOpen: true }),
+    onCloseNotifications: () => dispatch({ notificationsOpen: false }),
+    notificationCount,
   };
 
   return (

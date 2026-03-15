@@ -97,6 +97,10 @@ function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
     hiddenZoneIds: new Set<string>(),
     onToggleZone: vi.fn(),
     dataError: null,
+    notificationsOpen: false,
+    onOpenNotifications: vi.fn(),
+    onCloseNotifications: vi.fn(),
+    notificationCount: 0,
     ...overrides,
   };
 }

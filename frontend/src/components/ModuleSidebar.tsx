@@ -3,6 +3,8 @@ import { NavLink } from "react-router-dom";
 
 interface ModuleSidebarProps {
   onOpenSettings: () => void;
+  notificationCount?: number;
+  onOpenNotifications?: () => void;
 }
 
 interface NavItem {
@@ -74,7 +76,18 @@ function readExpanded(): boolean {
   }
 }
 
-export default function ModuleSidebar({ onOpenSettings }: ModuleSidebarProps) {
+const bellIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
+function formatBadgeCount(count: number): string {
+  return count > 9 ? "9+" : String(count);
+}
+
+export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, onOpenNotifications }: ModuleSidebarProps) {
   const [expanded, setExpanded] = useState(readExpanded);
 
   const toggle = () => {
@@ -111,6 +124,22 @@ export default function ModuleSidebar({ onOpenSettings }: ModuleSidebarProps) {
           {settingsIcon}
           {expanded && <span>Settings</span>}
         </button>
+        {onOpenNotifications && (
+          <button
+            onClick={onOpenNotifications}
+            className={navLinkClass(false) + " w-full relative"}
+            aria-label="Notifications"
+            title={expanded ? undefined : "Notifications"}
+          >
+            {bellIcon}
+            {expanded && <span>Notifications</span>}
+            {notificationCount > 0 && (
+              <span className="absolute top-0.5 left-6 inline-flex items-center justify-center h-4 min-w-4 rounded-full bg-status-danger text-white text-[10px] font-mono leading-none px-1">
+                {formatBadgeCount(notificationCount)}
+              </span>
+            )}
+          </button>
+        )}
         <button
           onClick={toggle}
           className="flex items-center justify-center px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised transition-colors"

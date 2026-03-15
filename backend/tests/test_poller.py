@@ -137,6 +137,10 @@ class TestCreateNotificationFromResult:
 
 
 class TestMaybePrune:
+    def setup_method(self) -> None:
+        import app.services.poller as poller_mod
+        poller_mod._last_prune_time = 0.0
+
     def test_prunes_on_first_call(self) -> None:
         with patch("app.services.poller.prune_old_data") as mock_prune:
             _maybe_prune()

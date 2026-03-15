@@ -72,7 +72,7 @@ def get_latest_snapshots(current_stats: list[DeviceStats] | None = None) -> list
             MetricsSnapshot(
                 mac=row.mac,
                 name=live.name if live else row.mac,
-                model=live.model_name if live else "",
+                model=live.model_name or live.model if live else "",
                 type=live.type if live else "",
                 cpu=row.cpu,
                 mem=row.mem,

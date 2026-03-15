@@ -25,24 +25,63 @@ function SeverityDot({ severity }: { severity: string }) {
   return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${color}`} />;
 }
 
+function formatAxisValue(value: number, unit: string): string {
+  if (unit === "bytes") return formatBytes(value);
+  if (unit === "C") return `${Math.round(value)}C`;
+  return `${Math.round(value)}${unit}`;
+}
+
+function formatTimeLabel(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  } catch {
+    return "";
+  }
+}
+
 function ChartSection({
   label,
   value,
   data,
+  timestamps,
   color,
+  unit,
 }: {
   label: string;
   value: string;
   data: number[];
+  timestamps: string[];
   color: string;
+  unit: string;
 }) {
+  const min = data.length > 0 ? Math.min(...data) : 0;
+  const max = data.length > 0 ? Math.max(...data) : 0;
+  const minLabel = formatAxisValue(min, unit);
+  const maxLabel = formatAxisValue(max, unit);
+
+  const firstTime = timestamps.length > 0 ? formatTimeLabel(timestamps[0]) : "";
+  const lastTime = timestamps.length > 1 ? formatTimeLabel(timestamps[timestamps.length - 1]) : "";
+
   return (
     <div className="rounded-lg border border-gray-200 dark:border-noc-border bg-white dark:bg-noc-raised p-4">
       <div className="flex items-baseline justify-between mb-2">
         <span className="text-sm font-medium text-gray-700 dark:text-noc-text-secondary">{label}</span>
         <span className="text-sm font-mono text-gray-900 dark:text-noc-text">{value}</span>
       </div>
-      <Sparkline data={data} width={400} height={60} color={color} className="w-full" />
+      <div className="flex gap-1">
+        <div className="flex flex-col justify-between text-[10px] font-mono text-gray-400 dark:text-noc-text-dim w-10 text-right shrink-0 py-0.5">
+          <span>{maxLabel}</span>
+          <span>{minLabel}</span>
+        </div>
+        <div className="flex-1 flex flex-col">
+          <Sparkline data={data} width={400} height={60} color={color} className="w-full" />
+          <div className="flex justify-between text-[10px] font-mono text-gray-400 dark:text-noc-text-dim mt-0.5">
+            <span>{firstTime}</span>
+            <span>{lastTime}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -56,7 +95,9 @@ export default function MetricsDetailView({
   const cpuData = history.map((h) => h.cpu);
   const memData = history.map((h) => h.mem);
   const tempData = history.filter((h) => h.temperature !== null).map((h) => h.temperature!);
+  const tempTimestamps = history.filter((h) => h.temperature !== null).map((h) => h.timestamp);
   const trafficData = history.map((h) => h.tx_bytes + h.rx_bytes);
+  const timestamps = history.map((h) => h.timestamp);
   const hasTemperature = device.temperature !== null;
 
   return (
@@ -80,22 +121,26 @@ export default function MetricsDetailView({
         </div>
       </div>
 
-      <div className="grid gap-4 mb-6">
-        <ChartSection label="CPU" value={`${Math.round(device.cpu)}%`} data={cpuData} color="#006fff" />
-        <ChartSection label="Memory" value={`${Math.round(device.mem)}%`} data={memData} color="#8b5cf6" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <ChartSection label="CPU" value={`${Math.round(device.cpu)}%`} data={cpuData} timestamps={timestamps} color="#006fff" unit="%" />
+        <ChartSection label="Memory" value={`${Math.round(device.mem)}%`} data={memData} timestamps={timestamps} color="#8b5cf6" unit="%" />
         {hasTemperature && (
           <ChartSection
             label="Temperature"
             value={`${Math.round(device.temperature!)}C`}
             data={tempData}
+            timestamps={tempTimestamps}
             color="#ffaa2c"
+            unit="C"
           />
         )}
         <ChartSection
           label="Traffic (TX + RX)"
           value={formatBytes(device.tx_bytes + device.rx_bytes)}
           data={trafficData}
+          timestamps={timestamps}
           color="#00d68f"
+          unit="bytes"
         />
       </div>
 

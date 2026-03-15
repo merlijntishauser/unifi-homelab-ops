@@ -61,7 +61,10 @@ async def test_zones_unifi_api_error_returns_502(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_zones_unifi_auth_error_returns_401(client: AsyncClient) -> None:
     _login()
-    with patch("app.services.firewall.fetch_firewall_zones", side_effect=UnifiAuthError("AUTHENTICATION_FAILED_LIMIT_REACHED")):
+    with patch(
+        "app.services.firewall.fetch_firewall_zones",
+        side_effect=UnifiAuthError("AUTHENTICATION_FAILED_LIMIT_REACHED"),
+    ):
         resp = await client.get("/api/firewall/zones")
     assert resp.status_code == 401
     assert "AUTHENTICATION_FAILED_LIMIT_REACHED" in resp.json()["detail"]

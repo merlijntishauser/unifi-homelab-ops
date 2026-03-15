@@ -107,7 +107,7 @@ class TestGetTopologySvg:
         mock_render.assert_called_once()
 
     def test_dark_mode_uses_unifi_dark_theme(self) -> None:
-        with _patch_all() as stack:
+        with _patch_all():
             get_topology_svg(MOCK_CONFIG, color_mode="dark")
         # resolve_svg_themes is not patched, so it runs with real theme resolution
         # Just verify no error -- theme is "unifi-dark"
@@ -121,7 +121,7 @@ class TestGetTopologySvg:
             get_topology_svg(MOCK_CONFIG, projection="3d")
 
     def test_passes_only_unifi_true(self) -> None:
-        with _patch_all() as stack:
+        with _patch_all():
             get_topology_svg(MOCK_CONFIG)
 
 

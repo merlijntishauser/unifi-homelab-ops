@@ -27,6 +27,8 @@ class TestInitDbForTests:
         assert "ai_analysis_cache" in tables
         assert "hidden_zones" in tables
         assert "ai_analysis_settings" in tables
+        assert "device_metrics" in tables
+        assert "notifications" in tables
 
     def test_idempotent(self, db_path: Path) -> None:
         init_db_for_tests(db_path)
@@ -51,6 +53,8 @@ class TestInitDbWithAlembic:
         assert "ai_analysis_cache" in tables
         assert "hidden_zones" in tables
         assert "ai_analysis_settings" in tables
+        assert "device_metrics" in tables
+        assert "notifications" in tables
         assert "alembic_version" in tables
 
     def test_idempotent(self, db_path: Path) -> None:

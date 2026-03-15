@@ -132,6 +132,56 @@ class TopologyDevicesResponse(BaseModel):
     edges: list[TopologyEdge]
 
 
+class MetricsSnapshot(BaseModel):
+    mac: str
+    name: str
+    model: str
+    type: str
+    cpu: float
+    mem: float
+    temperature: float | None = None
+    uptime: int = 0
+    tx_bytes: int = 0
+    rx_bytes: int = 0
+    num_sta: int = 0
+    version: str = ""
+    poe_consumption: float | None = None
+    status: str = "online"
+
+
+class MetricsHistoryPoint(BaseModel):
+    timestamp: str
+    cpu: float
+    mem: float
+    temperature: float | None = None
+    uptime: int = 0
+    tx_bytes: int = 0
+    rx_bytes: int = 0
+    num_sta: int = 0
+    poe_consumption: float | None = None
+
+
+class MetricsDevicesResponse(BaseModel):
+    devices: list[MetricsSnapshot]
+
+
+class MetricsHistoryResponse(BaseModel):
+    mac: str
+    history: list[MetricsHistoryPoint]
+
+
+class Notification(BaseModel):
+    id: int
+    device_mac: str
+    check_id: str
+    severity: str
+    title: str
+    message: str
+    created_at: str
+    resolved_at: str | None = None
+    dismissed: bool = False
+
+
 class AppLoginInput(BaseModel):
     password: str
 

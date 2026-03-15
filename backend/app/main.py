@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import logging
 import os
 from collections.abc import AsyncIterator
@@ -16,12 +18,14 @@ from app.logging import configure_logging
 from app.middleware import AccessLogMiddleware, AppAuthMiddleware
 from app.routers.analyze import router as analyze_router
 from app.routers.auth import router as auth_router
+from app.routers.metrics import router as metrics_router
 from app.routers.rules import router as rules_router
 from app.routers.settings import router as settings_router
 from app.routers.simulate import router as simulate_router
 from app.routers.topology import router as topology_router
 from app.routers.zone_filter import router as zone_filter_router
 from app.routers.zones import router as zones_router
+from app.services.poller import start_metrics_poller
 
 log = structlog.get_logger()
 startup_logger = logging.getLogger("app.startup")
@@ -115,7 +119,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     init_db(DEFAULT_DB_PATH)
     _log_startup_banner()
     _check_plaintext_db_key()
+    poller_task = asyncio.create_task(start_metrics_poller())
     yield
+    poller_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await poller_task
 
 
 configure_logging()
@@ -157,6 +165,9 @@ app.include_router(zone_filter_router, prefix="/api/firewall")
 
 # Topology module
 app.include_router(topology_router, prefix="/api/topology")
+
+# Metrics module
+app.include_router(metrics_router, prefix="/api/metrics")
 
 # Shared (cross-module)
 app.include_router(auth_router)

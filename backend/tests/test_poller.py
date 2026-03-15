@@ -139,7 +139,9 @@ class TestCreateNotificationFromResult:
 class TestMaybePrune:
     def setup_method(self) -> None:
         import app.services.poller as poller_mod
-        poller_mod._last_prune_time = 0.0
+        # Use a value guaranteed to be older than _PRUNE_INTERVAL, regardless
+        # of how recently the CI runner booted (time.monotonic() may be < 3600).
+        poller_mod._last_prune_time = time.monotonic() - _PRUNE_INTERVAL - 1
 
     def test_prunes_on_first_call(self) -> None:
         with patch("app.services.poller.prune_old_data") as mock_prune:

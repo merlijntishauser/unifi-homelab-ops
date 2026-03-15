@@ -54,9 +54,9 @@ describe("DeviceMetricCard", () => {
     expect(temp.className).toContain("text-status-danger");
   });
 
-  it("shows -- when temperature is null", () => {
+  it("hides temperature when null", () => {
     render(<DeviceMetricCard device={makeDevice({ temperature: null })} onClick={vi.fn()} />);
-    expect(screen.getByText("--")).toBeInTheDocument();
+    expect(screen.queryByText("Temp")).not.toBeInTheDocument();
   });
 
   it("shows client count", () => {

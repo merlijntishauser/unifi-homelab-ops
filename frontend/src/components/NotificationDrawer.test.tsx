@@ -77,6 +77,15 @@ describe("NotificationDrawer", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("calls onClose when Escape pressed on backdrop", () => {
+    const onClose = vi.fn();
+    render(
+      <NotificationDrawer notifications={[]} {...defaultProps} onClose={onClose} />,
+    );
+    fireEvent.keyDown(screen.getByTestId("drawer-backdrop"), { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("calls onDismiss when dismiss button is clicked", () => {
     const onDismiss = vi.fn();
     render(

@@ -79,12 +79,14 @@ export default function DeviceMetricCard({ device, onClick }: DeviceMetricCardPr
           </div>
         </div>
 
-        <div>
-          <span className="text-gray-500 dark:text-noc-text-dim">Temp</span>
-          <p className={`font-mono mt-0.5 ${device.temperature !== null ? tempColor(device.temperature) : "text-gray-400 dark:text-noc-text-dim"}`}>
-            {device.temperature !== null ? `${Math.round(device.temperature)}C` : "--"}
-          </p>
-        </div>
+        {device.temperature !== null && (
+          <div>
+            <span className="text-gray-500 dark:text-noc-text-dim">Temp</span>
+            <p className={`font-mono mt-0.5 ${tempColor(device.temperature)}`}>
+              {Math.round(device.temperature)}C
+            </p>
+          </div>
+        )}
 
         <div>
           <span className="text-gray-500 dark:text-noc-text-dim">Clients</span>

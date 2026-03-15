@@ -1,197 +1,88 @@
 # Product Roadmap
 
-Last updated: 2026-03-14
+Last updated: 2026-03-15
 
-## Current Assessment
+## Completed
 
-The application already has a solid base:
+Items shipped across all phases. Kept for historical context.
 
-- The product shape is clear: matrix view, graph view, rule inspection, traffic simulation, static analysis, and optional AI analysis.
-- The delivery story is stronger than the typical homelab tool: production Docker images, smoke tests, Trivy scans, and strict quality gates are already in place.
-- The codebase is mostly well-separated by concern, with backend routers/services and frontend components/hooks laid out sensibly.
+- **Analysis fidelity** -- static analyzer checks, simulator parity, golden test fixtures, AI analysis reliability with site profiles and caching
+- **Secrets and auth hardening** -- env/secret-file credential sources, app auth gate with HMAC cookies, CORS lockdown, deployment docs
+- **E2E confidence** -- production Playwright suite, Alembic migrations, structured logging, CI e2e-production job
+- **Frontend scaling** -- TanStack Query data layer, component extraction, sticky matrix headers, healthcheck startup race fix
+- **Multi-module platform** -- rebrand to UniFi Homelab Ops, sidebar navigation, module routing, settings modal with tabbed panes
+- **Topology module** -- device map (ReactFlow), SVG diagram with pan/zoom/export, device detail panel with port table
+- **Metrics module** -- background poller, 24h SQLite retention, anomaly detection, notification drawer, device grid with sparklines
 
-The biggest gaps are not basic functionality. They are trust, safety, and scale:
+---
 
-- The core value of the product is whether users can trust the conclusions made from static analysis.
-- The app handles sensitive controller and AI credentials, but the current storage and auth model is still lightweight.
-- CI is strong on unit and static checks, but critical end-to-end user journeys are not yet guarded.
-- Large sites will put pressure on both the frontend architecture and the graph/matrix interaction model.
-- The app is still strongest at inspection, not remediation.
+## General / Sitewide
 
-## Prioritized Roadmap
+### Prometheus metrics endpoint
 
-### 1. Raise analysis fidelity and explainability
+Add a `/metrics` endpoint exposing Prometheus counters and histograms for controller fetches, AI calls, cache hit/miss, and request latency. Optional -- zero-config if not scraped.
 
-Priority: P0
+### Site Health AI (Phase 4)
 
-Why this is first:
+Unified AI analysis across all three modules. Context assembly from firewall (grade distribution, findings), topology (single points of failure, VPN status), and metrics (anomaly notifications, trend outliers). Dedicated `/health` view with severity-grouped finding cards linking to the relevant module. Cached by composite key (firewall hash + topology hash + metrics timestamp). Requires all three modules producing data.
 
-- Static analysis and simulation are the product's core promise.
-- Recent analyzer improvements reduced obvious false positives, but the model still does not fully cover the full UniFi rule surface.
-- AI analysis only adds value if the deterministic baseline is trusted first.
+Related design: [Multi-Module Platform Design](plans/2026-03-14-unifi-homelab-ops-design.md)
 
-#### Phase 1: Static analysis, simulator parity, and golden tests -- DONE
+### Outbound URL validation and log redaction
 
-Shipped:
+Add HTTPS enforcement and domain allowlist for AI `base_url` to prevent credential leakage to unintended hosts. Audit and redact sensitive data (API keys, response bodies) from server-side log output.
 
-- Extended the simulator to match against all resolvable Rule constraints (IP ranges, address groups, source ports, port groups). Constraints it cannot evaluate (MAC addresses, schedules, IPSec, connection state) are reported as unresolvable in the evaluation trace.
-- Added five new static analyzer checks: no connection state tracking (high), overlapping allow/block interactions (medium), broad address group resolution (medium), missing logging on block rules (low), and schedule-dependent allows (low).
-- Added structured `rationale` to all findings explaining why each issue is flagged.
-- Polished the RulePanel UI: collapsible rationale, severity-grouped findings, visual pass/fail/unknown evaluation traces, assumption banners on simulation results.
-- Built 6 hand-crafted golden test fixtures covering clean, permissive, exposed, complex-interaction, constrained, and large-ruleset scenarios as regression anchors.
+### Responsive layout
 
-Related design:
+On narrow viewports (<768px), sidebar collapses to bottom tab bar. Primary target is desktop and NOC screen use.
 
-- [Analysis Fidelity and Explainability Design](plans/2026-03-12-analysis-fidelity-design.md)
+### Enterprise-scale sites (100+ zones)
 
-#### Phase 2: AI analysis reliability -- DONE
+Virtualized matrix rendering (TanStack Virtual or similar) for grids beyond 50 zones. Graph viewport culling and lazy edge rendering for large topologies. Zone search/filter input for both matrix and graph views. Graph clustering for dense zone groups.
 
-Shipped:
+---
 
-- Split AI provider transport settings from AI analysis settings with separate `ai_analysis_settings` SQLite table and API endpoints.
-- Added `site_profile` as analysis context (`homelab`, `smb`, `enterprise`) with tailored AI prompt guidance.
-- Versioned the AI prompt (`AI_PROMPT_VERSION`) and expanded the cache key to include model, site_profile, prompt_version, and static_summary.
-- Explicit AI failure states via `AiAnalysisResult` model with `status`, `cached`, and `message` fields instead of collapsing failures into empty findings.
-- Enriched findings with `rule_ids`, `confidence`, and `recommended_action` fields for traceability and actionability.
+## Firewall Module
 
-Related design:
+### Template-based fixture generation
 
-- [AI Analysis Reliability and Site Profile Design](plans/2026-03-12-ai-analysis-design.md)
+Define site archetypes as parameterized templates and generate fixture sets programmatically for broader regression coverage. Follows after hand-crafted fixtures prove the golden test pattern.
 
-#### Future: Template-based fixture generation
+### RulePanel hook extraction
 
-- Define site archetypes as parameterized templates and generate fixture sets programmatically for broader regression coverage. Follows after hand-crafted fixtures prove the golden test pattern.
+Split the two reducers in RulePanel into `useSimulation()`, `useAiAnalysis()`, `useRuleWrite()` hooks. Follow-up to the file extraction once it settles.
 
-Done looks like:
+### Operator workflow: remediation flows
 
-- The app can explain its conclusions on realistic rule sets, and false-positive/false-negative drift is measurably lower on fixture-based regression tests.
+Add remediation-oriented flows: suggested next actions, rule diffs, and before/after validation via simulation. Add export/share paths for findings and posture reports to support review and change management workflows. Rule enable/disable and reorder already shipped.
 
-### 2. Harden secrets, auth, and deployment boundaries -- DONE
+---
 
-Priority: P0
+## Topology Module
 
-Shipped:
+### Upstream: add `model_name` to `DeviceStats`
 
-- Production secrets load from env vars (`AI_API_KEY`, `UNIFI_PASS`, `APP_PASSWORD`) or secret-file providers (`AI_API_KEY_FILE`), with env key fallback when DB config stores only provider/model.
-- Application auth gate via `APP_PASSWORD` with HMAC-signed session cookies, constant-time comparison, and configurable TTL. Passphrase screen in frontend.
-- CORS restricted to Vite dev ports in development, fully disabled in production (same-origin via static file serving).
-- Settings UI shows env-sourced config clearly: disabled fields, provider-specific key indicator, "Loaded from environment" placeholder, conditional Delete button.
-- Comprehensive deployment documentation covering env vars, Docker Compose, Docker secrets, and Traefik reverse proxy with TLS.
+Add `model_name` field to `DeviceStats` in [unifi-topology](https://github.com/merlijntishauser/unifi-topology/issues/19) so device cards and panels show the friendly name (e.g. "UniFi Cloud Gateway Fiber") instead of the model code (e.g. "UCGFIBER"). Currently worked around by using the model code.
 
-Related design:
+---
 
-- [Secrets, Auth, and Hardening Design](plans/2026-03-13-secrets-auth-hardening-design.md)
+## Metrics Module
 
-#### Future: Outbound URL validation and log redaction
+### Customizable card metrics
 
-- Add HTTPS enforcement and domain allowlist for AI `base_url` to prevent credential leakage to unintended hosts.
-- Audit and redact sensitive data (API keys, response bodies) from server-side log output.
+Allow users to select which metrics/information are shown in the device cards overview. Store preference in User Settings. Possible options: CPU, memory, temperature, client count, uptime, traffic, PoE consumption.
 
-### 3. Add end-to-end confidence and upgrade safety -- DONE
+### Configurable anomaly thresholds
 
-Priority: P1
+Anomaly check thresholds are hardcoded (CPU >80%, memory >85%, temperature >80/95C, PoE >90%). A User Settings pane could expose per-check threshold configuration stored in SQLite.
 
-Shipped:
+### Extended retention
 
-- Production Playwright e2e suite (8 journeys) running against a mock UniFi controller and the real production Docker image, covering login, matrix, graph navigation, rule panel, traffic simulation, settings, and the app auth gate.
-- SQLAlchemy ORM (`models_db.py`) replacing raw sqlite3, with Alembic migrations running programmatically on startup via `init_db()`.
-- Structured logging via structlog across all routers, services, and middleware. JSON output in production, colored console in development. Custom `AccessLogMiddleware` replaces uvicorn access logs with structured key-value output.
-- CI `e2e-production` job building the production image, starting the e2e stack, and running Playwright with trace upload on failure. Local `make e2e-prod` target for the same flow.
+24-hour rolling history is sufficient for real-time monitoring. A future option could extend to 7-day or 30-day retention with downsampled data points. Users wanting longer retention should use UnPoller + Grafana.
 
-Related design:
+### Sparkline chart library upgrade
 
-- [E2E Tests, Migrations, and Structured Logging Design](plans/2026-03-13-e2e-migrations-observability-design.md)
+Current sparklines are custom inline SVG. If richer interactivity is needed:
 
-### 4. Add Prometheus metrics endpoint
-
-Priority: P1
-
-Why this follows observability:
-
-- Structured logging (delivered in item 3) gives debug-level visibility, but operators running the app alongside Grafana/Prometheus need quantitative metrics.
-- Controller fetch latency, AI call duration, cache hit rates, and error counts are the key signals.
-
-What to ship:
-
-- Add a `/metrics` endpoint exposing Prometheus counters and histograms for controller fetches, AI calls, cache hit/miss, and request latency.
-- Keep it optional -- zero-config if not scraped, no external dependencies at runtime.
-
-Done looks like:
-
-- Operators can point a Prometheus scrape target at the app and get actionable dashboards without custom log parsing.
-
-### 5. Scale the frontend architecture for maintainability (A/B-scale) -- DONE
-
-Priority: P1
-
-Shipped:
-
-- Adopted TanStack Query as the data layer with 6 query hooks and 10 mutation hooks, replacing all manual fetch/setState patterns with cached, deduplicated, cancellable queries.
-- Extracted auth orchestration from App.tsx into `useAuthFlow`, `useFirewallQueries`, and `useAiInfo` hooks. App.tsx reduced from 325 to 289 lines with 6 state properties.
-- Extracted RulePanel's sub-components into `components/rule-panel/` directory (7 files: RuleCard, RuleDetails, SimulationForm, SimulationResult, FindingsList, AiAnalysisStatus, utils). RulePanel.tsx reduced from 881 to 213 lines.
-- Added sticky column headers (`top-0 z-10`), row headers (`left-0 z-10`), and corner cell (`z-20`) to ZoneMatrix. Widened cells from `minmax(52px, 84px)` to `minmax(72px, 108px)`.
-- Added API healthcheck and `depends_on: condition: service_healthy` to eliminate frontend startup race. Added startup banner to frontend dev server.
-
-Related design:
-
-- [Frontend Architecture Scaling Design](plans/2026-03-13-frontend-scaling-design.md)
-
-#### Future: RulePanel hook extraction
-
-- Split the two reducers in RulePanel into `useSimulation()`, `useAiAnalysis()`, `useRuleWrite()` hooks. Follow-up to the file extraction once it settles.
-
-### 6. Support enterprise-scale sites (100+ zones)
-
-Priority: P2
-
-Why this follows item 5:
-
-- A/B-scale refactoring (item 5) establishes the query layer and component structure that C-scale work builds on.
-- 100+ zones requires fundamentally different interaction patterns (search/filter vs. browse) and rendering strategies.
-
-What to ship:
-
-- Virtualized matrix rendering (TanStack Virtual or similar) for grids beyond 50 zones.
-- Graph viewport culling and lazy edge rendering for large topologies.
-- Zone search/filter input for both matrix and graph views.
-- Graph clustering for dense zone groups.
-
-Done looks like:
-
-- A 100+ zone site loads and navigates without noticeable lag, and users can find specific zones without scanning the full grid or graph.
-
-### 7. Turn the app from analyzer into operator workflow
-
-Priority: P2
-
-Why this is last:
-
-- This is the clearest product expansion area, but it should follow trust, security, and upgrade safety work.
-- The existing app is good at diagnosis, but it still stops short of helping users close the loop.
-
-Already shipped:
-
-- Rule enable/disable toggle with confirmation dialog.
-- Rule reorder (move up/down) with confirmation dialog.
-- Backend write operations via unifi-topology library.
-
-What remains:
-
-- Add remediation-oriented flows: suggested next actions, rule diffs, and before/after validation via simulation.
-- Add export/share paths for findings and posture reports so the tool can support review and change management workflows.
-
-Done looks like:
-
-- Users can go from understanding a problem to making and validating a guarded change without leaving the application.
-
-## Ordering Rationale
-
-This ordering is deliberate:
-
-1. Trust the conclusions.
-2. Secure the trust boundary.
-3. Protect releases and upgrades end-to-end.
-4. Add quantitative metrics for operators.
-5. Refactor frontend for maintainability (A/B-scale).
-6. Scale to enterprise sites (C-scale, 100+ zones).
-7. Only then extend into change execution workflows.
+- **Recharts** (~150KB): full-featured React charting with tooltips, axes, responsive sizing
+- **@visx/shape + @visx/scale** (~40KB): D3-based React primitives, middle ground for axes and tooltips

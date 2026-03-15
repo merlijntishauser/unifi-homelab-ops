@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Topology devices showing as offline after first request due to unifi-topology cache stripping the `state` field (fixed upstream in unifi-topology 1.2.1)
+- Metrics device cards showing model codes instead of friendly names (e.g. "UCGFIBER" instead of "UniFi Cloud Gateway Fiber"), now using `model_name` from unifi-topology 1.2.1
+- Flaky `_maybe_prune` test failing on CI runners with short uptime
+
 ## [1.0.0] - 2026-03-15
 
 First stable release. Four modules providing firewall analysis, network topology visualization,

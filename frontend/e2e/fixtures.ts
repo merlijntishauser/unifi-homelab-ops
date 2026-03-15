@@ -232,4 +232,34 @@ export async function mockApi(page: Page, options: { authenticated?: boolean } =
   await page.route("**/api/metrics/notifications/*/dismiss", (route) =>
     route.fulfill({ json: { status: "ok" } }),
   );
+
+  // Health module
+  await page.route("**/api/health/summary", (route) =>
+    route.fulfill({
+      json: {
+        firewall: { zone_pair_count: 4, grade_distribution: { A: 1, C: 2, D: 1 }, finding_count_by_severity: { high: 2, medium: 3, low: 1 }, uncovered_pairs: 1 },
+        topology: { device_count_by_type: { gateway: 1, switch: 1 }, offline_count: 0, firmware_mismatches: 0 },
+        metrics: { active_notifications_by_severity: {}, high_resource_devices: 0, recent_reboots: 0 },
+      },
+    }),
+  );
+
+  await page.route("**/api/health/analyze", (route) =>
+    route.fulfill({
+      json: {
+        status: "ok",
+        findings: [
+          { severity: "high", title: "IoT zone broad egress with no monitoring", description: "IoT zone allows all traffic to External but no metrics anomaly checks are configured for IoT devices.", affected_module: "firewall", affected_entity_id: "IoT->External", recommended_action: "Add egress restrictions or enable anomaly monitoring for IoT devices.", confidence: "high" },
+          { severity: "medium", title: "Guest network isolation gap", description: "Guest zone blocks LAN access but has no rate limiting, combined with no traffic monitoring.", affected_module: "firewall", affected_entity_id: "Guest->Internal", recommended_action: "Consider bandwidth limits on the guest network.", confidence: "medium" },
+        ],
+        cached: false,
+        analyzed_at: "2026-03-15T12:00:00+00:00",
+        message: null,
+      },
+    }),
+  );
+
+  await page.route("**/api/settings/ai-analysis", (route) =>
+    route.fulfill({ json: { site_profile: "homelab" } }),
+  );
 }

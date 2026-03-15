@@ -1,0 +1,41 @@
+[
+  {
+    "mac": "aa:bb:cc:dd:ee:01",
+    "name": "Gateway",
+    "model": "UDM-Pro",
+    "model_name": "UniFi Dream Machine Pro",
+    "type": "ugw",
+    "ip": "192.168.1.1",
+    "version": "4.0.6",
+    "state": 1,
+    "uptime": 864000,
+    "num_sta": 15,
+    "tx_bytes": 1024000000,
+    "rx_bytes": 2048000000,
+    "system-stats": { "cpu": "12.5", "mem": "45.2" },
+    "general_temperature": 52,
+    "port_table": [],
+    "lldp_table": []
+  },
+  {
+    "mac": "aa:bb:cc:dd:ee:02",
+    "name": "Core Switch",
+    "model": "USW-Pro-24-PoE",
+    "model_name": "UniFi Switch Pro 24 PoE",
+    "type": "usw",
+    "ip": "192.168.1.2",
+    "version": "7.1.0",
+    "state": 1,
+    "uptime": 432000,
+    "num_sta": 20,
+    "tx_bytes": 512000000,
+    "rx_bytes": 768000000,
+    "system-stats": { "cpu": "8.3", "mem": "30.1" },
+    "total_max_power": 400,
+    "port_table": [
+      { "port_idx": 1, "poe_mode": "auto", "poe_power": "15.2" },
+      { "port_idx": 2, "poe_mode": "auto", "poe_power": "8.5" }
+    ],
+    "lldp_table": []
+  }
+]

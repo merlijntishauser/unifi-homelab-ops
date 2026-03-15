@@ -157,6 +157,41 @@ test.describe("traffic simulation", () => {
   });
 });
 
+test.describe("health module", () => {
+  test("health summary loads with data from all modules", async ({ page }) => {
+    await appLoginAndWaitForMatrix(page);
+
+    // Navigate to health module via sidebar
+    await page.getByRole("link", { name: "Health" }).click();
+
+    // Summary cards should load with real data from the backend
+    await expect(page.getByRole("button", { name: "Firewall" })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: "Topology" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Metrics" })).toBeVisible();
+
+    // Auto-refresh label
+    await expect(page.getByText("Auto-refreshes every 60s")).toBeVisible();
+  });
+
+  test("health summary card navigates to firewall module", async ({ page }) => {
+    await appLoginAndWaitForMatrix(page);
+    await page.getByRole("link", { name: "Health" }).click();
+    await expect(page.getByRole("button", { name: "Firewall" })).toBeVisible({ timeout: 15000 });
+
+    await page.getByRole("button", { name: "Firewall" }).click();
+    await waitForMatrix(page);
+  });
+
+  test("AI analysis section shows setup message when no AI configured", async ({ page }) => {
+    await appLoginAndWaitForMatrix(page);
+    await page.getByRole("link", { name: "Health" }).click();
+    await expect(page.getByRole("button", { name: "Firewall" })).toBeVisible({ timeout: 15000 });
+
+    // No AI provider configured in production e2e, so should show setup message
+    await expect(page.getByText("Configure an AI provider")).toBeVisible();
+  });
+});
+
 test.describe("settings", () => {
   test("AI settings modal opens and shows configuration", async ({ page }) => {
     await appLoginAndWaitForMatrix(page);

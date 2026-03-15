@@ -49,6 +49,18 @@ async def networks(site: str) -> dict:
     return {"meta": {"rc": "ok"}, "data": _load("networks")}
 
 
+@app.get("/api/s/{site}/stat/device")
+async def devices(site: str) -> dict:
+    """Classic API: return devices in {data: [...]} envelope."""
+    return {"meta": {"rc": "ok"}, "data": _load("devices")}
+
+
+@app.get("/api/s/{site}/stat/sta")
+async def clients(site: str) -> dict:
+    """Classic API: return clients (empty for mock)."""
+    return {"meta": {"rc": "ok"}, "data": []}
+
+
 @app.get("/api/health")
 async def health() -> dict:
     return {"status": "ok"}

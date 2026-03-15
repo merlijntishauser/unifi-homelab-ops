@@ -1,15 +1,38 @@
 # UniFi Homelab Ops
 
-A self-hosted web application that extends the native UniFi dashboard with firewall analysis, network topology visualization, and device metrics monitoring. Connect to your controller and get deeper visibility into your UniFi network.
+A self-hosted web application that extends the native UniFi dashboard with firewall analysis, network topology visualization, device metrics monitoring, and AI-powered site health assessment. Connect to your controller and get deeper visibility into your UniFi network.
 
-## What it does
+## Modules
+
+### Firewall
 
 - **Zone matrix** -- overview of all zone-to-zone rule relationships at a glance
 - **Interactive graph** -- click a cell to explore zones and rules as a node graph with automatic layout
-- **Rule inspector** -- click an edge to see every rule between two zones in a side panel
-- **Traffic simulator** -- enter source/destination IP, protocol and port to see which rule would match
-- **AI analysis** -- optional rule grading and risk assessment via OpenAI or Anthropic API
-- **Dark mode** -- toggle between light and dark themes
+- **Rule inspector** -- expand any rule to see match criteria, protocol, metadata, and static analysis findings
+- **Traffic simulator** -- enter source/destination IP, protocol, and port to trace which rule matches
+- **Static analysis** -- automatic scoring with 11 security checks per zone pair (A-F grading)
+- **AI analysis** -- optional deep analysis via OpenAI or Anthropic with caching and site profile context
+- **Rule management** -- enable/disable rules and reorder rule priority directly from the UI
+
+### Topology
+
+- **Interactive device map** -- ReactFlow graph showing device connections, port status, and LLDP neighbors
+- **SVG diagram** -- orthogonal or isometric network topology with pan, zoom, and export (SVG/PNG)
+- **Device panel** -- port table, firmware version, client count, uptime per device
+
+### Metrics
+
+- **Device monitoring** -- CPU, memory, temperature, traffic, PoE consumption for all UniFi devices
+- **Sparkline grid** -- at-a-glance device cards with 24h trends, auto-refreshing every 30 seconds
+- **Detail view** -- per-device time-series charts with notification history
+- **Anomaly detection** -- automatic alerts for high CPU, memory, temperature, PoE overload, and unexpected reboots
+- **Notification system** -- severity-based alerts with dismissal and auto-resolution
+
+### Site Health
+
+- **Summary dashboard** -- aggregated status cards from all three modules with colored health indicators
+- **AI cross-domain analysis** -- correlates firewall posture, topology risks, and metric anomalies to find issues no single module can detect
+- **Finding cards** -- severity-grouped results with module badges, recommended actions, and click-through navigation to the affected entity
 
 ## Getting started
 
@@ -18,9 +41,19 @@ A self-hosted web application that extends the native UniFi dashboard with firew
 - [Docker](https://docs.docker.com/get-docker/)
 - A UniFi Network controller running 9.x or later
 
-### Production image
+### Quick start
 
-Run the published single-container image:
+```bash
+docker run -d \
+  --name unifi-homelab-ops \
+  -p 8080:8080 \
+  -v unifi-homelab-ops-data:/data \
+  merlijntishauser/unifi-homelab-ops:latest
+```
+
+Open [http://localhost:8080](http://localhost:8080) and log in with your UniFi controller credentials.
+
+### With environment credentials
 
 ```bash
 docker run -d \
@@ -35,63 +68,85 @@ docker run -d \
   merlijntishauser/unifi-homelab-ops:latest
 ```
 
-Open [http://localhost:8080](http://localhost:8080) in your browser.
-
 Notes:
 
 - All `UNIFI_*` variables are optional. If omitted, log in through the UI after startup.
-- Runtime UI credentials take priority over env vars until the container restarts.
-- Mount `/data` to persist AI provider settings and cached AI analysis results.
+- Runtime UI credentials take priority over environment variables until the container restarts.
+- Mount `/data` to persist settings, cached analysis results, and metrics history.
+- An Alpine variant is available: `merlijntishauser/unifi-homelab-ops:alpine`
 
-### Development with Docker Compose
+### Development
 
 ```bash
 git clone https://github.com/merlijntishauser/unifi-homelab-ops.git
 cd unifi-homelab-ops
-cp .env.example .env
-make build
-make up
+cp .env.example .env     # edit with your controller credentials
+make build && make up    # API on :8001, frontend on :5174
 ```
 
-Open [http://localhost:5174](http://localhost:5174) in your browser.
-
-Stop the dev stack with:
+Both services mount source code as volumes -- changes reflect immediately via Vite HMR and uvicorn reload.
 
 ```bash
-make down
+make down                # stop
+make ci                  # full local CI pipeline (lint, type check, test, complexity)
+make e2e                 # Playwright e2e tests (dev)
+make e2e-prod            # Playwright e2e tests (production Docker image)
 ```
 
 ## Configuration
 
-| Variable           | Description             | Default   |
-|--------------------|-------------------------|-----------|
-| `UNIFI_URL`        | Controller URL          | --        |
-| `UNIFI_SITE`       | Site name               | `default` |
-| `UNIFI_USER`       | Controller username     | --        |
-| `UNIFI_PASS`       | Controller password     | --        |
-| `UNIFI_VERIFY_SSL` | Verify SSL certificates | `false`   |
-| `HOMELAB_OPS_DB_PATH` | SQLite database path | `/data/homelab-ops.db` in the production image |
-| `APP_ACCESS_URL`   | URL shown in the production startup banner | `http://localhost:8080` |
+| Variable | Description | Default |
+|---|---|---|
+| `UNIFI_URL` | Controller URL | -- |
+| `UNIFI_SITE` | Site name | `default` |
+| `UNIFI_USER` | Controller username | -- |
+| `UNIFI_PASS` | Controller password | -- |
+| `UNIFI_VERIFY_SSL` | Verify SSL certificates | `false` |
+| `APP_PASSWORD` | Application passphrase gate (optional) | -- |
+| `APP_SESSION_TTL` | Session duration in seconds | `86400` |
+| `HOMELAB_OPS_DB_PATH` | SQLite database path | `/data/homelab-ops.db` |
+| `LOG_LEVEL` | Server log level | `INFO` |
 
-AI analysis is optional. You can configure an OpenAI or Anthropic API key in the Settings modal within the app.
+### AI analysis (optional)
 
-## Docker Hub publishing
+AI-powered analysis can be configured via the Settings modal in the app, or via environment variables:
 
-The root [Dockerfile](./Dockerfile) builds the production single-container image. The workflow at [.github/workflows/docker-publish.yml](./.github/workflows/docker-publish.yml) builds multi-arch `linux/amd64` and `linux/arm64` images and pushes them to Docker Hub on pushes to `main` and version tags.
+| Variable | Description | Default |
+|---|---|---|
+| `AI_BASE_URL` | Provider API base URL | -- |
+| `AI_API_KEY` | API key | -- |
+| `AI_API_KEY_FILE` | Path to file containing the API key | -- |
+| `AI_MODEL` | Model name (e.g. `gpt-4o`, `claude-sonnet-4-6`) | -- |
+| `AI_PROVIDER_TYPE` | `openai` or `anthropic` | `openai` |
 
-An experimental high-risk Alpine runtime prototype is available in [Dockerfile.alpine](./Dockerfile.alpine). CI now publishes it as `merlijntishauser/unifi-homelab-ops:alpine`. It is smaller, but uses `python:3.13-alpine` and `musl`, so dependency compatibility is less predictable than the main `slim` image.
+Supports any OpenAI-compatible API (OpenAI, Ollama, LM Studio, etc.) and the Anthropic API.
 
-The main CI workflow at [.github/workflows/ci.yml](./.github/workflows/ci.yml) also:
+## Docker images
 
-- builds the standard and Alpine images for `linux/amd64`
-- smoke-tests container startup plus `/api/health` and `/`
-- runs Trivy image scans for OS and library vulnerabilities
-- fails on `HIGH` and `CRITICAL` findings, ignoring unfixed issues
+Published to [Docker Hub](https://hub.docker.com/r/merlijntishauser/unifi-homelab-ops) on every push to `main` and on version tags.
 
-To enable publishing, add these GitHub repository secrets:
+| Tag | Description |
+|---|---|
+| `latest` | Latest release or main branch build |
+| `1.0.0`, `1.0`, `1` | Pinned release version |
+| `main` | Latest main branch build |
+| `sha-abc123` | Specific commit |
+| `alpine` | Alpine variant of latest |
+| `1.0.0-alpine` | Alpine variant of pinned release |
 
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN`
+Multi-arch: `linux/amd64` and `linux/arm64`.
+
+CI also builds both image variants, runs smoke tests, and scans with Trivy for HIGH/CRITICAL vulnerabilities.
+
+## Releasing
+
+```bash
+# 1. Add a dated section to CHANGELOG.md
+# 2. Run:
+make release VERSION=1.1.0
+```
+
+This validates the changelog, bumps version in `pyproject.toml` and `package.json`, commits, creates a signed tag, and pushes. GitHub Actions then builds Docker images and creates a GitHub Release.
 
 ## License
 

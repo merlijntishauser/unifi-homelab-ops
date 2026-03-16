@@ -104,7 +104,7 @@ export default function Toolbar({
 
   return (
     <div className="relative z-30 flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2 lg:py-2.5 pt-safe border-b border-ui-border dark:border-noc-border bg-ui-surface/80 dark:bg-noc-surface/80 backdrop-blur-md">
-      <h1 className="text-sm lg:text-base font-sans font-semibold text-ui-text dark:text-noc-text tracking-tight">
+      <h1 className="text-sm lg:text-base font-sans font-semibold tracking-tight bg-gradient-to-r from-[#3b82f6] to-ub-blue bg-clip-text text-transparent">
         UniFi Homelab Ops
       </h1>
 

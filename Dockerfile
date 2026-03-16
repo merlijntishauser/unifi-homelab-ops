@@ -30,6 +30,8 @@ COPY backend/alembic ./alembic
 
 FROM python:3.13-slim AS runtime
 
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app/backend
 
 ENV PATH="/app/backend/.venv/bin:$PATH"

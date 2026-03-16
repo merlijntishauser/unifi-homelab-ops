@@ -1,6 +1,6 @@
 # Product Roadmap
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 ## Completed
 
@@ -14,22 +14,54 @@ Items shipped across all phases. Kept for historical context.
 - **Topology module** -- device map (ReactFlow), SVG diagram with pan/zoom/export, device detail panel with port table
 - **Metrics module** -- background poller, 24h SQLite retention, anomaly detection, notification drawer, device grid with sparklines
 - **Site Health AI** -- unified health dashboard with deterministic summary cards (firewall grades, topology status, metrics notifications) and AI-powered cross-domain analysis with severity-grouped finding cards, entity-level prompt context, caching, and deep-link navigation to affected modules
+- **UI redesign** -- Ubiquiti-inspired dual-theme token system (ui-*/noc-*), Inter typography, layered shadows, toolbar glassmorphism, custom favicon
+- **Responsive layout** -- bottom nav on mobile, full-screen overlays for panels/modals, touch-target compliance, iOS safe area support
+
+---
+
+## Next Up
+
+### Library refactoring (unifi-topology + unifi-network-maps)
+
+Move generic rendering (Mermaid, Markdown tables, inventory, LLDP, device port overview) from `unifi-network-maps` into `unifi-topology`. This makes `unifi-network-maps` a thin CLI shell and lets `unifi-homelab-ops` import the same renderers directly. See [design doc](plans/2026-03-16-new-modules-design.md) for the full migration plan.
+
+### RulePanel hook extraction
+
+Split the two reducers in RulePanel into `useSimulation()`, `useAiAnalysis()`, `useRuleWrite()` hooks. Follow-up to the file extraction once it settles.
+
+---
+
+## New Modules
+
+Detailed designs in [docs/plans/2026-03-16-new-modules-design.md](plans/2026-03-16-new-modules-design.md).
+
+### Documentation Generator (Module 5)
+
+Living documentation view rendering the full network setup as a browsable, searchable web document. Sections: network map (Mermaid), infrastructure inventory, device port overview, LLDP neighbors, firewall summary, metrics snapshot. Export as Markdown. Depends on the library refactoring.
+
+### Rack Planner (Module 6)
+
+Visual drag-and-drop editor for 10" and 19" server racks. Place devices, see power budget, generate bill of materials. Optional auto-populate from topology. Standalone with optional controller enrichment.
+
+### Cable & Port Mapper (Module 7)
+
+Document physical cable runs, patch panel assignments, and cable inventory. Pre-populated from LLDP topology edges, user adds physical details. Cross-links with Rack Planner and Topology Module.
+
+### VLAN Planner (Module 8)
+
+Visual subnet map with VLAN allocations, IP utilization, zone assignments, and automated conflict detection. Read-only -- a planning and visibility tool. Cross-links with Firewall Module.
 
 ---
 
 ## General / Sitewide
 
-### Prometheus metrics endpoint
-
-Add a `/metrics` endpoint exposing Prometheus counters and histograms for controller fetches, AI calls, cache hit/miss, and request latency. Optional -- zero-config if not scraped.
-
 ### Outbound URL validation and log redaction
 
 Add HTTPS enforcement and domain allowlist for AI `base_url` to prevent credential leakage to unintended hosts. Audit and redact sensitive data (API keys, response bodies) from server-side log output.
 
-### Responsive layout
+### Prometheus metrics endpoint
 
-On narrow viewports (<768px), sidebar collapses to bottom tab bar. Primary target is desktop and NOC screen use.
+Add a `/metrics` endpoint exposing Prometheus counters and histograms for controller fetches, AI calls, cache hit/miss, and request latency. Optional -- zero-config if not scraped.
 
 ### Enterprise-scale sites (100+ zones)
 
@@ -42,10 +74,6 @@ Virtualized matrix rendering (TanStack Virtual or similar) for grids beyond 50 z
 ### Template-based fixture generation
 
 Define site archetypes as parameterized templates and generate fixture sets programmatically for broader regression coverage. Follows after hand-crafted fixtures prove the golden test pattern.
-
-### RulePanel hook extraction
-
-Split the two reducers in RulePanel into `useSimulation()`, `useAiAnalysis()`, `useRuleWrite()` hooks. Follow-up to the file extraction once it settles.
 
 ### Operator workflow: remediation flows
 

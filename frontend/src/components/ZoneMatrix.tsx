@@ -18,38 +18,44 @@ function findPair(zonePairs: ZonePair[], srcId: string, dstId: string): ZonePair
 export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick }: ZoneMatrixProps) {
   const size = zones.length;
   const isMobile = useIsMobile();
-  const srcColWidth = isMobile ? "28px" : "max-content";
-  const cellMin = isMobile ? "100px" : "130px";
+
+  // Mobile: hide Source label column, row headers become the first sticky column
+  // Desktop: Source label | row headers | cells
+  const gridTemplateColumns = isMobile
+    ? `max-content repeat(${size}, minmax(100px, 160px))`
+    : `minmax(28px, max-content) max-content repeat(${size}, minmax(130px, 160px))`;
 
   return (
     <div className="h-full flex items-start justify-center p-3 lg:p-8 overflow-auto bg-ui-bg dark:bg-noc-bg">
       <div
         className="grid gap-1"
         style={{
-          gridTemplateColumns: `minmax(${srcColWidth}, max-content) auto repeat(${size}, minmax(${cellMin}, 160px))`,
+          gridTemplateColumns,
           gridTemplateRows: `auto auto repeat(${size}, minmax(38px, 52px))`,
         }}
       >
-        {/* Row 1: empty corner cells + "Destination" label spanning columns */}
-        <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />
+        {/* Row 1: corner cell(s) + "Destination" label */}
+        {!isMobile && <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />}
         <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />
         {size > 0 && (
           <div
             className="sticky top-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
-            style={{ gridColumn: `3 / span ${size}` }}
+            style={{ gridColumn: `${isMobile ? 2 : 3} / span ${size}` }}
           >
             Destination
           </div>
         )}
 
-        {/* Row 2: "Source" label cell + empty cell + column headers */}
-        <div
-          className="sticky left-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-1 py-1 lg:px-3 lg:py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
-          style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
-          data-testid="source-label"
-        >
-          {size > 0 ? "Source" : ""}
-        </div>
+        {/* Row 2+: Source label (desktop only) + column headers + data rows */}
+        {!isMobile && (
+          <div
+            className="sticky left-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-1 py-1 lg:px-3 lg:py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+            style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+            data-testid="source-label"
+          >
+            {size > 0 ? "Source" : ""}
+          </div>
+        )}
         <div className="sticky top-0 z-20 bg-ui-bg dark:bg-noc-bg" />
         {zones.map((zone) => (
           <button
@@ -65,7 +71,6 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
         {/* Data rows */}
         {zones.map((srcZone) => (
           <Fragment key={srcZone.id}>
-            {/* Row header */}
             <button
               data-testid={`row-header-${srcZone.id}`}
               onClick={() => onZoneClick(srcZone.id)}
@@ -74,7 +79,6 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
               {srcZone.name}
             </button>
 
-            {/* Cells */}
             {zones.map((dstZone) => {
               const pair = findPair(zonePairs, srcZone.id, dstZone.id);
               const isSelf = srcZone.id === dstZone.id;

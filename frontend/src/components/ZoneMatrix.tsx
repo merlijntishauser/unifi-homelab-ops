@@ -51,10 +51,10 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
           </div>
         )}
 
-        {/* Row 2: Source label (desktop, not sticky) + empty spacer + column headers */}
+        {/* Row 2: Source label (desktop, sticky but lower z than row headers) + spacer + column headers */}
         {!isMobile && (
           <div
-            className="z-10 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-1 py-1 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+            className="sticky left-0 z-10 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-1 py-1 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
             style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
             data-testid="source-label"
           >

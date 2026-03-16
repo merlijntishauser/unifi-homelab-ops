@@ -20,7 +20,7 @@ function getActionColor(actionLabel: ActionLabel | null): string {
     case "Mixed":
       return "bg-amber-50 dark:bg-status-warning/10 border-amber-200 dark:border-status-warning/25";
     default:
-      return "bg-gray-50 dark:bg-noc-raised/50 border-gray-200 dark:border-noc-border";
+      return "bg-ui-raised dark:bg-noc-raised/50 border-ui-border dark:border-noc-border";
   }
 }
 
@@ -50,7 +50,7 @@ export default function MatrixCell({
     return (
       <div
         data-testid="matrix-cell"
-        className="w-full h-full flex items-center justify-center text-xs rounded-lg bg-gray-100 dark:bg-noc-raised/30 text-gray-300 dark:text-noc-text-dim"
+        className="w-full h-full flex items-center justify-center text-xs rounded-lg bg-ui-raised dark:bg-noc-raised/30 text-ui-text-dim dark:text-noc-text-dim"
       >
         &mdash;
       </div>
@@ -69,13 +69,13 @@ export default function MatrixCell({
     >
       {actionLabel ? (
         <span className="flex items-center gap-1">
-          <span className="text-gray-700 dark:text-noc-text">{actionLabel}</span>
+          <span className="text-ui-text dark:text-noc-text">{actionLabel}</span>
           {userRuleCount > 0 && (
             <span className="text-ub-blue font-semibold">({userRuleCount})</span>
           )}
         </span>
       ) : (
-        <span className="text-gray-300 dark:text-noc-text-dim">&mdash;</span>
+        <span className="text-ui-text-dim dark:text-noc-text-dim">&mdash;</span>
       )}
       {dotColor && (
         <span
@@ -86,7 +86,7 @@ export default function MatrixCell({
       {tooltip && (
         <span
           data-testid="cell-tooltip"
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-gray-900 dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg"
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg"
         >
           {tooltip}
         </span>

@@ -1,7 +1,7 @@
 import type { Rule } from "../../api/types";
 import { resolveGrouped, formatSchedule, formatIpSec } from "./utils";
 
-const LABEL_CLASS = "text-[11px] font-medium text-gray-500 dark:text-noc-text-secondary whitespace-nowrap";
+const LABEL_CLASS = "text-[11px] font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap";
 
 interface DetailRow {
   label: string;
@@ -63,10 +63,10 @@ function DetailSectionView({ section }: { section: DetailSection }) {
   return (
     <div className="mt-2.5 first:mt-0">
       <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400 dark:text-noc-text-dim whitespace-nowrap">
+        <span className="text-[9px] font-semibold uppercase tracking-widest text-ui-text-dim dark:text-noc-text-dim whitespace-nowrap">
           {section.title}
         </span>
-        <span className="flex-1 h-px bg-gray-200 dark:bg-noc-border" />
+        <span className="flex-1 h-px bg-ui-border dark:bg-noc-border" />
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 items-baseline">
         {section.rows.map((row) => (
@@ -83,24 +83,24 @@ function DetailRowView({ row }: { row: DetailRow }) {
       <dt className={LABEL_CLASS}>{row.label}</dt>
       {row.type === "status" ? (
         <dd className="flex items-center gap-1.5">
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.active ? "bg-status-success" : "bg-gray-300 dark:bg-noc-text-dim"}`} />
-          <span className={`text-[11px] ${row.active ? "text-status-success" : "text-gray-400 dark:text-noc-text-dim"}`}>
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.active ? "bg-status-success" : "bg-ui-border dark:bg-noc-text-dim"}`} />
+          <span className={`text-[11px] ${row.active ? "text-status-success" : "text-ui-text-dim dark:text-noc-text-dim"}`}>
             {row.value}
           </span>
         </dd>
       ) : row.type === "mono" ? (
         <dd>
-          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-noc-raised text-gray-700 dark:text-noc-text inline-block">
+          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-ui-raised dark:bg-noc-raised text-ui-text dark:text-noc-text inline-block">
             {row.value}
           </span>
           {row.note && (
-            <span className="block text-[10px] text-gray-400 dark:text-noc-text-dim mt-0.5">
+            <span className="block text-[10px] text-ui-text-dim dark:text-noc-text-dim mt-0.5">
               {row.note}
             </span>
           )}
         </dd>
       ) : (
-        <dd className="text-[11px] text-gray-700 dark:text-noc-text">{row.value}</dd>
+        <dd className="text-[11px] text-ui-text dark:text-noc-text">{row.value}</dd>
       )}
     </>
   );
@@ -109,16 +109,16 @@ function DetailRowView({ row }: { row: DetailRow }) {
 export default function RuleDetails({ rule, sourceZoneName, destZoneName }: { rule: Rule; sourceZoneName: string; destZoneName: string }) {
   const sections = buildDetailSections(rule, sourceZoneName, destZoneName);
   return (
-    <div className="mt-2.5 pt-2 border-t border-gray-200/60 dark:border-noc-border/60 animate-fade-in">
+    <div className="mt-2.5 pt-2 border-t border-ui-border/60 dark:border-noc-border/60 animate-fade-in">
       {rule.description && (
-        <p className="mb-2 pl-2.5 border-l-2 border-gray-300 dark:border-noc-text-dim text-[11px] text-gray-500 dark:text-noc-text-secondary italic">
+        <p className="mb-2 pl-2.5 border-l-2 border-ui-border dark:border-noc-text-dim text-[11px] text-ui-text-secondary dark:text-noc-text-secondary italic">
           {rule.description}
         </p>
       )}
       {sections.map((section) => (
         <DetailSectionView key={section.title} section={section} />
       ))}
-      <div className="mt-2.5 pt-1.5 border-t border-gray-200/40 dark:border-noc-border/40 font-mono text-[10px] text-gray-400 dark:text-noc-text-dim select-all">
+      <div className="mt-2.5 pt-1.5 border-t border-ui-border/40 dark:border-noc-border/40 font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim select-all">
         ID: {rule.id}
       </div>
     </div>

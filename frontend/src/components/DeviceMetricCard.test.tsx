@@ -111,7 +111,7 @@ describe("DeviceMetricCard", () => {
 
   it("shows gray status dot for unknown status", () => {
     const { container } = render(<DeviceMetricCard device={makeDevice({ status: "unknown" })} onClick={vi.fn()} />);
-    const dot = container.querySelector(".bg-gray-400");
+    const dot = container.querySelector(".bg-ui-text-dim");
     expect(dot).toBeInTheDocument();
   });
 

@@ -7,7 +7,7 @@ export function gradeColor(grade: string): string {
 }
 
 export function actionColor(action: Rule["action"], enabled: boolean): string {
-  if (!enabled) return "bg-gray-50 dark:bg-noc-raised/50 border-gray-200 dark:border-noc-border";
+  if (!enabled) return "bg-ui-raised dark:bg-noc-raised/50 border-ui-border dark:border-noc-border";
   switch (action) {
     case "ALLOW":
       return "bg-green-50 dark:bg-status-success/6 border-green-200 dark:border-status-success/20";
@@ -36,7 +36,7 @@ export function verdictColor(verdict: string | null): string {
     case "REJECT":
       return "bg-red-50 dark:bg-status-danger/10 border-red-300 dark:border-status-danger/30 text-red-800 dark:text-status-danger";
     default:
-      return "bg-gray-50 dark:bg-noc-raised border-gray-300 dark:border-noc-border text-gray-700 dark:text-noc-text-secondary";
+      return "bg-ui-raised dark:bg-noc-raised border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary";
   }
 }
 

@@ -28,20 +28,20 @@ export default function ConfirmDialog({
       <div
         role="dialog"
         aria-modal="true"
-        className="bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-xl shadow-xl p-5 max-w-sm w-full mx-4"
+        className="bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-xl p-5 max-w-sm w-full mx-4"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <h3 className="text-sm font-display font-semibold text-gray-900 dark:text-noc-text">
+        <h3 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text">
           {title}
         </h3>
-        <p className="mt-2 text-xs text-gray-600 dark:text-noc-text-secondary">
+        <p className="mt-2 text-xs text-ui-text-secondary dark:text-noc-text-secondary">
           {message}
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onCancel}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-noc-border text-gray-700 dark:text-noc-text-secondary hover:bg-gray-50 dark:hover:bg-noc-raised cursor-pointer transition-colors"
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors"
           >
             Cancel
           </button>

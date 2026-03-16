@@ -25,7 +25,7 @@ function AnalysisSection({ analysis, allFindings }: { analysis: ZonePair["analys
         <div className={`px-2.5 py-1 rounded-md text-xs font-bold text-white ${gradeColor(analysis.grade)}`}>
           {analysis.grade}
         </div>
-        <span className="text-xs font-mono text-gray-500 dark:text-noc-text-dim">
+        <span className="text-xs font-mono text-ui-text-secondary dark:text-noc-text-dim">
           {analysis.score}/100
         </span>
       </div>
@@ -127,19 +127,19 @@ export default function RulePanel({
   const simError = deriveMutationError(simulateMutation.error, "Simulation failed");
 
   const inputClass =
-    "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-2.5 py-1.5 text-xs font-mono text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
+    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2.5 py-1.5 text-xs font-mono text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
   return (
     <>
-    <div className="w-[400px] h-full border-l border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface flex flex-col overflow-hidden animate-slide-right">
+    <div className="w-[400px] h-full border-l border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface flex flex-col overflow-hidden animate-slide-right">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-noc-border">
-        <h2 className="text-sm font-display font-semibold text-gray-900 dark:text-noc-text truncate">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-ui-border dark:border-noc-border">
+        <h2 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text truncate">
           {sourceZoneName} &rarr; {destZoneName}
         </h2>
         <button
           onClick={onClose}
-          className="text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text text-lg leading-none cursor-pointer transition-colors"
+          className="text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-lg leading-none cursor-pointer transition-colors"
           aria-label="Close panel"
         >
           &times;
@@ -160,7 +160,7 @@ export default function RulePanel({
 
         {/* Rule list */}
         <div className="space-y-2">
-          <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
+          <h3 className="text-[10px] font-semibold text-ui-text-dim dark:text-noc-text-dim uppercase tracking-widest">
             Rules ({sortedRules.length})
           </h3>
           {sortedRules.map((rule, idx) => (

@@ -21,7 +21,7 @@ function SeverityDot({ severity }: { severity: string }) {
       ? "bg-status-danger"
       : severity === "warning" || severity === "medium"
         ? "bg-status-warning"
-        : "bg-gray-400 dark:bg-noc-text-dim";
+        : "bg-ui-text-dim dark:bg-noc-text-dim";
   return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${color}`} />;
 }
 
@@ -64,19 +64,19 @@ function ChartSection({
   const lastTime = timestamps.length > 1 ? formatTimeLabel(timestamps[timestamps.length - 1]) : "";
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-noc-border bg-white dark:bg-noc-raised p-4">
+    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4">
       <div className="flex items-baseline justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700 dark:text-noc-text-secondary">{label}</span>
-        <span className="text-sm font-mono text-gray-900 dark:text-noc-text">{value}</span>
+        <span className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary">{label}</span>
+        <span className="text-sm font-mono text-ui-text dark:text-noc-text">{value}</span>
       </div>
       <div className="flex gap-1">
-        <div className="flex flex-col justify-between text-[10px] font-mono text-gray-400 dark:text-noc-text-dim w-10 text-right shrink-0 py-0.5">
+        <div className="flex flex-col justify-between text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim w-10 text-right shrink-0 py-0.5">
           <span>{maxLabel}</span>
           <span>{minLabel}</span>
         </div>
         <div className="flex-1 flex flex-col">
           <Sparkline data={data} width={400} height={60} color={color} className="w-full" />
-          <div className="flex justify-between text-[10px] font-mono text-gray-400 dark:text-noc-text-dim mt-0.5">
+          <div className="flex justify-between text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim mt-0.5">
             <span>{firstTime}</span>
             <span>{lastTime}</span>
           </div>
@@ -104,16 +104,16 @@ export default function MetricsDetailView({
     <div className="flex-1 overflow-y-auto p-6">
       <button
         onClick={onBack}
-        className="rounded-lg bg-white dark:bg-noc-surface border border-gray-300 dark:border-noc-border px-3 py-1.5 text-sm text-gray-700 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm dark:shadow-lg cursor-pointer transition-all mb-4"
+        className="rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all mb-4"
       >
         Back to overview
       </button>
 
       <div className="mb-6">
-        <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-noc-text">
+        <h2 className="text-lg font-sans font-semibold text-ui-text dark:text-noc-text">
           {device.name}
         </h2>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-500 dark:text-noc-text-dim">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-ui-text-dim dark:text-noc-text-dim">
           <span>{device.model}</span>
           <span className="font-mono">{device.mac}</span>
           <span>v{device.version}</span>
@@ -146,22 +146,22 @@ export default function MetricsDetailView({
 
       {notifications.length > 0 && (
         <div>
-          <h3 className="text-sm font-display font-semibold text-gray-900 dark:text-noc-text mb-3">
+          <h3 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text mb-3">
             Active Notifications
           </h3>
           <div className="flex flex-col gap-2">
             {notifications.map((n) => (
               <div
                 key={n.id}
-                className="rounded-lg border border-gray-200 dark:border-noc-border bg-white dark:bg-noc-raised p-3"
+                className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-3"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <SeverityDot severity={n.severity} />
-                  <span className="text-sm font-medium text-gray-900 dark:text-noc-text">
+                  <span className="text-sm font-medium text-ui-text dark:text-noc-text">
                     {n.title}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-noc-text-dim">{n.message}</p>
+                <p className="text-xs text-ui-text-dim dark:text-noc-text-dim">{n.message}</p>
               </div>
             ))}
           </div>

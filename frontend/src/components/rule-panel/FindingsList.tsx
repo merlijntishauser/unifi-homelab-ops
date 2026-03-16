@@ -10,7 +10,7 @@ function severityBadge(severity: string): string {
     case "low":
       return "bg-blue-100 dark:bg-ub-blue-dim text-blue-700 dark:text-ub-blue";
     default:
-      return "bg-gray-100 dark:bg-noc-raised text-gray-700 dark:text-noc-text-secondary";
+      return "bg-ui-raised dark:bg-noc-raised text-ui-text-secondary dark:text-noc-text-secondary";
   }
 }
 
@@ -20,24 +20,24 @@ function FindingCard({ finding }: { finding: Finding }) {
   const [showDetails, setShowDetails] = useState(false);
   const hasDetails = !!(finding.rationale || finding.recommended_action);
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-noc-border p-2.5 text-xs bg-gray-50 dark:bg-noc-raised/50">
+    <div className="rounded-lg border border-ui-border dark:border-noc-border p-2.5 text-xs bg-ui-raised dark:bg-noc-raised/50">
       <div className="flex items-center gap-1.5">
         <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${severityBadge(finding.severity)}`}>
           {finding.severity}
         </span>
         {finding.source === "ai" && (
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-ub-purple/15 text-purple-700 dark:text-ub-purple-light">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-ub-blue-dim text-ub-blue dark:text-ub-blue-light">
             AI
           </span>
         )}
         {finding.confidence && (
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-noc-raised text-gray-500 dark:text-noc-text-dim">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-ui-raised dark:bg-noc-raised text-ui-text-secondary dark:text-noc-text-dim">
             {finding.confidence}
           </span>
         )}
-        <span className="font-medium text-gray-900 dark:text-noc-text">{finding.title}</span>
+        <span className="font-medium text-ui-text dark:text-noc-text">{finding.title}</span>
       </div>
-      <p className="mt-1 text-gray-500 dark:text-noc-text-secondary">{finding.description}</p>
+      <p className="mt-1 text-ui-text-secondary dark:text-noc-text-secondary">{finding.description}</p>
       {hasDetails && (
         <>
           <button
@@ -49,10 +49,10 @@ function FindingCard({ finding }: { finding: Finding }) {
           {showDetails && (
             <div className="mt-1 pl-2 border-l-2 border-ub-blue/30 text-[11px] animate-fade-in space-y-1">
               {finding.rationale && (
-                <p className="text-gray-500 dark:text-noc-text-secondary">{finding.rationale}</p>
+                <p className="text-ui-text-secondary dark:text-noc-text-secondary">{finding.rationale}</p>
               )}
               {finding.recommended_action && (
-                <p className="text-gray-600 dark:text-noc-text-secondary">
+                <p className="text-ui-text-secondary dark:text-noc-text-secondary">
                   <span className="font-medium">Action:</span> {finding.recommended_action}
                 </p>
               )}
@@ -73,7 +73,7 @@ export default function FindingsList({ findings }: { findings: Finding[] }) {
 
   return (
     <div className="space-y-1.5">
-      <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
+      <h3 className="text-[10px] font-semibold text-ui-text-dim dark:text-noc-text-dim uppercase tracking-widest">
         Findings ({findings.length})
       </h3>
       {sorted.map((finding, idx) => (

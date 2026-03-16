@@ -20,8 +20,8 @@ function readStorage(key: string, fallback: string): string {
 function LoadingSpinner({ message }: { message: string }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3">
-      <div className="h-6 w-6 rounded-full border-2 border-gray-300 dark:border-noc-border border-t-ub-blue animate-spin" />
-      <p className="text-sm text-gray-500 dark:text-noc-text-secondary font-body">{message}</p>
+      <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+      <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">{message}</p>
     </div>
   );
 }
@@ -72,7 +72,7 @@ function DiagramContent({ query }: { query: UseQueryResult<TopologySvgResponse> 
   return null;
 }
 
-const BTN = "rounded-lg border border-gray-300 dark:border-noc-border px-3 py-1.5 text-sm text-gray-600 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:text-gray-900 dark:hover:text-noc-text hover:border-gray-400 dark:hover:border-noc-border-hover cursor-pointer transition-all";
+const BTN = "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
 const BTN_ACTIVE = "rounded-lg border border-ub-blue px-3 py-1.5 text-sm text-ub-blue bg-blue-50 dark:bg-ub-blue-dim cursor-pointer transition-all";
 
 export default function TopologyModule() {
@@ -114,14 +114,14 @@ export default function TopologyModule() {
   }, [projection]);
 
   const segmentClass = (active: boolean, isFirst: boolean) =>
-    `px-3 py-1.5 text-sm transition-colors ${!isFirst ? "border-l border-gray-300 dark:border-noc-border" : ""} ${
-      active ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue font-medium" : "text-gray-600 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised"
+    `px-3 py-1.5 text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
+      active ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue font-medium" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised"
     }`;
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface shrink-0">
-        <div className="flex rounded-lg border border-gray-300 dark:border-noc-border overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+        <div className="flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
           <button onClick={() => handleSubViewChange("map")} className={segmentClass(subView === "map", true)}>Map</button>
           <button onClick={() => handleSubViewChange("diagram")} className={segmentClass(subView === "diagram", false)}>Diagram</button>
         </div>

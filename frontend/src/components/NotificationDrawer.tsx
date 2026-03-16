@@ -15,7 +15,7 @@ function SeverityDot({ severity }: { severity: string }) {
       ? "bg-status-danger"
       : severity === "warning" || severity === "medium"
         ? "bg-status-warning"
-        : "bg-gray-400 dark:bg-noc-text-dim";
+        : "bg-ui-text-dim dark:bg-noc-text-dim";
   return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${color}`} />;
 }
 
@@ -56,11 +56,11 @@ export default function NotificationDrawer({
         data-testid="drawer-backdrop"
       />
       <aside
-        className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-noc-surface border-r border-gray-200 dark:border-noc-border z-50 flex flex-col shadow-xl animate-slide-left"
+        className="fixed left-0 top-0 bottom-0 w-80 bg-ui-surface dark:bg-noc-surface border-r border-ui-border dark:border-noc-border z-50 flex flex-col shadow-xl animate-slide-left"
         aria-label="Notifications"
       >
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-noc-border shrink-0">
-          <h2 className="text-sm font-display font-semibold text-gray-900 dark:text-noc-text flex-1">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-ui-border dark:border-noc-border shrink-0">
+          <h2 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text flex-1">
             Notifications
           </h2>
           {notifications.length > 0 && (
@@ -71,7 +71,7 @@ export default function NotificationDrawer({
           {notifications.length > 0 && (
             <button
               onClick={onDismissAll}
-              className="text-xs text-gray-500 dark:text-noc-text-dim hover:text-gray-700 dark:hover:text-noc-text-secondary transition-colors"
+              className="text-xs text-ui-text-secondary dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary transition-colors"
             >
               Dismiss all
             </button>
@@ -79,7 +79,7 @@ export default function NotificationDrawer({
           <button
             onClick={onClose}
             aria-label="Close notifications"
-            className="text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text-secondary transition-colors"
+            className="text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary transition-colors"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -91,14 +91,14 @@ export default function NotificationDrawer({
         <div className="flex-1 overflow-y-auto">
           {sorted.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-gray-400 dark:text-noc-text-dim">No notifications</p>
+              <p className="text-sm text-ui-text-dim dark:text-noc-text-dim">No notifications</p>
             </div>
           ) : (
             <div className="flex flex-col gap-1 p-2">
               {sorted.map((n) => (
                 <div
                   key={n.id}
-                  className={`rounded-lg border border-gray-200 dark:border-noc-border p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-noc-raised transition-colors ${
+                  className={`rounded-lg border border-ui-border dark:border-noc-border p-3 cursor-pointer hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors ${
                     n.resolved_at ? "opacity-50" : ""
                   }`}
                   role="button"
@@ -110,7 +110,7 @@ export default function NotificationDrawer({
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <SeverityDot severity={n.severity} />
-                    <span className="text-sm font-medium text-gray-900 dark:text-noc-text flex-1 truncate">
+                    <span className="text-sm font-medium text-ui-text dark:text-noc-text flex-1 truncate">
                       {n.title}
                     </span>
                     <button
@@ -118,14 +118,14 @@ export default function NotificationDrawer({
                         e.stopPropagation();
                         onDismiss(n.id);
                       }}
-                      className="text-xs text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text-secondary"
+                      className="text-xs text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary"
                       aria-label={`Dismiss ${n.title}`}
                     >
                       Dismiss
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-noc-text-dim mb-1">{n.message}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-noc-text-dim">
+                  <p className="text-xs text-ui-text-secondary dark:text-noc-text-dim mb-1">{n.message}</p>
+                  <div className="flex items-center gap-2 text-xs text-ui-text-dim dark:text-noc-text-dim">
                     <span>{formatRelativeTime(n.created_at)}</span>
                     {n.resolved_at && <span className="text-status-success">Resolved</span>}
                   </div>

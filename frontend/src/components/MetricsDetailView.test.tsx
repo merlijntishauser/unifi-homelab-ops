@@ -227,7 +227,7 @@ describe("MetricsDetailView", () => {
         onBack={vi.fn()}
       />,
     );
-    const grayDot = container.querySelector(".bg-gray-400");
+    const grayDot = container.querySelector(".bg-ui-text-dim");
     expect(grayDot).toBeInTheDocument();
   });
 

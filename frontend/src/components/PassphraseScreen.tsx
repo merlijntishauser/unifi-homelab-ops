@@ -21,21 +21,21 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
   }
 
   const inputClass =
-    "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-3 py-2.5 text-sm text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors font-body";
+    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2.5 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-noc-bg px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-ui-bg dark:bg-noc-bg px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.07)_0%,_transparent_60%)]" />
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-sm bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-xl shadow-lg dark:shadow-2xl p-8 space-y-5 animate-fade-in"
+        className="relative w-full max-w-sm bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-lg p-8 space-y-5 animate-fade-in"
       >
         <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-ub-blue/50 to-transparent" />
 
-        <h2 className="text-2xl font-display font-semibold text-gray-900 dark:text-noc-text text-center tracking-tight">
+        <h2 className="text-2xl font-sans font-semibold text-ui-text dark:text-noc-text text-center tracking-tight">
           UniFi Homelab Ops
         </h2>
-        <p className="text-sm text-gray-500 dark:text-noc-text-secondary text-center">
+        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary text-center">
           Enter the application password to continue.
         </p>
 
@@ -48,7 +48,7 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
         <div className="space-y-1">
           <label
             htmlFor="passphrase"
-            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
+            className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
           >
             Password
           </label>

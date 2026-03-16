@@ -331,7 +331,7 @@ describe("ZoneNodeComponent", () => {
         />,
       );
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper.className).toContain("border-l-gray-500");
+      expect(wrapper.className).toContain("border-l-ui-text-dim");
     });
   });
 });

@@ -55,10 +55,10 @@ function resolveColorMode(preference: ThemePreference, systemDark: boolean): Col
 
 function LoadingOverlay({ message }: { message: string | null }) {
   return (
-    <div className="h-screen flex flex-col items-center justify-center gap-3 bg-gray-50 dark:bg-noc-bg">
-      <div className="h-6 w-6 rounded-full border-2 border-gray-300 dark:border-noc-border border-t-ub-blue animate-spin" />
+    <div className="h-screen flex flex-col items-center justify-center gap-3 bg-ui-bg dark:bg-noc-bg">
+      <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
       {message && (
-        <p className="text-sm text-gray-500 dark:text-noc-text-secondary font-body animate-pulse">{message}</p>
+        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary animate-pulse">{message}</p>
       )}
     </div>
   );

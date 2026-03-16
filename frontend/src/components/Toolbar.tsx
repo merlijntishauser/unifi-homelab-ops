@@ -25,14 +25,14 @@ function StatusBadge({ active, label, tooltip }: { active: boolean; label: strin
       <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium select-none ${
         active
           ? "bg-emerald-50 dark:bg-status-success-dim text-emerald-700 dark:text-status-success"
-          : "bg-gray-100 dark:bg-noc-raised text-gray-500 dark:text-noc-text-dim"
+          : "bg-ui-raised dark:bg-noc-raised text-ui-text-dim dark:text-noc-text-dim"
       }`}>
         <span className={`inline-block w-1.5 h-1.5 rounded-full ${
-          active ? "bg-emerald-500 dark:bg-status-success" : "bg-gray-400 dark:bg-noc-text-dim"
+          active ? "bg-emerald-500 dark:bg-status-success" : "bg-ui-text-dim dark:bg-noc-text-dim"
         }`} />
         {label}
       </div>
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-gray-900 dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
+      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
         {tooltip}
       </div>
     </div>
@@ -99,8 +99,8 @@ export default function Toolbar({
   const ariaLabel = `Theme: ${THEME_LABELS[themePreference]}`;
 
   return (
-    <div className="flex items-center gap-3 px-5 py-2.5 border-b border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface">
-      <h1 className="text-base font-display font-semibold text-gray-900 dark:text-noc-text tracking-tight">
+    <div className="flex items-center gap-3 px-5 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface/80 dark:bg-noc-surface/80 backdrop-blur-md">
+      <h1 className="text-base font-sans font-semibold text-ui-text dark:text-noc-text tracking-tight">
         UniFi Homelab Ops
       </h1>
 
@@ -112,12 +112,12 @@ export default function Toolbar({
       <div className="relative group">
         <button
           onClick={() => onThemePreferenceChange(THEME_CYCLE[themePreference])}
-          className="rounded-lg border border-gray-300 dark:border-noc-border p-2 text-gray-600 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:text-gray-900 dark:hover:text-noc-text hover:border-gray-400 dark:hover:border-noc-border-hover cursor-pointer transition-all"
+          className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all"
           aria-label={ariaLabel}
         >
           <ThemeIcon />
         </button>
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-gray-900 dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
           {`Theme: ${THEME_LABELS[themePreference]}`}
         </div>
       </div>

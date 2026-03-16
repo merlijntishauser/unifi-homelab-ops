@@ -16,7 +16,7 @@ export default function SimulationForm({
 }) {
   return (
     <form onSubmit={onSubmit} className="space-y-2">
-      <h3 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
+      <h3 className="text-[10px] font-semibold text-ui-text-dim dark:text-noc-text-dim uppercase tracking-widest">
         Packet Simulation
       </h3>
       <input

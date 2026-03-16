@@ -95,18 +95,18 @@ export default function FirewallModule() {
       : "Show disabled rules";
 
   const btnClass =
-    "rounded-lg border border-gray-300 dark:border-noc-border px-3 py-1.5 text-sm text-gray-600 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:text-gray-900 dark:hover:text-noc-text hover:border-gray-400 dark:hover:border-noc-border-hover cursor-pointer transition-all";
+    "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface shrink-0">
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         {(hasHiddenZones || hasDisabledRules) && (
-          <label className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-noc-text-secondary cursor-pointer select-none">
+          <label className="flex items-center gap-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary cursor-pointer select-none">
             <input
               type="checkbox"
               checked={showHidden}
               onChange={(e) => onShowHiddenChange(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
+              className="h-4 w-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
             />
             {toggleLabel}
           </label>
@@ -128,8 +128,8 @@ export default function FirewallModule() {
         )}
         {showLoadingOverlay ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
-            <div className="h-6 w-6 rounded-full border-2 border-gray-300 dark:border-noc-border border-t-ub-blue animate-spin" />
-            <p className="text-sm text-gray-500 dark:text-noc-text-secondary font-body animate-pulse">
+            <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+            <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary animate-pulse">
               Connecting to controller...
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function FirewallModule() {
           <div className="flex-1 relative">
             <button
               onClick={() => history.back()}
-              className="absolute top-3 left-3 z-10 rounded-lg bg-white dark:bg-noc-surface border border-gray-300 dark:border-noc-border px-3 py-1.5 text-sm text-gray-700 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm dark:shadow-lg cursor-pointer transition-all"
+              className="absolute top-3 left-3 z-10 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all"
             >
               Back to matrix
             </button>

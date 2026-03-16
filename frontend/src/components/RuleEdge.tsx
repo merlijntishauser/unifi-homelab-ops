@@ -75,11 +75,11 @@ export function RuleCardContent({
         e.stopPropagation();
         onLabelClick?.();
       }}
-      className="rounded px-1 py-0.5 max-w-[170px] bg-white/95 dark:bg-noc-bg/95 backdrop-blur-sm border shadow-lg cursor-pointer"
+      className="rounded px-1 py-0.5 max-w-[170px] bg-ui-surface/95 dark:bg-noc-bg/95 backdrop-blur-sm border shadow-lg cursor-pointer"
       style={borderColor ? { borderColor } : undefined}
     >
       {sourceZoneName && destZoneName && (
-        <div className="text-[8px] text-gray-400 dark:text-noc-text-dim pb-0.5 text-left border-b border-gray-200/30 dark:border-noc-border/20 mb-0.5">
+        <div className="text-[8px] text-ui-text-dim dark:text-noc-text-dim pb-0.5 text-left border-b border-ui-border dark:border-noc-border/20 mb-0.5">
           {sourceZoneName} &rarr; {destZoneName}
         </div>
       )}
@@ -94,11 +94,11 @@ export function RuleCardContent({
               className="w-1.5 h-1.5 rounded-full shrink-0"
               style={{ background: getActionColor(rule.action) }}
             />
-            <span className="text-[10px] font-medium text-gray-600 dark:text-noc-text-secondary truncate flex-1 text-left">
+            <span className="text-[10px] font-medium text-ui-text-secondary dark:text-noc-text-secondary truncate flex-1 text-left">
               {rule.name}
             </span>
             {portLabel && (
-              <span className="text-[8px] font-mono text-gray-400 dark:text-noc-text-dim shrink-0">
+              <span className="text-[8px] font-mono text-ui-text-dim dark:text-noc-text-dim shrink-0">
                 {portLabel}
               </span>
             )}
@@ -106,12 +106,12 @@ export function RuleCardContent({
         );
       })}
       {overflow > 0 && (
-        <div className="text-[10px] text-gray-400 dark:text-noc-text-dim pt-0.5 text-left">
+        <div className="text-[10px] text-ui-text-dim dark:text-noc-text-dim pt-0.5 text-left">
           +{overflow} more
         </div>
       )}
       {rules.length === 0 && (
-        <div className="text-[10px] text-gray-400 dark:text-noc-text-dim py-0.5 text-left">
+        <div className="text-[10px] text-ui-text-dim dark:text-noc-text-dim py-0.5 text-left">
           No active rules
         </div>
       )}
@@ -199,13 +199,13 @@ function CompactPill({
           e.stopPropagation();
           setPinnedId(isPinned ? null : edgeId);
         }}
-        className="flex items-center gap-1 rounded-full px-1.5 py-0.5 bg-white/80 dark:bg-noc-bg/80 border border-gray-200/40 dark:border-noc-border/20 cursor-pointer hover:border-gray-300 dark:hover:border-noc-border/40 transition-colors"
+        className="flex items-center gap-1 rounded-full px-1.5 py-0.5 bg-ui-surface/80 dark:bg-noc-bg/80 border border-ui-border dark:border-noc-border/20 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border/40 transition-colors"
       >
         <span
           className="w-1.5 h-1.5 rounded-full shrink-0"
           style={{ background: color }}
         />
-        <span className="text-[8px] font-medium text-gray-500 dark:text-noc-text-dim">
+        <span className="text-[8px] font-medium text-ui-text-secondary dark:text-noc-text-dim">
           {ruleCount}
         </span>
       </button>

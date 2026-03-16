@@ -35,7 +35,7 @@ describe("MatrixCell", () => {
 
     it("renders gray when actionLabel is null", () => {
       render(<MatrixCell {...baseProps} actionLabel={null} userRuleCount={0} predefinedRuleCount={0} />);
-      expect(screen.getByRole("button")).toHaveClass("bg-gray-50");
+      expect(screen.getByRole("button")).toHaveClass("bg-ui-raised");
     });
   });
 

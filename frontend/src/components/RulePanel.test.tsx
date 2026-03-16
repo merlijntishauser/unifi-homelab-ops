@@ -985,7 +985,7 @@ describe("RulePanel", () => {
       renderPanel(pair);
 
       const badge = screen.getByText("unknown");
-      expect(badge.className).toContain("bg-gray-100");
+      expect(badge.className).toContain("bg-ui-raised");
     });
 
     it("uses index as key when finding has no id", () => {
@@ -1105,7 +1105,7 @@ describe("RulePanel", () => {
         expect(screen.getByText("AI")).toBeInTheDocument();
       });
       const aiBadge = screen.getByText("AI");
-      expect(aiBadge.className).toContain("bg-purple-100");
+      expect(aiBadge.className).toContain("bg-ub-blue-dim");
     });
 
     it("shows error message when AI returns error status", async () => {
@@ -1206,7 +1206,7 @@ describe("RulePanel", () => {
       fireEvent.click(screen.getByRole("button", { name: "Analyze with AI" }));
 
       await waitFor(() => {
-        expect(screen.getByText("high", { selector: ".bg-gray-100, [class*=noc-raised]" })).toBeInTheDocument();
+        expect(screen.getByText("high", { selector: ".bg-ui-raised, [class*=noc-raised]" })).toBeInTheDocument();
       });
     });
   });

@@ -36,14 +36,14 @@ export default function MetricsModule() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 dark:border-noc-border bg-white dark:bg-noc-surface shrink-0">
-        <span className="text-sm text-gray-500 dark:text-noc-text-dim">Auto-refreshes every 30s</span>
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+        <span className="text-sm text-ui-text-dim dark:text-noc-text-dim">Auto-refreshes every 30s</span>
       </div>
       <div className="flex-1 flex overflow-hidden relative">
         {devicesQuery.isLoading && devices.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
-            <div className="h-6 w-6 rounded-full border-2 border-gray-300 dark:border-noc-border border-t-ub-blue animate-spin" />
-            <p className="text-sm text-gray-500 dark:text-noc-text-secondary font-body">
+            <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+            <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">
               Loading devices...
             </p>
           </div>
@@ -65,7 +65,7 @@ export default function MetricsModule() {
         ) : (
           <div className="flex-1 overflow-y-auto p-6">
             {devices.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-noc-text-dim">
+              <div className="flex flex-col items-center justify-center h-full text-ui-text-dim dark:text-noc-text-dim">
                 <p className="text-sm">No devices found</p>
               </div>
             ) : (

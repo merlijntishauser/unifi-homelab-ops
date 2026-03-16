@@ -19,12 +19,12 @@ function StatusDot({ status }: { status: string }) {
       ? "bg-status-success"
       : status === "offline"
         ? "bg-status-danger"
-        : "bg-gray-400 dark:bg-noc-text-dim";
+        : "bg-ui-text-dim dark:bg-noc-text-dim";
   return <span className={`inline-block h-2 w-2 rounded-full ${color}`} />;
 }
 
 function DeviceIcon({ deviceType }: { deviceType: string }) {
-  const cls = "h-5 w-5 text-gray-500 dark:text-noc-text-secondary shrink-0";
+  const cls = "h-5 w-5 text-ui-text-secondary dark:text-noc-text-secondary shrink-0";
   switch (deviceType) {
     case "gateway":
       return (
@@ -70,41 +70,41 @@ function DeviceIcon({ deviceType }: { deviceType: string }) {
 }
 
 export default function DeviceNodeComponent({ data }: NodeProps<DeviceNode>) {
-  const borderColor = data.deviceType === "gateway" ? "border-ub-blue" : "border-gray-200 dark:border-noc-border";
+  const borderColor = data.deviceType === "gateway" ? "border-ub-blue" : "border-ui-border dark:border-noc-border";
 
   return (
     <div
-      className={`rounded-lg border ${borderColor} bg-white dark:bg-noc-raised shadow-md dark:shadow-lg w-[200px] cursor-pointer`}
+      className={`rounded-lg border ${borderColor} bg-ui-surface dark:bg-noc-raised shadow-md w-[200px] cursor-pointer`}
       onClick={data.onSelect}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") data.onSelect(); }}
       role="button"
       tabIndex={0}
     >
-      <Handle type="target" position={Position.Top} className="!bg-gray-400 dark:!bg-noc-text-dim" />
+      <Handle type="target" position={Position.Top} className="!bg-ui-text-dim dark:!bg-noc-text-dim" />
 
       <div className="px-3 py-2">
         <div className="flex items-center gap-2">
           <DeviceIcon deviceType={data.deviceType} />
-          <span className="font-display font-semibold text-sm text-gray-900 dark:text-noc-text truncate flex-1">
+          <span className="font-sans font-semibold text-sm text-ui-text dark:text-noc-text truncate flex-1">
             {data.label}
           </span>
           <StatusDot status={data.status} />
         </div>
 
         <div className="mt-1.5 flex flex-col gap-0.5">
-          <span className="text-xs font-body text-gray-500 dark:text-noc-text-dim truncate">
+          <span className="text-xs text-ui-text-dim dark:text-noc-text-dim truncate">
             {data.model}
           </span>
-          <span className="text-xs font-mono text-gray-500 dark:text-noc-text-dim">
+          <span className="text-xs font-mono text-ui-text-dim dark:text-noc-text-dim">
             {data.ip}
           </span>
-          <span className="inline-flex items-center self-start rounded-full bg-gray-100 dark:bg-noc-input px-2 py-0.5 text-xs font-mono font-medium text-gray-600 dark:text-noc-text-secondary mt-0.5">
+          <span className="inline-flex items-center self-start rounded-full bg-ui-raised dark:bg-noc-input px-2 py-0.5 text-xs font-mono font-medium text-ui-text-secondary dark:text-noc-text-secondary mt-0.5">
             {data.clientCount} client{data.clientCount !== 1 ? "s" : ""}
           </span>
         </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-gray-400 dark:!bg-noc-text-dim" />
+      <Handle type="source" position={Position.Bottom} className="!bg-ui-text-dim dark:!bg-noc-text-dim" />
     </div>
   );
 }

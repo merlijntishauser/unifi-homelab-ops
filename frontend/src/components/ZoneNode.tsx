@@ -21,8 +21,8 @@ const ZONE_COLORS: Record<string, { accent: string; text: string }> = {
 };
 
 const DEFAULT_COLORS = {
-  accent: "border-l-gray-500",
-  text: "text-gray-400",
+  accent: "border-l-ui-text-dim",
+  text: "text-ui-text-dim",
 };
 
 function getZoneColors(name: string) {
@@ -36,16 +36,16 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
 
   return (
     <div
-      className={`rounded-lg border border-gray-200 dark:border-noc-border ${colors.accent} border-l-[3px] bg-white dark:bg-noc-raised shadow-md dark:shadow-lg min-w-[200px]`}
+      className={`rounded-lg border border-ui-border dark:border-noc-border ${colors.accent} border-l-[3px] bg-ui-surface dark:bg-noc-raised shadow-md min-w-[200px]`}
     >
-      <Handle type="target" position={Position.Top} className="!bg-gray-400 dark:!bg-noc-text-dim" />
+      <Handle type="target" position={Position.Top} className="!bg-ui-text-dim dark:!bg-noc-text-dim" />
 
       <div className="px-3 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className={`font-display font-semibold text-sm ${colors.text}`}>
+          <span className={`font-sans font-semibold text-sm ${colors.text}`}>
             {data.label}
           </span>
-          <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-noc-input px-2 py-0.5 text-xs font-mono font-medium text-gray-600 dark:text-noc-text-secondary">
+          <span className="inline-flex items-center rounded-full bg-ui-raised dark:bg-noc-input px-2 py-0.5 text-xs font-mono font-medium text-ui-text-secondary dark:text-noc-text-secondary">
             {networks.length}
           </span>
         </div>
@@ -53,7 +53,7 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
         {networks.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="mt-1 text-xs text-gray-500 dark:text-noc-text-dim hover:text-gray-700 dark:hover:text-noc-text-secondary cursor-pointer transition-colors"
+            className="mt-1 text-xs text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary cursor-pointer transition-colors"
           >
             {expanded ? "Hide networks" : "Show networks"}
           </button>
@@ -64,16 +64,16 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
             {networks.map((net) => (
               <li
                 key={net.id}
-                className="text-xs text-gray-600 dark:text-noc-text-secondary border-t border-gray-100 dark:border-noc-border pt-1"
+                className="text-xs text-ui-text-secondary dark:text-noc-text-secondary border-t border-ui-border dark:border-noc-border pt-1"
               >
                 <span className="font-medium">{net.name}</span>
                 {net.vlan_id != null && (
-                  <span className="ml-1 font-mono text-gray-400 dark:text-noc-text-dim">
+                  <span className="ml-1 font-mono text-ui-text-dim dark:text-noc-text-dim">
                     VLAN {net.vlan_id}
                   </span>
                 )}
                 {net.subnet && (
-                  <span className="ml-1 font-mono text-gray-400 dark:text-noc-text-dim">
+                  <span className="ml-1 font-mono text-ui-text-dim dark:text-noc-text-dim">
                     {net.subnet}
                   </span>
                 )}
@@ -83,7 +83,7 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-gray-400 dark:!bg-noc-text-dim" />
+      <Handle type="source" position={Position.Bottom} className="!bg-ui-text-dim dark:!bg-noc-text-dim" />
     </div>
   );
 }

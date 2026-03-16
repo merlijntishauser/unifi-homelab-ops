@@ -31,7 +31,7 @@ export default function AiAnalysisStatus({
         </div>
       )}
       {aiCached && aiFindings.length > 0 && (
-        <div className="text-[10px] text-gray-400 dark:text-noc-text-dim">
+        <div className="text-[10px] text-ui-text-dim dark:text-noc-text-dim">
           AI findings from cache
         </div>
       )}
@@ -39,7 +39,7 @@ export default function AiAnalysisStatus({
         <button
           onClick={onAnalyze}
           disabled={aiLoading}
-          className="w-full rounded-lg bg-ub-purple px-3 py-1.5 text-xs font-semibold text-white hover:bg-ub-purple-light focus:outline-none focus:ring-2 focus:ring-ub-purple/40 focus:ring-offset-1 dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+          className="w-full rounded-lg bg-ub-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 focus:ring-offset-1 dark:focus:ring-offset-noc-surface disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
         >
           {aiLoading ? "Analyzing..." : "Analyze with AI"}
         </button>

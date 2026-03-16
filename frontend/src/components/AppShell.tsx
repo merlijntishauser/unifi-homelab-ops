@@ -48,7 +48,7 @@ export default function AppShell() {
           notificationCount={ctx.notificationCount}
           onOpenNotifications={ctx.onOpenNotifications}
         />
-        <div className="flex-1 flex overflow-hidden bg-gray-50 dark:bg-noc-bg">
+        <div className="flex-1 flex overflow-hidden bg-ui-bg dark:bg-noc-bg">
           <Outlet />
         </div>
       </div>

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Redesigned UI to match Ubiquiti/UniFi aesthetic with custom dual-theme token system
+- Replaced generic Tailwind gray palette with purpose-built light (`ui-*`) and dark (`noc-*`) tokens
+- Consolidated typography from three fonts (Lexend, Outfit, IBM Plex Mono) to two (Inter, IBM Plex Mono)
+- Custom layered ambient shadows replacing Tailwind defaults, auto-switching between themes
+- Toolbar uses glassmorphism (backdrop-blur with semi-transparent background)
+- Borders are now nearly invisible, relying on elevation and background contrast
+- Dropped purple accent color in favor of single UniFi blue (#006fff) throughout
+- Replaced default Vite favicon with branded "U" icon
+
 ## [1.0.1] - 2026-03-16
 
 ### Fixed

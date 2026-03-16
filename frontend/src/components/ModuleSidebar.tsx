@@ -65,7 +65,7 @@ const navLinkClass = (isActive: boolean) =>
   `flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
     isActive
       ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue"
-      : "text-gray-500 dark:text-noc-text-dim hover:text-gray-900 dark:hover:text-noc-text hover:bg-gray-100 dark:hover:bg-noc-raised"
+      : "text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text hover:bg-ui-raised dark:hover:bg-noc-raised"
   }`;
 
 function readExpanded(): boolean {
@@ -98,7 +98,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
 
   return (
     <nav
-      className={`flex flex-col ${expanded ? "w-45" : "w-12"} bg-white dark:bg-noc-surface border-r border-gray-200 dark:border-noc-border transition-[width] duration-200 overflow-hidden shrink-0 z-20`}
+      className={`flex flex-col ${expanded ? "w-45" : "w-12"} bg-ui-surface dark:bg-noc-surface border-r border-ui-border dark:border-noc-border transition-[width] duration-200 overflow-hidden shrink-0 z-20`}
       aria-label="Module navigation"
     >
       <div className="flex-1 flex flex-col gap-1 py-2 px-1.5">
@@ -114,7 +114,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
           </NavLink>
         ))}
       </div>
-      <div className="border-t border-gray-200 dark:border-noc-border py-2 px-1.5 flex flex-col gap-1">
+      <div className="border-t border-ui-border dark:border-noc-border py-2 px-1.5 flex flex-col gap-1">
         <button
           onClick={onOpenSettings}
           className={navLinkClass(false) + " w-full"}
@@ -142,7 +142,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
         )}
         <button
           onClick={toggle}
-          className="flex items-center justify-center px-2.5 py-1.5 rounded-lg text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised transition-colors"
+          className="flex items-center justify-center px-2.5 py-1.5 rounded-lg text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors"
           aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
         >
           {chevronIcon(expanded)}

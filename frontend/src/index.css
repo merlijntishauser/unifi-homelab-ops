@@ -4,44 +4,75 @@
 @import "@xyflow/react/dist/style.css";
 
 @theme {
-  --color-noc-bg: #0a0c10;
-  --color-noc-surface: #13161e;
-  --color-noc-raised: #1c2029;
-  --color-noc-input: #232834;
-  --color-noc-border: #2d3340;
-  --color-noc-border-hover: #3d4455;
-  --color-noc-text: #e4e8ef;
-  --color-noc-text-secondary: #7b8ba2;
-  --color-noc-text-dim: #4a5468;
+  /* ── Light mode tokens (Ubiquiti Store aesthetic) ── */
+  --color-ui-bg: #f7f8fa;
+  --color-ui-surface: #ffffff;
+  --color-ui-raised: #f0f2f5;
+  --color-ui-input: #f4f5f7;
+  --color-ui-border: rgba(0, 0, 0, 0.06);
+  --color-ui-border-hover: rgba(0, 0, 0, 0.12);
+  --color-ui-text: #1a1d23;
+  --color-ui-text-secondary: #6b7280;
+  --color-ui-text-dim: #9ba3af;
+
+  /* ── Dark mode tokens (NOC / Network Operations) ── */
+  --color-noc-bg: #0b0e14;
+  --color-noc-surface: #141820;
+  --color-noc-raised: #1a1f2b;
+  --color-noc-input: #1e2430;
+  --color-noc-border: rgba(255, 255, 255, 0.08);
+  --color-noc-border-hover: rgba(255, 255, 255, 0.14);
+  --color-noc-text: #f0f2f5;
+  --color-noc-text-secondary: #8b95a5;
+  --color-noc-text-dim: #4d5666;
+
+  /* ── Brand ── */
   --color-ub-blue: #006fff;
-  --color-ub-blue-light: #338fff;
-  --color-ub-blue-dim: #006fff26;
-  --color-ub-purple: #8b5cf6;
-  --color-ub-purple-light: #a78bfa;
+  --color-ub-blue-light: #1a7fff;
+  --color-ub-blue-dim: rgba(0, 111, 255, 0.08);
+
+  /* ── Status ── */
   --color-status-success: #00d68f;
-  --color-status-success-dim: #00d68f1a;
+  --color-status-success-dim: rgba(0, 214, 143, 0.10);
   --color-status-warning: #ffaa2c;
-  --color-status-warning-dim: #ffaa2c1a;
+  --color-status-warning-dim: rgba(255, 170, 44, 0.10);
   --color-status-danger: #ff4d5e;
-  --color-status-danger-dim: #ff4d5e1a;
-  --font-display: "Lexend", system-ui, sans-serif;
-  --font-body: "Outfit", system-ui, sans-serif;
+  --color-status-danger-dim: rgba(255, 77, 94, 0.10);
+
+  /* ── Typography ── */
+  --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "Menlo", monospace;
+
+  /* ── Shadows (light) ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 4px 8px rgba(0, 0, 0, 0.04), 0 16px 48px rgba(0, 0, 0, 0.08);
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dark scrollbar */
-.dark ::-webkit-scrollbar { width: 6px; height: 6px; }
-.dark ::-webkit-scrollbar-track { background: transparent; }
-.dark ::-webkit-scrollbar-thumb { background: #2d3340; border-radius: 3px; }
-.dark ::-webkit-scrollbar-thumb:hover { background: #3d4455; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.2); }
+.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
 
-/* Animations */
+/* ── Dark shadows (override via CSS custom properties) ── */
+.dark {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Animations ── */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -61,25 +92,47 @@ body {
 .animate-slide-right { animation: slide-in-right 0.25s ease-out; }
 .animate-slide-left { animation: slide-in-left 0.25s ease-out; }
 
-/* ReactFlow dark mode refinements */
+/* ── ReactFlow light mode refinements ── */
+.react-flow__minimap {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+}
+.react-flow__controls {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
+}
+.react-flow__controls button {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  fill: #6b7280 !important;
+}
+.react-flow__controls button:hover {
+  background: #f0f2f5 !important;
+  fill: #1a1d23 !important;
+}
+
+/* ── ReactFlow dark mode refinements ── */
 .dark .react-flow__background { opacity: 0.4; }
 .dark .react-flow__minimap {
-  background: #13161e !important;
-  border: 1px solid #2d3340;
-  border-radius: 8px;
+  background: #141820 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
 }
 .dark .react-flow__controls {
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #2d3340;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 .dark .react-flow__controls button {
-  background: #1c2029 !important;
-  border-color: #2d3340 !important;
-  fill: #7b8ba2 !important;
+  background: #1a1f2b !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  fill: #8b95a5 !important;
 }
 .dark .react-flow__controls button:hover {
-  background: #232834 !important;
-  fill: #e4e8ef !important;
+  background: #1e2430 !important;
+  fill: #f0f2f5 !important;
 }

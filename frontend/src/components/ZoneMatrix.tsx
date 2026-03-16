@@ -18,7 +18,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
   const size = zones.length;
 
   return (
-    <div className="h-full flex items-start justify-center p-8 overflow-auto bg-gray-50 dark:bg-noc-bg">
+    <div className="h-full flex items-start justify-center p-8 overflow-auto bg-ui-bg dark:bg-noc-bg">
       <div
         className="grid gap-1"
         style={{
@@ -27,11 +27,11 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
         }}
       >
         {/* Row 1: empty corner cells + "Destination" label spanning columns */}
-        <div className="sticky top-0 left-0 z-30 bg-gray-50 dark:bg-noc-bg" />
-        <div className="sticky top-0 left-0 z-30 bg-gray-50 dark:bg-noc-bg" />
+        <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />
+        <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />
         {size > 0 && (
           <div
-            className="sticky top-0 z-20 bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
+            className="sticky top-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
             style={{ gridColumn: `3 / span ${size}` }}
           >
             Destination
@@ -40,19 +40,19 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
 
         {/* Row 2: "Source" label cell + empty cell + column headers */}
         <div
-          className="sticky left-0 z-20 bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-display font-medium text-gray-500 dark:text-noc-text-secondary"
+          className="sticky left-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
           style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
           data-testid="source-label"
         >
           {size > 0 ? "Source" : ""}
         </div>
-        <div className="sticky top-0 z-20 bg-gray-50 dark:bg-noc-bg" />
+        <div className="sticky top-0 z-20 bg-ui-bg dark:bg-noc-bg" />
         {zones.map((zone) => (
           <button
             key={`col-${zone.id}`}
             data-testid={`col-header-${zone.id}`}
             onClick={() => onZoneClick(zone.id)}
-            className="sticky top-0 z-10 bg-gray-50 dark:bg-noc-bg text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary truncate px-2 pb-2 hover:text-ub-blue cursor-pointer text-center transition-colors"
+            className="sticky top-0 z-10 bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary truncate px-2 pb-2 hover:text-ub-blue cursor-pointer text-center transition-colors"
           >
             {zone.name}
           </button>
@@ -65,7 +65,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             <button
               data-testid={`row-header-${srcZone.id}`}
               onClick={() => onZoneClick(srcZone.id)}
-              className="sticky left-0 z-10 bg-gray-50 dark:bg-noc-bg text-xs font-display font-medium text-gray-600 dark:text-noc-text-secondary whitespace-nowrap pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"
+              className="sticky left-0 z-10 bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"
             >
               {srcZone.name}
             </button>

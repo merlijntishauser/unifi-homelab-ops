@@ -23,20 +23,20 @@ export default function SimulationResult({ simResult, simError }: { simResult: S
             </div>
           )}
           <div
-            className={`rounded-lg border p-3 text-center font-display font-semibold text-sm ${verdictColor(simResult.verdict)}`}
+            className={`rounded-lg border p-3 text-center font-sans font-semibold text-sm ${verdictColor(simResult.verdict)}`}
           >
             {simResult.verdict ?? "NO MATCH"}
             {simResult.default_policy_used && (
-              <div className="text-xs font-normal mt-1 opacity-70 font-body">
+              <div className="text-xs font-normal mt-1 opacity-70">
                 (default policy)
               </div>
             )}
           </div>
 
           {simResult.matched_rule_name && (
-            <div className="text-xs text-gray-600 dark:text-noc-text-secondary">
+            <div className="text-xs text-ui-text-secondary dark:text-noc-text-secondary">
               Matched:{" "}
-              <span className="font-medium text-gray-900 dark:text-noc-text">
+              <span className="font-medium text-ui-text dark:text-noc-text">
                 {simResult.matched_rule_name}
               </span>
             </div>
@@ -44,7 +44,7 @@ export default function SimulationResult({ simResult, simError }: { simResult: S
 
           {simResult.evaluations.length > 0 && (
             <div className="space-y-1">
-              <h4 className="text-[10px] font-semibold text-gray-400 dark:text-noc-text-dim uppercase tracking-widest">
+              <h4 className="text-[10px] font-semibold text-ui-text-dim dark:text-noc-text-dim uppercase tracking-widest">
                 Evaluation Chain
               </h4>
               {simResult.evaluations.map((ev) => (
@@ -54,21 +54,21 @@ export default function SimulationResult({ simResult, simError }: { simResult: S
                     ev.matched
                       ? "border-blue-300 dark:border-ub-blue/30 bg-blue-50 dark:bg-ub-blue-dim"
                       : ev.skipped_disabled
-                        ? "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50 opacity-50"
-                        : "border-gray-200 dark:border-noc-border bg-gray-50 dark:bg-noc-raised/50"
+                        ? "border-ui-border dark:border-noc-border bg-ui-raised dark:bg-noc-raised/50 opacity-50"
+                        : "border-ui-border dark:border-noc-border bg-ui-raised dark:bg-noc-raised/50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-700 dark:text-noc-text-secondary truncate">
+                    <span className="font-medium text-ui-text-secondary dark:text-noc-text-secondary truncate">
                       {ev.rule_name}
                     </span>
                     <span
-                      className={`shrink-0 ml-1 font-mono ${ev.matched ? "text-ub-blue font-semibold" : "text-gray-400 dark:text-noc-text-dim"}`}
+                      className={`shrink-0 ml-1 font-mono ${ev.matched ? "text-ub-blue font-semibold" : "text-ui-text-dim dark:text-noc-text-dim"}`}
                     >
                       {ev.matched ? "MATCH" : "skip"}
                     </span>
                   </div>
-                  <div className="text-gray-400 dark:text-noc-text-dim mt-0.5">
+                  <div className="text-ui-text-dim dark:text-noc-text-dim mt-0.5">
                     {ev.reason}
                   </div>
                   {ev.unresolvable_constraints && ev.unresolvable_constraints.length > 0 && (

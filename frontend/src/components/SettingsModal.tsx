@@ -27,7 +27,7 @@ function TabButton({ icon, label, active, onClick }: TabButtonProps) {
       className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
         active
           ? "bg-ub-blue/10 dark:bg-ub-blue-dim text-ub-blue dark:text-ub-blue-light"
-          : "text-gray-600 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:text-gray-900 dark:hover:text-noc-text"
+          : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text"
       }`}
     >
       {icon}
@@ -67,7 +67,7 @@ function UserIcon() {
 // --- Shared styles ---
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-3 py-2 text-sm text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
+  "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
 // --- Connection pane ---
 
@@ -126,22 +126,22 @@ function ConnectionPane() {
       )}
 
       <div>
-        <label htmlFor="conn-url" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Controller URL</label>
+        <label htmlFor="conn-url" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Controller URL</label>
         <input id="conn-url" type="url" value={form.url} onChange={e => dispatch({ url: e.target.value })} placeholder="https://192.168.1.1" className={INPUT_CLASS} />
       </div>
 
       <div>
-        <label htmlFor="conn-username" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Username</label>
+        <label htmlFor="conn-username" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Username</label>
         <input id="conn-username" type="text" value={form.username} onChange={e => dispatch({ username: e.target.value })} className={INPUT_CLASS} />
       </div>
 
       <div>
-        <label htmlFor="conn-password" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Password</label>
+        <label htmlFor="conn-password" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Password</label>
         <input id="conn-password" type="password" value={form.password} onChange={e => dispatch({ password: e.target.value })} className={INPUT_CLASS} data-1p-ignore />
       </div>
 
       <div>
-        <label htmlFor="conn-site" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Site</label>
+        <label htmlFor="conn-site" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Site</label>
         <input id="conn-site" type="text" value={form.site} onChange={e => dispatch({ site: e.target.value })} className={INPUT_CLASS} />
       </div>
 
@@ -151,9 +151,9 @@ function ConnectionPane() {
           type="checkbox"
           checked={form.verifySsl}
           onChange={e => dispatch({ verifySsl: e.target.checked })}
-          className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
+          className="h-4 w-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
         />
-        <label htmlFor="conn-verify-ssl" className="text-sm text-gray-700 dark:text-noc-text-secondary">Verify SSL</label>
+        <label htmlFor="conn-verify-ssl" className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Verify SSL</label>
       </div>
 
       <div className="flex gap-2 pt-2">
@@ -245,7 +245,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
     <>
       {selectedPresetId === "custom" && (
         <div>
-          <label htmlFor="settings-base-url" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Base URL</label>
+          <label htmlFor="settings-base-url" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Base URL</label>
           <input
             id="settings-base-url"
             type="text"
@@ -259,9 +259,9 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
       )}
 
       <div>
-        <label htmlFor="settings-api-key" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">API Key</label>
+        <label htmlFor="settings-api-key" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">API Key</label>
         {isEnvSourced ? (
-          <div className="flex items-center gap-2 rounded-lg border border-gray-300 dark:border-noc-border bg-gray-50 dark:bg-noc-input px-3 py-2 text-sm text-gray-500 dark:text-noc-text-dim">
+          <div className="flex items-center gap-2 rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-dim">
             <span>{presets.find(p => p.id === selectedPresetId)?.name ?? providerType} key configured via environment</span>
           </div>
         ) : (
@@ -278,7 +278,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
       </div>
 
       <div>
-        <label htmlFor="settings-model" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Model</label>
+        <label htmlFor="settings-model" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Model</label>
         {models.length > 0 ? (
           <select
             id="settings-model"
@@ -306,7 +306,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
 
       {selectedPresetId === "custom" && (
         <div>
-          <label htmlFor="settings-provider-type" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Provider Type</label>
+          <label htmlFor="settings-provider-type" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Provider Type</label>
           <select
             id="settings-provider-type"
             value={providerType}
@@ -409,7 +409,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
   }, [onClose, deleteAiConfigMutation]);
 
   if (loading) {
-    return <div className="text-sm text-gray-500 dark:text-noc-text-secondary">Loading...</div>;
+    return <div className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading...</div>;
   }
 
   return (
@@ -421,7 +421,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
       )}
 
       <div>
-        <label htmlFor="settings-provider" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Provider</label>
+        <label htmlFor="settings-provider" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Provider</label>
         <select
           id="settings-provider"
           value={selectedPresetId ?? ""}
@@ -452,7 +452,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
       />
 
       <div>
-        <label htmlFor="settings-site-profile" className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-1">Site Profile</label>
+        <label htmlFor="settings-site-profile" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Site Profile</label>
         <select
           id="settings-site-profile"
           value={siteProfile}
@@ -463,7 +463,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
           <option value="smb">Small / Medium Business</option>
           <option value="enterprise">Enterprise</option>
         </select>
-        <p className="mt-1 text-xs text-gray-500 dark:text-noc-text-dim">
+        <p className="mt-1 text-xs text-ui-text-dim dark:text-noc-text-dim">
           Tunes AI analysis prioritization and remediation for your environment.
         </p>
       </div>
@@ -479,7 +479,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
         <button onClick={handleSave} disabled={saving || (!isEnvSourced && !selectedPresetId)} className="flex-1 rounded-lg bg-ub-blue px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
           {saving ? "Saving..." : "Save"}
         </button>
-        <button onClick={handleTest} disabled={testing} className="rounded-lg border border-gray-300 dark:border-noc-border px-3 py-2 text-sm text-gray-700 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised hover:text-gray-900 dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
+        <button onClick={handleTest} disabled={testing} className="rounded-lg border border-ui-border dark:border-noc-border px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
           {testing ? "Testing..." : "Test Connection"}
         </button>
         {configSource === "db" && (
@@ -506,8 +506,8 @@ function UserPane() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-medium text-gray-700 dark:text-noc-text-secondary mb-2">Appearance</h3>
-        <div className="inline-flex rounded-lg border border-gray-300 dark:border-noc-border overflow-hidden">
+        <h3 className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-2">Appearance</h3>
+        <div className="inline-flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
           {THEME_OPTIONS.map(opt => (
             <button
               key={opt.value}
@@ -515,7 +515,7 @@ function UserPane() {
               className={`px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
                 themePreference === opt.value
                   ? "bg-ub-blue text-white"
-                  : "bg-white dark:bg-noc-input text-gray-600 dark:text-noc-text-secondary hover:bg-gray-100 dark:hover:bg-noc-raised"
+                  : "bg-ui-surface dark:bg-noc-input text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised"
               }`}
               aria-label={`Theme: ${opt.label}`}
             >
@@ -543,14 +543,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       aria-label="Close dialog"
     >
       <div
-        className="relative bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-xl shadow-xl dark:shadow-2xl w-[700px] h-[80vh] flex mx-4 animate-fade-in"
+        className="relative bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-xl w-[700px] h-[80vh] flex mx-4 animate-fade-in"
         onClick={e => e.stopPropagation()}
         onKeyDown={e => e.stopPropagation()}
         role="dialog"
         aria-label="Settings"
       >
         {/* Tab sidebar */}
-        <div className="w-[160px] border-r border-gray-200 dark:border-noc-border flex flex-col gap-1 py-4 px-2 shrink-0">
+        <div className="w-[160px] border-r border-ui-border dark:border-noc-border flex flex-col gap-1 py-4 px-2 shrink-0">
           <TabButton icon={<LinkIcon />} label="Connection" active={tab === "connection"} onClick={() => setTab("connection")} />
           <TabButton icon={<CpuIcon />} label="AI Provider" active={tab === "ai"} onClick={() => setTab("ai")} />
           <TabButton icon={<UserIcon />} label="User Settings" active={tab === "user"} onClick={() => setTab("user")} />
@@ -559,12 +559,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         {/* Content area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
-            <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-noc-text tracking-tight">
+            <h2 className="text-lg font-sans font-semibold text-ui-text dark:text-noc-text tracking-tight">
               {tab === "connection" && "Connection"}
               {tab === "ai" && "AI Provider Settings"}
               {tab === "user" && "User Settings"}
             </h2>
-            <button onClick={onClose} className="text-gray-400 dark:text-noc-text-dim hover:text-gray-600 dark:hover:text-noc-text text-xl cursor-pointer transition-colors" aria-label="Close settings">
+            <button onClick={onClose} className="text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-xl cursor-pointer transition-colors" aria-label="Close settings">
               &times;
             </button>
           </div>

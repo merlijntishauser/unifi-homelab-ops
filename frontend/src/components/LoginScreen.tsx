@@ -45,18 +45,18 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-gray-300 dark:border-noc-border bg-white dark:bg-noc-input px-3 py-2.5 text-sm text-gray-900 dark:text-noc-text placeholder-gray-400 dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors font-body";
+    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2.5 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-noc-bg px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-ui-bg dark:bg-noc-bg px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.07)_0%,_transparent_60%)]" />
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-md bg-white dark:bg-noc-surface border border-gray-200 dark:border-noc-border rounded-xl shadow-lg dark:shadow-2xl p-8 space-y-5 animate-fade-in"
+        className="relative w-full max-w-md bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-lg p-8 space-y-5 animate-fade-in"
       >
         <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-ub-blue/50 to-transparent" />
 
-        <h2 className="text-2xl font-display font-semibold text-gray-900 dark:text-noc-text text-center tracking-tight">
+        <h2 className="text-2xl font-sans font-semibold text-ui-text dark:text-noc-text text-center tracking-tight">
           Connect to UniFi Controller
         </h2>
 
@@ -69,7 +69,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         <div className="space-y-1">
           <label
             htmlFor="url"
-            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
+            className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
           >
             Controller URL
           </label>
@@ -87,7 +87,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         <div className="space-y-1">
           <label
             htmlFor="username"
-            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
+            className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
           >
             Username
           </label>
@@ -104,7 +104,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         <div className="space-y-1">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
+            className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
           >
             Password
           </label>
@@ -122,7 +122,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
         <div className="space-y-1">
           <label
             htmlFor="site"
-            className="block text-sm font-medium text-gray-700 dark:text-noc-text-secondary"
+            className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
           >
             Site
           </label>
@@ -142,11 +142,11 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             type="checkbox"
             checked={verifySsl}
             onChange={(e) => dispatch({ verifySsl: e.target.checked })}
-            className="h-4 w-4 rounded border-gray-300 dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-white dark:bg-noc-input accent-ub-blue"
+            className="h-4 w-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
           />
           <label
             htmlFor="verifySsl"
-            className="text-sm text-gray-700 dark:text-noc-text-secondary"
+            className="text-sm text-ui-text-secondary dark:text-noc-text-secondary"
           >
             Verify SSL
           </label>

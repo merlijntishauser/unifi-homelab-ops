@@ -18,7 +18,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
   const size = zones.length;
 
   return (
-    <div className="h-full flex items-start justify-center p-8 overflow-auto bg-ui-bg dark:bg-noc-bg">
+    <div className="h-full flex items-start justify-center p-3 lg:p-8 overflow-auto bg-ui-bg dark:bg-noc-bg">
       <div
         className="grid gap-1"
         style={{

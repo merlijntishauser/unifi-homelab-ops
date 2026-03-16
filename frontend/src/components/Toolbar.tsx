@@ -17,6 +17,8 @@ interface ToolbarProps {
   onThemePreferenceChange: (pref: ThemePreference) => void;
   connectionInfo: ConnectionInfo | null;
   aiInfo: AiInfo;
+  notificationCount?: number;
+  onOpenNotifications?: () => void;
 }
 
 function StatusBadge({ active, label, tooltip }: { active: boolean; label: string; tooltip: string }) {
@@ -30,7 +32,7 @@ function StatusBadge({ active, label, tooltip }: { active: boolean; label: strin
         <span className={`inline-block w-1.5 h-1.5 rounded-full ${
           active ? "bg-emerald-500 dark:bg-status-success" : "bg-ui-text-dim dark:bg-noc-text-dim"
         }`} />
-        {label}
+        <span className="hidden md:inline">{label}</span>
       </div>
       <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
         {tooltip}
@@ -86,6 +88,8 @@ export default function Toolbar({
   onThemePreferenceChange,
   connectionInfo,
   aiInfo,
+  notificationCount = 0,
+  onOpenNotifications,
 }: ToolbarProps) {
   const connectionTooltip = connectionInfo
     ? `Connected to: ${connectionInfo.url}\nAs: ${connectionInfo.username}\nConfig from: ${connectionInfo.source}`
@@ -99,8 +103,8 @@ export default function Toolbar({
   const ariaLabel = `Theme: ${THEME_LABELS[themePreference]}`;
 
   return (
-    <div className="relative z-30 flex items-center gap-3 px-5 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface/80 dark:bg-noc-surface/80 backdrop-blur-md">
-      <h1 className="text-base font-sans font-semibold text-ui-text dark:text-noc-text tracking-tight">
+    <div className="relative z-30 flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2 lg:py-2.5 pt-safe border-b border-ui-border dark:border-noc-border bg-ui-surface/80 dark:bg-noc-surface/80 backdrop-blur-md">
+      <h1 className="text-sm lg:text-base font-sans font-semibold text-ui-text dark:text-noc-text tracking-tight">
         UniFi Homelab Ops
       </h1>
 
@@ -108,6 +112,24 @@ export default function Toolbar({
       <StatusBadge active={aiInfo.configured} label="AI" tooltip={aiTooltip} />
 
       <div className="mr-auto" />
+
+      {onOpenNotifications && (
+        <button
+          onClick={onOpenNotifications}
+          className="lg:hidden relative rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all"
+          aria-label="Notifications"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          {notificationCount > 0 && (
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center h-4 min-w-4 rounded-full bg-status-danger text-white text-[10px] font-mono leading-none px-1">
+              {notificationCount > 9 ? "9+" : notificationCount}
+            </span>
+          )}
+        </button>
+      )}
 
       <div className="relative group">
         <button

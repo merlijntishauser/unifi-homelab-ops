@@ -92,4 +92,37 @@ describe("Toolbar", () => {
     renderToolbar({ themePreference: "system" });
     expect(screen.getByText("Theme: System")).toBeInTheDocument();
   });
+
+  it("renders notification bell when onOpenNotifications is provided", () => {
+    renderToolbar({ onOpenNotifications: vi.fn() });
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+  });
+
+  it("does not render notification bell when onOpenNotifications is not provided", () => {
+    renderToolbar();
+    expect(screen.queryByRole("button", { name: "Notifications" })).not.toBeInTheDocument();
+  });
+
+  it("clicking bell calls onOpenNotifications", () => {
+    const handler = vi.fn();
+    renderToolbar({ onOpenNotifications: handler });
+    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("shows badge with count when notificationCount > 0", () => {
+    renderToolbar({ onOpenNotifications: vi.fn(), notificationCount: 3 });
+    expect(screen.getByText("3")).toBeInTheDocument();
+  });
+
+  it("shows 9+ badge when notificationCount exceeds 9", () => {
+    renderToolbar({ onOpenNotifications: vi.fn(), notificationCount: 15 });
+    expect(screen.getByText("9+")).toBeInTheDocument();
+  });
+
+  it("does not show badge when notificationCount is 0", () => {
+    renderToolbar({ onOpenNotifications: vi.fn(), notificationCount: 0 });
+    const button = screen.getByRole("button", { name: "Notifications" });
+    expect(button.querySelector(".bg-status-danger")).not.toBeInTheDocument();
+  });
 });

@@ -24,14 +24,14 @@ function TabButton({ icon, label, active, onClick }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+      className={`flex items-center gap-1 md:gap-2 flex-col md:flex-row w-full md:w-full px-2 md:px-3 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-colors ${
         active
           ? "bg-ub-blue/10 dark:bg-ub-blue-dim text-ub-blue dark:text-ub-blue-light"
           : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text"
       }`}
     >
       {icon}
-      {label}
+      <span className="hidden md:inline">{label}</span>
     </button>
   );
 }
@@ -543,14 +543,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       aria-label="Close dialog"
     >
       <div
-        className="relative bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-xl w-[700px] h-[80vh] flex mx-4 animate-fade-in"
+        className="relative bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border md:rounded-xl shadow-xl w-full h-full md:w-[700px] md:h-[80vh] flex flex-col md:flex-row md:mx-4 animate-fade-in"
         onClick={e => e.stopPropagation()}
         onKeyDown={e => e.stopPropagation()}
         role="dialog"
         aria-label="Settings"
       >
         {/* Tab sidebar */}
-        <div className="w-[160px] border-r border-ui-border dark:border-noc-border flex flex-col gap-1 py-4 px-2 shrink-0">
+        <div className="md:w-[160px] border-b md:border-b-0 md:border-r border-ui-border dark:border-noc-border flex flex-row md:flex-col gap-1 py-2 md:py-4 px-2 shrink-0 overflow-x-auto md:overflow-x-visible">
           <TabButton icon={<LinkIcon />} label="Connection" active={tab === "connection"} onClick={() => setTab("connection")} />
           <TabButton icon={<CpuIcon />} label="AI Provider" active={tab === "ai"} onClick={() => setTab("ai")} />
           <TabButton icon={<UserIcon />} label="User Settings" active={tab === "user"} onClick={() => setTab("user")} />
@@ -564,7 +564,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               {tab === "ai" && "AI Provider Settings"}
               {tab === "user" && "User Settings"}
             </h2>
-            <button onClick={onClose} className="text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-xl cursor-pointer transition-colors" aria-label="Close settings">
+            <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-xl cursor-pointer transition-colors" aria-label="Close settings">
               &times;
             </button>
           </div>

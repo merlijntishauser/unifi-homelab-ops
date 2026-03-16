@@ -101,15 +101,15 @@ export default function MetricsDetailView({
   const hasTemperature = device.temperature !== null;
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
+    <div className="flex-1 overflow-y-auto p-4 lg:p-6">
       <button
         onClick={onBack}
-        className="rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all mb-4"
+        className="rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all mb-4"
       >
         Back to overview
       </button>
 
-      <div className="mb-6">
+      <div className="mb-4 lg:mb-6">
         <h2 className="text-lg font-sans font-semibold text-ui-text dark:text-noc-text">
           {device.name}
         </h2>
@@ -121,7 +121,7 @@ export default function MetricsDetailView({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 mb-4 lg:mb-6">
         <ChartSection label="CPU" value={`${Math.round(device.cpu)}%`} data={cpuData} timestamps={timestamps} color="#006fff" unit="%" />
         <ChartSection label="Memory" value={`${Math.round(device.mem)}%`} data={memData} timestamps={timestamps} color="#8b5cf6" unit="%" />
         {hasTemperature && (

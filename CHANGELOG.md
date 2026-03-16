@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped purple accent color in favor of single UniFi blue (#006fff) throughout
 - Replaced default Vite favicon with branded "U" icon
 
+### Added
+- Responsive mobile layout for iPad (768px+) and iPhone (375px+)
+- Bottom navigation bar on mobile replacing the sidebar
+- Notification bell in toolbar on mobile screens
+- Full-screen overlays for RulePanel, DevicePanel, and SettingsModal on mobile
+- Safe area support for iOS notch and gesture bar
+- Touch-target compliance (44px minimum) on all interactive elements
+- `useIsMobile` and `useIsPhone` viewport hooks
+
 ## [1.0.1] - 2026-03-16
 
 ### Fixed

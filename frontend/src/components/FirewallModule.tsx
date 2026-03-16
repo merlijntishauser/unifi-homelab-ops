@@ -99,9 +99,9 @@ export default function FirewallModule() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+      <div className="flex items-center gap-3 px-3 lg:px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         {(hasHiddenZones || hasDisabledRules) && (
-          <label className="flex items-center gap-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary cursor-pointer select-none">
+          <label className="flex items-center gap-1.5 text-xs lg:text-sm text-ui-text-secondary dark:text-noc-text-secondary cursor-pointer select-none">
             <input
               type="checkbox"
               checked={showHidden}
@@ -137,7 +137,7 @@ export default function FirewallModule() {
           <div className="flex-1 relative">
             <button
               onClick={() => history.back()}
-              className="absolute top-3 left-3 z-10 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all"
+              className="absolute top-3 left-3 z-10 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all"
             >
               Back to matrix
             </button>

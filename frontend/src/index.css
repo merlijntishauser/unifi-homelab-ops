@@ -92,6 +92,21 @@ body {
 .animate-slide-right { animation: slide-in-right 0.25s ease-out; }
 .animate-slide-left { animation: slide-in-left 0.25s ease-out; }
 
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-in-up 0.3s ease-out; }
+
+/* ── Safe area utilities ── */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ── Mobile: hide ReactFlow minimap on small screens ── */
+@media (max-width: 767px) {
+  .react-flow__minimap { display: none; }
+}
+
 /* ── ReactFlow light mode refinements ── */
 .react-flow__minimap {
   background: #ffffff !important;

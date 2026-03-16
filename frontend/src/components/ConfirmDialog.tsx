@@ -41,13 +41,13 @@ export default function ConfirmDialog({
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onCancel}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors"
+            className="px-3 py-1.5 min-h-[44px] text-xs font-medium rounded-lg border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-ub-blue text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
+            className="px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-lg bg-ub-blue text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
           >
             {confirmLabel}
           </button>

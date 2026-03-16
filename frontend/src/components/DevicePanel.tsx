@@ -60,7 +60,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
     .reduce((sum, p) => sum + (p.poe_power ?? 0), 0);
 
   return (
-    <div className="w-[380px] h-full border-l border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface flex flex-col overflow-hidden animate-slide-right">
+    <div className="w-full lg:w-[380px] h-full fixed inset-0 z-40 lg:relative lg:inset-auto lg:border-l border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface flex flex-col overflow-hidden animate-slide-up lg:animate-slide-right">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-ui-border dark:border-noc-border">
         <h2 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text truncate">

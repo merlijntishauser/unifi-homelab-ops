@@ -72,7 +72,7 @@ function DiagramContent({ query }: { query: UseQueryResult<TopologySvgResponse> 
   return null;
 }
 
-const BTN = "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+const BTN = "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
 const BTN_ACTIVE = "rounded-lg border border-ub-blue px-3 py-1.5 text-sm text-ub-blue bg-blue-50 dark:bg-ub-blue-dim cursor-pointer transition-all";
 
 export default function TopologyModule() {
@@ -120,7 +120,7 @@ export default function TopologyModule() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+      <div className="flex items-center gap-3 px-3 lg:px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <div className="flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
           <button onClick={() => handleSubViewChange("map")} className={segmentClass(subView === "map", true)}>Map</button>
           <button onClick={() => handleSubViewChange("diagram")} className={segmentClass(subView === "diagram", false)}>Diagram</button>
@@ -130,8 +130,8 @@ export default function TopologyModule() {
             <button onClick={handleProjectionChange} className={projection === "isometric" ? BTN_ACTIVE : BTN}>Isometric</button>
             {svgQuery.data && (
               <>
-                <button onClick={() => downloadSvg(svgQuery.data.svg)} className={BTN}>Export SVG</button>
-                <button onClick={() => downloadPng(svgQuery.data.svg)} className={BTN}>Export PNG</button>
+                <button onClick={() => downloadSvg(svgQuery.data.svg)} className={`${BTN} hidden md:inline-flex`}>Export SVG</button>
+                <button onClick={() => downloadPng(svgQuery.data.svg)} className={`${BTN} hidden md:inline-flex`}>Export PNG</button>
               </>
             )}
           </>

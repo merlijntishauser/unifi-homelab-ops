@@ -127,11 +127,11 @@ export default function RulePanel({
   const simError = deriveMutationError(simulateMutation.error, "Simulation failed");
 
   const inputClass =
-    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2.5 py-1.5 text-xs font-mono text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
+    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2.5 py-2.5 lg:py-1.5 text-xs font-mono text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
   return (
     <>
-    <div className="w-[400px] h-full border-l border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface flex flex-col overflow-hidden animate-slide-right">
+    <div className="w-full lg:w-[400px] h-full fixed inset-0 z-40 lg:relative lg:inset-auto lg:border-l border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface flex flex-col overflow-hidden animate-slide-up lg:animate-slide-right">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-ui-border dark:border-noc-border">
         <h2 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text truncate">

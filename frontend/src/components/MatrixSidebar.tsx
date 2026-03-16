@@ -42,7 +42,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 export default function MatrixSidebar({ zones, hiddenZoneIds, onToggleZone }: MatrixSidebarProps) {
   return (
-    <div className="w-[220px] shrink-0 border-r border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface px-4 py-5 overflow-y-auto flex flex-col gap-5">
+    <div className="hidden lg:flex lg:flex-col w-[220px] shrink-0 border-r border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface px-4 py-5 overflow-y-auto gap-5">
       <section>
         <SectionHeading>Security Score</SectionHeading>
         <p className="text-[11px] text-ui-text-secondary dark:text-noc-text-secondary mb-2 leading-relaxed">

@@ -98,7 +98,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
 
   return (
     <nav
-      className={`flex flex-col ${expanded ? "w-45" : "w-12"} bg-ui-surface dark:bg-noc-surface border-r border-ui-border dark:border-noc-border transition-[width] duration-200 overflow-hidden shrink-0 z-20`}
+      className={`hidden lg:flex lg:flex-col ${expanded ? "w-45" : "w-12"} bg-ui-surface dark:bg-noc-surface border-r border-ui-border dark:border-noc-border transition-[width] duration-200 overflow-hidden shrink-0 z-20`}
       aria-label="Module navigation"
     >
       <div className="flex-1 flex flex-col gap-1 py-2 px-1.5">

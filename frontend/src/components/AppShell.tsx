@@ -2,12 +2,15 @@ import { Outlet } from "react-router-dom";
 import Toolbar from "./Toolbar";
 import SettingsModal from "./SettingsModal";
 import ModuleSidebar from "./ModuleSidebar";
+import BottomNav from "./BottomNav";
 import NotificationDrawer from "./NotificationDrawer";
 import { useAppContext } from "../hooks/useAppContext";
 import { useNotifications, useDismissNotification } from "../hooks/queries";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 export default function AppShell() {
   const ctx = useAppContext();
+  const isMobile = useIsMobile();
   const authed = ctx.connectionInfo !== null;
   const notificationsQuery = useNotifications(authed);
   const dismissMutation = useDismissNotification();
@@ -24,12 +27,14 @@ export default function AppShell() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-dvh flex flex-col">
       <Toolbar
         themePreference={ctx.themePreference}
         onThemePreferenceChange={ctx.onThemePreferenceChange}
         connectionInfo={ctx.connectionInfo}
         aiInfo={ctx.aiInfo}
+        notificationCount={ctx.notificationCount}
+        onOpenNotifications={ctx.onOpenNotifications}
       />
       {ctx.settingsOpen && (
         <SettingsModal onClose={ctx.onCloseSettings} />
@@ -43,15 +48,18 @@ export default function AppShell() {
         onNavigateToDevice={() => ctx.onCloseNotifications()}
       />
       <div className="flex-1 flex overflow-hidden">
-        <ModuleSidebar
-          onOpenSettings={ctx.onOpenSettings}
-          notificationCount={ctx.notificationCount}
-          onOpenNotifications={ctx.onOpenNotifications}
-        />
+        {!isMobile && (
+          <ModuleSidebar
+            onOpenSettings={ctx.onOpenSettings}
+            notificationCount={ctx.notificationCount}
+            onOpenNotifications={ctx.onOpenNotifications}
+          />
+        )}
         <div className="flex-1 flex overflow-hidden bg-ui-bg dark:bg-noc-bg">
           <Outlet />
         </div>
       </div>
+      {isMobile && <BottomNav onOpenSettings={ctx.onOpenSettings} />}
     </div>
   );
 }

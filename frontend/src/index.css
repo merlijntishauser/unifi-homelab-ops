@@ -99,8 +99,9 @@ body {
 .animate-slide-up { animation: slide-in-up 0.3s ease-out; }
 
 /* ── Safe area utilities ── */
-.pt-safe { padding-top: env(safe-area-inset-top); }
-.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.mt-safe { margin-top: env(safe-area-inset-top, 0px); }
 
 /* ── Mobile: hide ReactFlow minimap on small screens ── */
 @media (max-width: 767px) {

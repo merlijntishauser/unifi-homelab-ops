@@ -95,14 +95,14 @@ jobs:
             cache_scope: ci-docker-alpine
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: .cache/trivy
           key: trivy-db-${{ runner.os }}-${{ matrix.variant }}
           restore-keys: |
             trivy-db-${{ runner.os }}-
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.dockerfile }}
@@ -156,9 +156,9 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build production image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
@@ -173,7 +173,7 @@ jobs:
         run: cd frontend && npx playwright test --config playwright.e2e-prod.config.ts
       - name: Upload traces on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-prod-traces
           path: frontend/test-results/

@@ -99,7 +99,7 @@ export default function Toolbar({
   const ariaLabel = `Theme: ${THEME_LABELS[themePreference]}`;
 
   return (
-    <div className="flex items-center gap-3 px-5 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface/80 dark:bg-noc-surface/80 backdrop-blur-md">
+    <div className="relative z-30 flex items-center gap-3 px-5 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface/80 dark:bg-noc-surface/80 backdrop-blur-md">
       <h1 className="text-base font-sans font-semibold text-ui-text dark:text-noc-text tracking-tight">
         UniFi Homelab Ops
       </h1>

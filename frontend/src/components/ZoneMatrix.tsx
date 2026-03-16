@@ -74,7 +74,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             <button
               data-testid={`row-header-${srcZone.id}`}
               onClick={() => onZoneClick(srcZone.id)}
-              className="sticky left-0 z-10 bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"
+              className={`${isMobile ? "sticky left-0 z-10" : ""} bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors`}
             >
               {srcZone.name}
             </button>

@@ -192,13 +192,11 @@ describe("ZoneMatrix", () => {
     expect(colHeader.className).toContain("z-10");
   });
 
-  it("applies sticky classes to row headers", () => {
+  it("row headers are not sticky on desktop (sticky only on mobile)", () => {
     render(
       <ZoneMatrix zones={zones} zonePairs={zonePairs} onCellClick={onCellClick} onZoneClick={onZoneClick} />,
     );
     const rowHeader = screen.getByTestId("row-header-z1");
-    expect(rowHeader.className).toContain("sticky");
-    expect(rowHeader.className).toContain("left-0");
-    expect(rowHeader.className).toContain("z-10");
+    expect(rowHeader.className).not.toContain("sticky");
   });
 });

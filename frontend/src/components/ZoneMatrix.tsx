@@ -21,40 +21,42 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
   const cellMin = isMobile ? "100px" : "130px";
 
   return (
-    <div className="h-full w-full flex bg-ui-bg dark:bg-noc-bg">
-      {/* Source axis label -- fixed strip along the left, full height */}
-      {!isMobile && size > 0 && (
-        <div
-          className="shrink-0 flex items-center justify-center bg-ui-surface dark:bg-noc-surface border-r border-ui-border dark:border-noc-border"
-          style={{ width: 32 }}
-          data-testid="source-label"
-        >
-          <span
-            className="text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
-            style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
-          >
-            Source
+    <div className="h-full w-full overflow-hidden flex flex-col bg-ui-bg dark:bg-noc-bg">
+      {/* Destination header -- full-width bar across the top */}
+      {size > 0 && (
+        <div className="shrink-0 flex items-center justify-center py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface/50 dark:bg-noc-surface/50">
+          <span className="text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary tracking-wide uppercase">
+            Destination
           </span>
         </div>
       )}
 
-      <div className="flex flex-col flex-1 min-w-0 min-h-0">
-        {/* Destination axis label -- fixed strip along the top, full width */}
-        {size > 0 && (
-          <div className="shrink-0 flex items-center justify-center bg-ui-surface dark:bg-noc-surface border-b border-ui-border dark:border-noc-border py-2">
-            <span className="text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary">
-              Destination
+      {/* Main area: Source label left + scrollable grid */}
+      <div className="flex-1 flex min-h-0">
+        {/* Source header -- full-height bar down the left */}
+        {!isMobile && size > 0 && (
+          <div
+            className="shrink-0 flex items-center justify-center border-r border-ui-border dark:border-noc-border bg-ui-surface/50 dark:bg-noc-surface/50"
+            style={{ width: 28 }}
+            data-testid="source-label"
+          >
+            <span
+              className="text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary tracking-wide uppercase"
+              style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}
+            >
+              Source
             </span>
           </div>
         )}
 
-        {/* Scrollable grid -- fills remaining space, scrolls independently */}
-        <div className="flex-1 overflow-auto">
+        {/* Scrollable grid -- constrained to remaining space */}
+        <div className="flex-1 min-w-0 min-h-0 overflow-auto">
           <div
-            className="grid gap-1 p-3 lg:p-6"
+            className="grid gap-1 p-4 lg:p-6"
             style={{
               gridTemplateColumns: `max-content repeat(${size}, minmax(${cellMin}, 160px))`,
               gridTemplateRows: `auto repeat(${size}, minmax(38px, 52px))`,
+              width: "max-content",
             }}
           >
             {/* Row 1: corner spacer + column headers */}

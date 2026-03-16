@@ -926,7 +926,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.0" },
     { name = "sqlalchemy", specifier = ">=2.0.0" },
     { name = "structlog", specifier = ">=25.1.0" },
-    { name = "unifi-topology", specifier = ">=1.2.3" },
+    { name = "unifi-topology", specifier = ">=1.2.5" },
     { name = "uvicorn", specifier = ">=0.34.0" },
 ]
 
@@ -944,7 +944,7 @@ dev = [
 
 [[package]]
 name = "unifi-topology"
-version = "1.2.3"
+version = "1.2.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dnspython" },
@@ -952,9 +952,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/39/51eb42c381e7165bc94af374274b7fb11b82cba55414780556af6eca7212/unifi_topology-1.2.3.tar.gz", hash = "sha256:3b613eb2086d613287dd604d26afe95b6bc92f72df128a26e2925422abc6ae29", size = 364456, upload-time = "2026-03-16T10:24:17.25Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/37/f6a9c026bc35f7417125507e7a61a4b6412f24e000e9b495a6485dca062a/unifi_topology-1.2.5.tar.gz", hash = "sha256:7077714b8325a9e733f8d2ac4c45b69f67d3c91c5b3a72c9f3945f353761e22c", size = 372771, upload-time = "2026-03-16T10:59:56.018Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/56/96d542a22efe175f42a425994b398b8ba2326956f625feb1b13ea9eac997/unifi_topology-1.2.3-py3-none-any.whl", hash = "sha256:c6b2aa0641ec330b92b6083f214218c348929ec5d8de0014df320b5fba8463a8", size = 386212, upload-time = "2026-03-16T10:24:15.555Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/67/63aaad3eea32e31b862f2095285cd6512cddefed7912bab7f2aa835edfb6/unifi_topology-1.2.5-py3-none-any.whl", hash = "sha256:758aa844aa7e7097c59a6a8f1cc1a3e9adc499461a03b950ddb016db3bcc797f", size = 393985, upload-time = "2026-03-16T10:59:54.692Z" },
 ]
 
 [[package]]

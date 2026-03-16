@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-03-16
+
 ### Fixed
 - Topology devices showing as offline after first request due to unifi-topology cache stripping the `state` field (fixed upstream in unifi-topology 1.2.1)
-- Metrics device cards showing model codes instead of friendly names (e.g. "UCGFIBER" instead of "UniFi Cloud Gateway Fiber"), now using `model_name` from unifi-topology 1.2.1
-- Flaky `_maybe_prune` test failing on CI runners with short uptime
+- Metrics device cards showing model codes (e.g. "U6M") instead of friendly names (e.g. "Access Point U6 Mesh"), now resolved via unifi-topology 1.2.5 model lookup table with model code fallback
+- Flaky `_maybe_prune` test failing on CI runners with short uptime (`time.monotonic()` < 3600)
+- CVE-2026-0861 (glibc heap corruption, HIGH) by applying OS security patches in Docker runtime images
+
+### Changed
+- Rewritten README covering all four modules, configuration reference, Docker tags, and release process
+- Upgraded unifi-topology from 1.2.0 to 1.2.5
+- Bumped GitHub Actions: actions/cache v5, docker/setup-buildx-action v4, docker/build-push-action v7, docker/setup-qemu-action v4, docker/metadata-action v6, docker/login-action v4, actions/upload-artifact v7
 
 ## [1.0.0] - 2026-03-15
 
@@ -65,5 +73,6 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/merlijntishauser/unifi-homelab-ops/releases/tag/v1.0.0

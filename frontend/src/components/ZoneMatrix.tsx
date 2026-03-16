@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import type { Zone, ZonePair } from "../api/types";
 import MatrixCell from "./MatrixCell";
 import { deriveCellSummary } from "../utils/matrixUtils";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 interface ZoneMatrixProps {
   zones: Zone[];
@@ -16,13 +17,16 @@ function findPair(zonePairs: ZonePair[], srcId: string, dstId: string): ZonePair
 
 export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick }: ZoneMatrixProps) {
   const size = zones.length;
+  const isMobile = useIsMobile();
+  const srcColWidth = isMobile ? "28px" : "max-content";
+  const cellMin = isMobile ? "100px" : "130px";
 
   return (
     <div className="h-full flex items-start justify-center p-3 lg:p-8 overflow-auto bg-ui-bg dark:bg-noc-bg">
       <div
         className="grid gap-1"
         style={{
-          gridTemplateColumns: `minmax(80px, max-content) auto repeat(${size}, minmax(130px, 160px))`,
+          gridTemplateColumns: `minmax(${srcColWidth}, max-content) auto repeat(${size}, minmax(${cellMin}, 160px))`,
           gridTemplateRows: `auto auto repeat(${size}, minmax(38px, 52px))`,
         }}
       >
@@ -40,7 +44,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
 
         {/* Row 2: "Source" label cell + empty cell + column headers */}
         <div
-          className="sticky left-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+          className="sticky left-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-1 py-1 lg:px-3 lg:py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
           style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
           data-testid="source-label"
         >

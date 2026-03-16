@@ -36,7 +36,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
       >
         {/* Row 1: corner cell(s) + "Destination" label */}
         {!isMobile && <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />}
-        <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />
+        <div className="sticky top-0 z-30 bg-ui-bg dark:bg-noc-bg" style={{ left: isMobile ? 0 : 32 }} />
         {size > 0 && (
           <div
             className="sticky top-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
@@ -56,7 +56,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             {size > 0 ? "Source" : ""}
           </div>
         )}
-        <div className="sticky top-0 z-20 bg-ui-bg dark:bg-noc-bg" />
+        <div className="sticky top-0 z-20 bg-ui-bg dark:bg-noc-bg" style={{ left: isMobile ? 0 : 32 }} />
         {zones.map((zone) => (
           <button
             key={`col-${zone.id}`}
@@ -74,7 +74,8 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             <button
               data-testid={`row-header-${srcZone.id}`}
               onClick={() => onZoneClick(srcZone.id)}
-              className={`${isMobile ? "sticky left-0 z-10" : ""} bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors`}
+              className="sticky z-10 bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"
+              style={{ left: isMobile ? 0 : 32 }}
             >
               {srcZone.name}
             </button>

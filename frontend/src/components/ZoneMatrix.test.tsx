@@ -192,11 +192,26 @@ describe("ZoneMatrix", () => {
     expect(colHeader.className).toContain("z-10");
   });
 
-  it("row headers are not sticky on desktop (sticky only on mobile)", () => {
+  it("applies sticky classes to row headers with left offset on desktop", () => {
     render(
       <ZoneMatrix zones={zones} zonePairs={zonePairs} onCellClick={onCellClick} onZoneClick={onZoneClick} />,
     );
     const rowHeader = screen.getByTestId("row-header-z1");
-    expect(rowHeader.className).not.toContain("sticky");
+    expect(rowHeader.className).toContain("sticky");
+    expect(rowHeader.style.left).toBe("32px");
+  });
+
+  it("hides Source label and pins row headers at left-0 on mobile", () => {
+    vi.spyOn(window, "matchMedia").mockReturnValue({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaQueryList);
+    render(
+      <ZoneMatrix zones={zones} zonePairs={zonePairs} onCellClick={onCellClick} onZoneClick={onZoneClick} />,
+    );
+    expect(screen.queryByTestId("source-label")).not.toBeInTheDocument();
+    const rowHeader = screen.getByTestId("row-header-z1");
+    expect(rowHeader.style.left).toBe("0px");
   });
 });

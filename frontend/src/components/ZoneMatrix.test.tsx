@@ -192,16 +192,23 @@ describe("ZoneMatrix", () => {
     expect(colHeader.className).toContain("z-10");
   });
 
-  it("applies sticky classes to row headers with left offset on desktop", () => {
+  it("applies sticky left-0 to row headers", () => {
     render(
       <ZoneMatrix zones={zones} zonePairs={zonePairs} onCellClick={onCellClick} onZoneClick={onZoneClick} />,
     );
     const rowHeader = screen.getByTestId("row-header-z1");
     expect(rowHeader.className).toContain("sticky");
-    expect(rowHeader.style.left).toBe("32px");
+    expect(rowHeader.className).toContain("left-0");
   });
 
-  it("hides Source label and pins row headers at left-0 on mobile", () => {
+  it("shows Source label on desktop", () => {
+    render(
+      <ZoneMatrix zones={zones} zonePairs={zonePairs} onCellClick={onCellClick} onZoneClick={onZoneClick} />,
+    );
+    expect(screen.getByTestId("source-label")).toBeInTheDocument();
+  });
+
+  it("hides Source label on mobile", () => {
     vi.spyOn(window, "matchMedia").mockReturnValue({
       matches: true,
       addEventListener: vi.fn(),
@@ -211,7 +218,5 @@ describe("ZoneMatrix", () => {
       <ZoneMatrix zones={zones} zonePairs={zonePairs} onCellClick={onCellClick} onZoneClick={onZoneClick} />,
     );
     expect(screen.queryByTestId("source-label")).not.toBeInTheDocument();
-    const rowHeader = screen.getByTestId("row-header-z1");
-    expect(rowHeader.style.left).toBe("0px");
   });
 });

@@ -18,12 +18,17 @@ function findPair(zonePairs: ZonePair[], srcId: string, dstId: string): ZonePair
 export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick }: ZoneMatrixProps) {
   const size = zones.length;
   const isMobile = useIsMobile();
+  const cellMin = isMobile ? "100px" : "130px";
 
-  // Mobile: hide Source label column, row headers become the first sticky column
-  // Desktop: Source label | row headers | cells
+  // Mobile: no Source label column -- row headers are col 1
+  // Desktop: Source label (col 1) | row headers (col 2) | cells (col 3+)
+  // Row headers are always sticky left-0; on desktop they cover the Source label when scrolled.
   const gridTemplateColumns = isMobile
-    ? `max-content repeat(${size}, minmax(100px, 160px))`
-    : `minmax(28px, max-content) max-content repeat(${size}, minmax(130px, 160px))`;
+    ? `max-content repeat(${size}, minmax(${cellMin}, 160px))`
+    : `36px max-content repeat(${size}, minmax(${cellMin}, 160px))`;
+
+  // Column where data cells start
+  const cellStart = isMobile ? 2 : 3;
 
   return (
     <div className="h-full flex items-start justify-center p-3 lg:p-8 overflow-auto bg-ui-bg dark:bg-noc-bg">
@@ -36,27 +41,27 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
       >
         {/* Row 1: corner cell(s) + "Destination" label */}
         {!isMobile && <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />}
-        <div className="sticky top-0 z-30 bg-ui-bg dark:bg-noc-bg" style={{ left: isMobile ? 0 : 32 }} />
+        <div className="sticky top-0 left-0 z-30 bg-ui-bg dark:bg-noc-bg" />
         {size > 0 && (
           <div
             className="sticky top-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-3 py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
-            style={{ gridColumn: `${isMobile ? 2 : 3} / span ${size}` }}
+            style={{ gridColumn: `${cellStart} / span ${size}` }}
           >
             Destination
           </div>
         )}
 
-        {/* Row 2+: Source label (desktop only) + column headers + data rows */}
+        {/* Row 2: Source label (desktop, not sticky) + empty spacer + column headers */}
         {!isMobile && (
           <div
-            className="sticky left-0 z-20 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-1 py-1 lg:px-3 lg:py-2 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+            className="z-10 bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg flex items-center justify-center px-1 py-1 text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary"
             style={{ gridRow: `2 / span ${size + 1}`, writingMode: "vertical-lr", transform: "rotate(180deg)" }}
             data-testid="source-label"
           >
             {size > 0 ? "Source" : ""}
           </div>
         )}
-        <div className="sticky top-0 z-20 bg-ui-bg dark:bg-noc-bg" style={{ left: isMobile ? 0 : 32 }} />
+        <div className="sticky top-0 left-0 z-20 bg-ui-bg dark:bg-noc-bg" />
         {zones.map((zone) => (
           <button
             key={`col-${zone.id}`}
@@ -74,8 +79,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             <button
               data-testid={`row-header-${srcZone.id}`}
               onClick={() => onZoneClick(srcZone.id)}
-              className="sticky z-10 bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap pr-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"
-              style={{ left: isMobile ? 0 : 32 }}
+              className="sticky left-0 z-20 bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap px-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"
             >
               {srcZone.name}
             </button>

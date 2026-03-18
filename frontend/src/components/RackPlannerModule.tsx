@@ -692,7 +692,7 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
         const hasFractional = topItems.some((item) => item.width_fraction < 1.0);
         const uLabel = Number.isInteger(currentU) ? String(currentU) : "";
         slots.unshift(
-          <div key={`slot-${currentU}`} className="flex" style={{ gridRow: `span ${gridSpan}` }} onDrop={(e) => handleDrop(e, Math.ceil(currentU))} onDragOver={handleDragOver}>
+          <div key={`slot-${currentU}`} className="flex" style={{ gridRow: `span ${gridSpan}` }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
             <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{uLabel}</span>
             <div className={`flex-1 min-w-0 ${hasFractional ? "relative" : ""}`}>
               {topItems.length === 1 && !hasFractional ? (
@@ -711,17 +711,14 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
       // Occupied but not a bottom-slot (mid/top of item) -- covered by item's span
       continue;
     }
-    // Unoccupied half-slot
-    if (Number.isInteger(currentU)) {
-      // Empty whole-U: span 2 grid rows
-      slots.unshift(
-        <div key={`empty-${currentU}`} className="flex" style={{ gridRow: "span 2" }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver} data-testid={`empty-slot-${currentU}`}>
-          <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{currentU}</span>
-          <div className="flex-1 border border-dashed border-ui-border/50 dark:border-noc-border/50 rounded h-full" />
-        </div>,
-      );
-      skip = 1;
-    }
+    // Unoccupied half-slot -- each is its own drop target for 0.5U precision
+    const isWholeU = Number.isInteger(currentU);
+    slots.unshift(
+      <div key={`empty-${currentU}`} className="flex" onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver} data-testid={`empty-slot-${currentU}`}>
+        <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-0.5 shrink-0 select-none">{isWholeU ? currentU : ""}</span>
+        <div className={`flex-1 border border-dashed rounded h-full ${isWholeU ? "border-ui-border/50 dark:border-noc-border/50" : "border-ui-border/25 dark:border-noc-border/25"}`} />
+      </div>,
+    );
     // Non-integer unoccupied half-slot (e.g., 1.5 when there's a 0.5U at 1.0): no grid element needed
     // because the grid doesn't need a filler -- this will be naturally handled by adjacent spans
   }

@@ -271,22 +271,22 @@ describe("DocumentationModule", () => {
   it("shows copy/download MD buttons when section expanded", () => {
     renderModule();
     fireEvent.click(screen.getByText("Zones & Networks"));
-    expect(screen.getByText("Copy MD")).toBeInTheDocument();
-    expect(screen.getByText("Download MD")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy MD" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download MD" })).toBeInTheDocument();
   });
 
   it("shows JSON buttons when section has data", () => {
     renderModule();
     fireEvent.click(screen.getByText("Zones & Networks"));
-    expect(screen.getByText("Copy JSON")).toBeInTheDocument();
-    expect(screen.getByText("Download JSON")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy JSON" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download JSON" })).toBeInTheDocument();
   });
 
   it("hides JSON buttons when section has no data", () => {
     renderModule();
     fireEvent.click(screen.getByText("Firewall Rules"));
-    expect(screen.queryByText("Copy JSON")).not.toBeInTheDocument();
-    expect(screen.queryByText("Download JSON")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copy JSON" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download JSON" })).not.toBeInTheDocument();
   });
 
   it("shows SVG and PNG download buttons for mermaid section", async () => {
@@ -301,15 +301,15 @@ describe("DocumentationModule", () => {
     await waitFor(() => {
       expect(mermaidMod.render).toHaveBeenCalled();
     });
-    expect(screen.getByText("Download SVG")).toBeInTheDocument();
-    expect(screen.getByText("Download PNG")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download SVG" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download PNG" })).toBeInTheDocument();
   });
 
   it("hides SVG/PNG buttons for non-mermaid sections", () => {
     renderModule();
     fireEvent.click(screen.getByText("Zones & Networks"));
-    expect(screen.queryByText("Download SVG")).not.toBeInTheDocument();
-    expect(screen.queryByText("Download PNG")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download SVG" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download PNG" })).not.toBeInTheDocument();
   });
 
   it("falls back to raw code when mermaid render fails", async () => {
@@ -333,7 +333,7 @@ describe("DocumentationModule", () => {
 
     renderModule();
     fireEvent.click(screen.getByText("Firewall Rules"));
-    fireEvent.click(screen.getByText("Copy MD"));
+    fireEvent.click(screen.getByRole("button", { name: "Copy MD" }));
 
     expect(writeText).toHaveBeenCalledWith("**10 rules** configured.");
   });
@@ -344,7 +344,7 @@ describe("DocumentationModule", () => {
 
     renderModule();
     fireEvent.click(screen.getByText("Zones & Networks"));
-    fireEvent.click(screen.getByText("Copy JSON"));
+    fireEvent.click(screen.getByRole("button", { name: "Copy JSON" }));
 
     expect(writeText).toHaveBeenCalledWith(JSON.stringify([{ zone: "LAN", vlan: 1 }], null, 2));
   });
@@ -356,7 +356,7 @@ describe("DocumentationModule", () => {
     renderModule();
     fireEvent.click(screen.getByText("Firewall Rules"));
     // Should not throw
-    fireEvent.click(screen.getByText("Copy MD"));
+    fireEvent.click(screen.getByRole("button", { name: "Copy MD" }));
     expect(writeText).toHaveBeenCalled();
   });
 
@@ -377,7 +377,7 @@ describe("DocumentationModule", () => {
 
     renderModule();
     fireEvent.click(screen.getByText("Firewall Rules"));
-    fireEvent.click(screen.getByText("Download MD"));
+    fireEvent.click(screen.getByRole("button", { name: "Download MD" }));
 
     expect(createObjectURL).toHaveBeenCalled();
     const blobArg = vi.mocked(createObjectURL).mock.calls[0][0] as Blob;
@@ -406,7 +406,7 @@ describe("DocumentationModule", () => {
 
     renderModule();
     fireEvent.click(screen.getByText("Zones & Networks"));
-    fireEvent.click(screen.getByText("Download JSON"));
+    fireEvent.click(screen.getByRole("button", { name: "Download JSON" }));
 
     expect(createObjectURL).toHaveBeenCalled();
     const blobArg = vi.mocked(createObjectURL).mock.calls[0][0] as Blob;
@@ -454,7 +454,7 @@ describe("DocumentationModule", () => {
       return originalCreateElement(tag);
     });
 
-    fireEvent.click(screen.getByText("Download SVG"));
+    fireEvent.click(screen.getByRole("button", { name: "Download SVG" }));
 
     expect(serializeToString).toHaveBeenCalled();
     expect(createObjectURL).toHaveBeenCalled();
@@ -525,7 +525,7 @@ describe("DocumentationModule", () => {
       }
     });
 
-    fireEvent.click(screen.getByText("Download PNG"));
+    fireEvent.click(screen.getByRole("button", { name: "Download PNG" }));
 
     // Wait for the Image onload to fire (via setTimeout)
     await waitFor(() => {
@@ -561,7 +561,7 @@ describe("DocumentationModule", () => {
     });
 
     // No SVG in the DOM -- clicking Download PNG should not throw
-    fireEvent.click(screen.getByText("Download PNG"));
+    fireEvent.click(screen.getByRole("button", { name: "Download PNG" }));
   });
 
   it("handles Download SVG gracefully when no SVG is present", async () => {
@@ -582,7 +582,7 @@ describe("DocumentationModule", () => {
     });
 
     // No SVG in the DOM -- clicking Download SVG should not throw
-    fireEvent.click(screen.getByText("Download SVG"));
+    fireEvent.click(screen.getByRole("button", { name: "Download SVG" }));
   });
 
   it("handles Download PNG when canvas getContext returns null", async () => {
@@ -627,7 +627,7 @@ describe("DocumentationModule", () => {
       set src(val: string) { this._src = val; setTimeout(() => { if (this.onload) this.onload(); }, 0); }
     });
 
-    fireEvent.click(screen.getByText("Download PNG"));
+    fireEvent.click(screen.getByRole("button", { name: "Download PNG" }));
 
     await waitFor(() => {
       expect(mockCanvas.getContext).toHaveBeenCalledWith("2d");
@@ -686,7 +686,7 @@ describe("DocumentationModule", () => {
       set src(val: string) { this._src = val; setTimeout(() => { if (this.onload) this.onload(); }, 0); }
     });
 
-    fireEvent.click(screen.getByText("Download PNG"));
+    fireEvent.click(screen.getByRole("button", { name: "Download PNG" }));
 
     await waitFor(() => {
       expect(drawImage).toHaveBeenCalled();

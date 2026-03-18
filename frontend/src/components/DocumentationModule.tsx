@@ -89,7 +89,7 @@ function ErrorMessage({ error, fallback }: { error: Error | null; fallback: stri
   );
 }
 
-const SECTION_BTN = "px-2 py-1 text-xs rounded border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors";
+const SECTION_BTN = "inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors";
 
 function downloadFile(content: string, filename: string, mime: string): void {
   const blob = new Blob([content], { type: mime });
@@ -135,30 +135,45 @@ function downloadSvgAsPng(containerRef: React.RefObject<HTMLDivElement | null>, 
   img.src = url;
 }
 
+const copyIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
+    <rect x="9" y="9" width="13" height="13" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+);
+
+const downloadIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
 function SectionActions({ section, diagramRef }: { section: DocumentationSection; diagramRef?: React.RefObject<HTMLDivElement | null> }) {
   const slug = section.id;
   const jsonStr = section.data ? JSON.stringify(section.data, null, 2) : null;
   const isMermaid = section.id === "mermaid-topology";
 
   return (
-    <div className="flex items-center gap-1.5 mt-3 mb-2">
-      <button className={SECTION_BTN} onClick={() => copyToClipboard(section.content)}>Copy MD</button>
-      <button className={SECTION_BTN} onClick={() => downloadFile(section.content, `${slug}.md`, "text/markdown")}>Download MD</button>
+    <div className="flex items-center gap-1.5 flex-wrap mt-3 mb-2">
+      <button className={SECTION_BTN} aria-label="Copy MD" onClick={() => copyToClipboard(section.content)}>{copyIcon} MD</button>
+      <button className={SECTION_BTN} aria-label="Download MD" onClick={() => downloadFile(section.content, `${slug}.md`, "text/markdown")}>{downloadIcon} MD</button>
       {jsonStr && (
         <>
-          <button className={SECTION_BTN} onClick={() => copyToClipboard(jsonStr)}>Copy JSON</button>
-          <button className={SECTION_BTN} onClick={() => downloadFile(jsonStr, `${slug}.json`, "application/json")}>Download JSON</button>
+          <button className={SECTION_BTN} aria-label="Copy JSON" onClick={() => copyToClipboard(jsonStr)}>{copyIcon} JSON</button>
+          <button className={SECTION_BTN} aria-label="Download JSON" onClick={() => downloadFile(jsonStr, `${slug}.json`, "application/json")}>{downloadIcon} JSON</button>
         </>
       )}
       {isMermaid && diagramRef && (
         <>
-          <button className={SECTION_BTN} onClick={() => {
+          <button className={SECTION_BTN} aria-label="Download SVG" onClick={() => {
             const svg = diagramRef.current?.querySelector("svg");
             if (!svg) return;
             const svgData = new XMLSerializer().serializeToString(svg);
             downloadFile(svgData, "network-topology.svg", "image/svg+xml");
-          }}>Download SVG</button>
-          <button className={SECTION_BTN} onClick={() => downloadSvgAsPng(diagramRef, "network-topology.png")}>Download PNG</button>
+          }}>{downloadIcon} SVG</button>
+          <button className={SECTION_BTN} aria-label="Download PNG" onClick={() => downloadSvgAsPng(diagramRef, "network-topology.png")}>{downloadIcon} PNG</button>
         </>
       )}
     </div>

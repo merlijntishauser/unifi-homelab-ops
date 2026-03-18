@@ -354,6 +354,29 @@ def get_bom(rack_id: int) -> BomResponse:
     return BomResponse(rack_name=rack_row.name, entries=entries)
 
 
+def get_available_devices(rack_id: int, credentials: UnifiCredentials) -> list[dict[str, str]]:
+    """List topology devices not yet placed in this rack."""
+    from app.services.topology import get_topology_devices
+
+    _get_rack_row_or_raise(rack_id)
+    existing_items = _get_items_for_rack(rack_id)
+    existing_macs = {item.device_mac for item in existing_items if item.device_mac}
+
+    topology = get_topology_devices(credentials)
+    devices: list[dict[str, str]] = []
+    for device in topology.devices:
+        if device.mac in existing_macs:
+            continue
+        device_type = _DEVICE_TYPE_MAP.get(device.type, "other")
+        devices.append({
+            "mac": device.mac,
+            "name": device.name,
+            "model": device.model_name or device.model,
+            "type": device_type,
+        })
+    return devices
+
+
 def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[RackItem]:
     """Auto-populate rack items from topology devices."""
     from app.services.topology import get_topology_devices

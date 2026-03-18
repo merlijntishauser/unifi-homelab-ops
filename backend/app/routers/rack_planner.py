@@ -11,6 +11,7 @@ from app.services.rack_planner import (
     create_rack,
     delete_rack,
     delete_rack_item,
+    get_available_devices,
     get_bom,
     get_rack,
     import_from_topology,
@@ -110,6 +111,21 @@ async def rack_item_move(rack_id: int, item_id: int, body: MoveRequest) -> RackI
 async def rack_bom(rack_id: int) -> BomResponse:
     try:
         return get_bom(rack_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/{rack_id}/available-devices")
+async def rack_available_devices(rack_id: int) -> list[dict[str, str]]:
+    """List topology devices not yet placed in this rack."""
+    if not has_credentials():
+        raise HTTPException(status_code=401, detail="No credentials configured")
+
+    credentials = get_unifi_config()
+    assert credentials is not None
+
+    try:
+        return get_available_devices(rack_id, credentials)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

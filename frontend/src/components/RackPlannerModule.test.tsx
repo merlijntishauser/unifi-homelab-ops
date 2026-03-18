@@ -68,6 +68,10 @@ vi.mock("../api/client", async () => {
           { item_type: "switch", label: "USW-24", quantity: 1, notes: "" },
         ],
       }),
+      getAvailableDevices: vi.fn().mockResolvedValue([
+        { mac: "aa:bb:cc:dd:ee:01", name: "USW-Lite-8", model: "USW-Lite-8-PoE", type: "switch" },
+        { mac: "aa:bb:cc:dd:ee:02", name: "U6-Pro", model: "U6-Pro", type: "ap" },
+      ]),
     },
   };
 });
@@ -307,12 +311,11 @@ describe("RackPlannerModule", () => {
       expect(screen.getByTestId("add-item-form")).toBeInTheDocument();
     });
 
-    it("has Import from Topology button", () => {
+    it("has Add from Topology button that toggles device picker", () => {
       openEditor();
       const btn = screen.getByTestId("import-button");
       expect(btn).toBeInTheDocument();
-      fireEvent.click(btn);
-      expect(importMock.mutate).toHaveBeenCalledWith(1);
+      expect(btn.textContent).toBe("Add from Topology");
     });
 
     it("has Bill of Materials button", async () => {
@@ -789,6 +792,135 @@ describe("RackPlannerModule", () => {
       });
       fireEvent.click(screen.getByText("Create"));
       expect(createRackMock.mutate).not.toHaveBeenCalled();
+    });
+
+    describe("DevicePicker", () => {
+      it("clicking 'Add from Topology' toggles the device picker panel", async () => {
+        openEditor();
+        const btn = screen.getByTestId("import-button");
+        expect(btn.textContent).toBe("Add from Topology");
+
+        // Open device picker
+        fireEvent.click(btn);
+        expect(btn.textContent).toBe("Hide Devices");
+
+        // Close device picker
+        fireEvent.click(btn);
+        expect(btn.textContent).toBe("Add from Topology");
+      });
+
+      it("shows loading state while fetching devices", () => {
+        // Make getAvailableDevices return a promise that never resolves during this test
+        vi.mocked(api.getAvailableDevices).mockReturnValueOnce(new Promise(() => {}));
+        openEditor();
+        fireEvent.click(screen.getByTestId("import-button"));
+        expect(screen.getByText("Loading devices...")).toBeInTheDocument();
+      });
+
+      it("shows available devices after loading", async () => {
+        openEditor();
+        fireEvent.click(screen.getByTestId("import-button"));
+        await waitFor(() => {
+          expect(screen.getByText("Available Devices")).toBeInTheDocument();
+        });
+        expect(screen.getByText("USW-Lite-8")).toBeInTheDocument();
+        expect(screen.getByText("U6-Pro")).toBeInTheDocument();
+        expect(screen.getByText(/Switch -- USW-Lite-8-PoE/)).toBeInTheDocument();
+        expect(screen.getByText(/Access Point -- U6-Pro/)).toBeInTheDocument();
+      });
+
+      it("shows 'all devices placed' when no devices are available", async () => {
+        vi.mocked(api.getAvailableDevices).mockResolvedValueOnce([]);
+        openEditor();
+        fireEvent.click(screen.getByTestId("import-button"));
+        await waitFor(() => {
+          expect(screen.getByText("All devices already placed in this rack.")).toBeInTheDocument();
+        });
+      });
+
+      it("clicking 'Add to Rack' calls addItem.mutate with correct data", async () => {
+        openEditor();
+        fireEvent.click(screen.getByTestId("import-button"));
+        await waitFor(() => {
+          expect(screen.getByText("USW-Lite-8")).toBeInTheDocument();
+        });
+        const addButtons = screen.getAllByText("Add to Rack");
+        fireEvent.click(addButtons[0]);
+        // The rack has items at U1 (1U) and U3-U4 (2U). Free slots start at U2.
+        expect(addItemMock.mutate).toHaveBeenCalledWith({
+          rackId: 1,
+          data: {
+            position_u: 2,
+            label: "USW-Lite-8",
+            device_type: "switch",
+            device_mac: "aa:bb:cc:dd:ee:01",
+            height_u: 1,
+          },
+        });
+      });
+
+      it("fetches from the correct API endpoint with rackId", async () => {
+        openEditor();
+        fireEvent.click(screen.getByTestId("import-button"));
+        await waitFor(() => {
+          expect(api.getAvailableDevices).toHaveBeenCalledWith(1);
+        });
+      });
+
+      it("handles API error gracefully by showing empty state", async () => {
+        vi.mocked(api.getAvailableDevices).mockRejectedValueOnce(new Error("Network error"));
+        openEditor();
+        fireEvent.click(screen.getByTestId("import-button"));
+        await waitFor(() => {
+          expect(screen.getByText("All devices already placed in this rack.")).toBeInTheDocument();
+        });
+      });
+
+      it("places device at U1 when rack is fully empty", async () => {
+        rackMock.data = {
+          ...sampleRack,
+          height_u: 4,
+          items: [],
+        };
+        renderModule();
+        fireEvent.click(screen.getByTestId("rack-card-1"));
+        fireEvent.click(screen.getByTestId("import-button"));
+        await waitFor(() => {
+          expect(screen.getByText("USW-Lite-8")).toBeInTheDocument();
+        });
+        const addButtons = screen.getAllByText("Add to Rack");
+        fireEvent.click(addButtons[0]);
+        expect(addItemMock.mutate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({ position_u: 1 }),
+          }),
+        );
+      });
+
+      it("places device at U1 as fallback when rack is completely full", async () => {
+        rackMock.data = {
+          ...sampleRack,
+          height_u: 2,
+          items: [
+            { id: 60, position_u: 1, height_u: 1, device_type: "switch", label: "A", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
+            { id: 61, position_u: 2, height_u: 1, device_type: "switch", label: "B", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
+          ],
+        };
+        renderModule();
+        fireEvent.click(screen.getByTestId("rack-card-1"));
+        fireEvent.click(screen.getByTestId("import-button"));
+        await waitFor(() => {
+          expect(screen.getByText("USW-Lite-8")).toBeInTheDocument();
+        });
+        const addButtons = screen.getAllByText("Add to Rack");
+        fireEvent.click(addButtons[0]);
+        // No free slots, so fallback to position_u: 1
+        expect(addItemMock.mutate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({ position_u: 1 }),
+          }),
+        );
+      });
     });
 
     it("NewRackForm height defaults to 6 on invalid input", () => {

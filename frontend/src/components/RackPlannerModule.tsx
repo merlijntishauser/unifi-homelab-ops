@@ -9,7 +9,6 @@ import {
   useAddRackItem,
   useDeleteRackItem,
   useMoveRackItem,
-  useImportRackFromTopology,
 } from "../hooks/queries";
 
 // --- Device type metadata ---
@@ -534,6 +533,59 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
   );
 }
 
+// --- DevicePicker ---
+
+interface DevicePickerProps {
+  rackId: number;
+  onAdd: (device: { mac: string; name: string; model: string; type: string }) => void;
+}
+
+function DevicePicker({ rackId, onAdd }: DevicePickerProps) {
+  const [devices, setDevices] = useState<{ mac: string; name: string; model: string; type: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getAvailableDevices(rackId).then(setDevices).catch(() => setDevices([])).finally(() => setLoading(false));
+  }, [rackId]);
+
+  if (loading) {
+    return <p className="text-xs text-ui-text-dim dark:text-noc-text-dim p-3">Loading devices...</p>;
+  }
+
+  if (devices.length === 0) {
+    return <p className="text-xs text-ui-text-dim dark:text-noc-text-dim p-3">All devices already placed in this rack.</p>;
+  }
+
+  return (
+    <div className="max-w-md mb-4">
+      <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised overflow-hidden">
+        <div className="px-3 py-2 bg-ui-raised dark:bg-noc-input text-xs font-semibold text-ui-text-secondary dark:text-noc-text-secondary uppercase tracking-wide">
+          Available Devices
+        </div>
+        <div className="divide-y divide-ui-border/50 dark:divide-noc-border/50 max-h-64 overflow-y-auto">
+          {devices.map((device) => {
+            const meta = getDeviceTypeMeta(device.type);
+            return (
+              <div key={device.mac} className="flex items-center gap-3 px-3 py-2 hover:bg-ui-raised dark:hover:bg-noc-input transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-ui-text dark:text-noc-text truncate">{device.name}</div>
+                  <div className="text-xs text-ui-text-dim dark:text-noc-text-dim truncate">{meta.label} -- {device.model}</div>
+                </div>
+                <button
+                  onClick={() => onAdd(device)}
+                  className="shrink-0 rounded border border-ub-blue/20 px-2 py-1 text-xs text-ub-blue hover:bg-ub-blue/10 cursor-pointer transition-colors"
+                >
+                  Add to Rack
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- RackEditor ---
 
 interface RackEditorProps {
@@ -547,9 +599,8 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   const deleteItem = useDeleteRackItem();
   const moveItem = useMoveRackItem();
   const deleteRack = useDeleteRack();
-  const importFromTopology = useImportRackFromTopology();
-
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showDevicePicker, setShowDevicePicker] = useState(false);
   const [bom, setBom] = useState<BomResponse | null>(null);
   const [dragItemId, setDragItemId] = useState<number | null>(null);
 
@@ -613,9 +664,16 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
     deleteRack.mutate(rackId, { onSuccess: onBack });
   }, [rackId, deleteRack, onBack]);
 
-  const handleImport = useCallback(() => {
-    importFromTopology.mutate(rackId);
-  }, [rackId, importFromTopology]);
+  const handleAddFromTopology = useCallback((device: { mac: string; name: string; model: string; type: string }) => {
+    const freeSlots: number[] = [];
+    if (rack) {
+      for (let s = 1; s <= rack.height_u; s++) {
+        if (!occupiedSlots.has(s)) freeSlots.push(s);
+      }
+    }
+    const positionU = freeSlots.length > 0 ? freeSlots[0] : 1;
+    addItem.mutate({ rackId, data: { position_u: positionU, label: device.name, device_type: device.type, device_mac: device.mac, height_u: 1 } });
+  }, [rackId, addItem, rack, occupiedSlots]);
 
   const handleShowBom = useCallback(async () => {
     const data = await api.getRackBom(rackId);
@@ -693,8 +751,8 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
         <button onClick={() => setShowAddForm((v) => !v)} className={btnClass} data-testid="add-item-button">
           Add Item
         </button>
-        <button onClick={handleImport} className={btnClass} data-testid="import-button">
-          Import from Topology
+        <button onClick={() => setShowDevicePicker((v) => !v)} className={btnClass} data-testid="import-button">
+          {showDevicePicker ? "Hide Devices" : "Add from Topology"}
         </button>
         <button onClick={handleShowBom} className={btnClass} data-testid="bom-button">
           Bill of Materials
@@ -712,6 +770,9 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
               maxPositionU={rack.height_u}
             />
           </div>
+        )}
+        {showDevicePicker && (
+          <DevicePicker rackId={rackId} onAdd={handleAddFromTopology} />
         )}
         {bom && (
           <div className="mb-4 max-w-2xl">

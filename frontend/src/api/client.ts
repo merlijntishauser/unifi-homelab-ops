@@ -158,6 +158,8 @@ export const api = {
       body: JSON.stringify({ position_u: positionU }),
     }),
   getRackBom: (id: number) => fetchJson<BomResponse>(`/racks/${id}/bom`),
+  getAvailableDevices: (rackId: number) =>
+    fetchJson<{ mac: string; name: string; model: string; type: string }[]>(`/racks/${rackId}/available-devices`),
   importRackFromTopology: (id: number) =>
     fetchJson<RackItem[]>(`/racks/${id}/import`, { method: "POST" }),
 };

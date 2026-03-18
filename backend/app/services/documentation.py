@@ -11,8 +11,10 @@ from typing import Any
 
 import structlog
 from unifi_topology import (
+    DeviceStats,
     build_device_inventory,
     build_topology,
+    fetch_device_stats,
     fetch_devices,
     normalize_devices,
     resolve_hostnames,
@@ -168,9 +170,15 @@ def _build_firewall_section(credentials: UnifiCredentials) -> DocumentationSecti
     )
 
 
-def _build_metrics_section() -> DocumentationSection:
+def _build_metrics_section(credentials: UnifiCredentials) -> DocumentationSection:
     """Build the metrics snapshot section from the metrics database."""
-    snapshots = get_latest_snapshots()
+    stats: list[DeviceStats] | None = None
+    try:
+        config = to_topology_config(credentials)
+        stats = [s for s in fetch_device_stats(config, site=credentials.site) if isinstance(s, DeviceStats)]
+    except Exception:  # noqa: BLE001
+        pass
+    snapshots = get_latest_snapshots(stats)
 
     if not snapshots:
         return DocumentationSection(
@@ -210,7 +218,7 @@ def get_documentation_sections(credentials: UnifiCredentials) -> list[Documentat
         _build_port_overview_section(devices),
         _build_lldp_section(devices),
         _build_firewall_section(credentials),
-        _build_metrics_section(),
+        _build_metrics_section(credentials),
     ]
 
     log.info("documentation_sections_generated", section_count=len(sections))

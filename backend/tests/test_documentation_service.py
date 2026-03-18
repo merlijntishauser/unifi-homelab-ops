@@ -289,8 +289,11 @@ class TestBuildMetricsSection:
             ),
         ]
 
-        with patch("app.services.documentation.get_latest_snapshots", return_value=snapshots):
-            section = _build_metrics_section()
+        with (
+            patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
+            patch("app.services.documentation.fetch_device_stats", return_value=[]),
+        ):
+            section = _build_metrics_section(CREDENTIALS)
 
         assert section.id == "metrics-snapshot"
         assert section.title == "Metrics Snapshot"
@@ -300,8 +303,11 @@ class TestBuildMetricsSection:
         assert section.item_count == 1
 
     def test_empty_metrics(self) -> None:
-        with patch("app.services.documentation.get_latest_snapshots", return_value=[]):
-            section = _build_metrics_section()
+        with (
+            patch("app.services.documentation.get_latest_snapshots", return_value=[]),
+            patch("app.services.documentation.fetch_device_stats", return_value=[]),
+        ):
+            section = _build_metrics_section(CREDENTIALS)
 
         assert section.item_count == 0
         assert "No metrics data available" in section.content
@@ -320,8 +326,11 @@ class TestBuildMetricsSection:
             ),
         ]
 
-        with patch("app.services.documentation.get_latest_snapshots", return_value=snapshots):
-            section = _build_metrics_section()
+        with (
+            patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
+            patch("app.services.documentation.fetch_device_stats", return_value=[]),
+        ):
+            section = _build_metrics_section(CREDENTIALS)
 
         assert "| 2 |" in section.content
 
@@ -339,8 +348,11 @@ class TestBuildMetricsSection:
             ),
         ]
 
-        with patch("app.services.documentation.get_latest_snapshots", return_value=snapshots):
-            section = _build_metrics_section()
+        with (
+            patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
+            patch("app.services.documentation.fetch_device_stats", return_value=[]),
+        ):
+            section = _build_metrics_section(CREDENTIALS)
 
         assert "| 0 |" in section.content
 

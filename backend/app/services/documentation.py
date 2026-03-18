@@ -11,11 +11,11 @@ from typing import Any
 
 import structlog
 from unifi_topology import (
-    DeviceStats,
     build_device_inventory,
     build_topology,
     fetch_device_stats,
     fetch_devices,
+    normalize_device_stats,
     normalize_devices,
     resolve_hostnames,
 )
@@ -172,12 +172,12 @@ def _build_firewall_section(credentials: UnifiCredentials) -> DocumentationSecti
 
 def _build_metrics_section(credentials: UnifiCredentials) -> DocumentationSection:
     """Build the metrics snapshot section from the metrics database."""
-    stats: list[DeviceStats] | None = None
     try:
         config = to_topology_config(credentials)
-        stats = [s for s in fetch_device_stats(config, site=credentials.site) if isinstance(s, DeviceStats)]
+        raw_stats: list[dict[str, Any]] = list(fetch_device_stats(config, site=credentials.site))  # type: ignore[arg-type]
+        stats = normalize_device_stats(raw_stats)
     except Exception:  # noqa: BLE001
-        pass
+        stats = None
     snapshots = get_latest_snapshots(stats)
 
     if not snapshots:

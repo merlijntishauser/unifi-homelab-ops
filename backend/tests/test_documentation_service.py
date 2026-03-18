@@ -292,6 +292,7 @@ class TestBuildMetricsSection:
         with (
             patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
             patch("app.services.documentation.fetch_device_stats", return_value=[]),
+            patch("app.services.documentation.normalize_device_stats", return_value=[]),
         ):
             section = _build_metrics_section(CREDENTIALS)
 
@@ -306,6 +307,7 @@ class TestBuildMetricsSection:
         with (
             patch("app.services.documentation.get_latest_snapshots", return_value=[]),
             patch("app.services.documentation.fetch_device_stats", return_value=[]),
+            patch("app.services.documentation.normalize_device_stats", return_value=[]),
         ):
             section = _build_metrics_section(CREDENTIALS)
 
@@ -329,6 +331,7 @@ class TestBuildMetricsSection:
         with (
             patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
             patch("app.services.documentation.fetch_device_stats", return_value=[]),
+            patch("app.services.documentation.normalize_device_stats", return_value=[]),
         ):
             section = _build_metrics_section(CREDENTIALS)
 
@@ -351,6 +354,7 @@ class TestBuildMetricsSection:
         with (
             patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
             patch("app.services.documentation.fetch_device_stats", return_value=[]),
+            patch("app.services.documentation.normalize_device_stats", return_value=[]),
         ):
             section = _build_metrics_section(CREDENTIALS)
 

@@ -94,6 +94,19 @@ def _build_inventory_section(devices: list[Any], credentials: UnifiCredentials) 
     )
 
 
+def _build_port_data(devices: list[Any]) -> list[dict[str, str | int | float | bool | None]]:
+    """Build structured port data for JSON export."""
+    rows: list[dict[str, str | int | float | bool | None]] = []
+    for d in devices:
+        for p in d.port_table:
+            rows.append({
+                "device": d.name, "port": p.port_idx, "name": p.name or "",
+                "speed": p.speed, "up": p.up, "poe": p.poe_enable,
+                "poe_power": p.poe_power, "native_vlan": p.native_vlan,
+            })
+    return rows
+
+
 def _build_port_overview_section(devices: list[Any]) -> DocumentationSection:
     """Build the device port overview section."""
     port_map = build_port_map(devices)
@@ -103,7 +116,22 @@ def _build_port_overview_section(devices: list[Any]) -> DocumentationSection:
         title="Port Overview",
         content=content,
         item_count=len(devices),
+        data=_build_port_data(devices),
     )
+
+
+def _build_lldp_data(devices: list[Any]) -> list[dict[str, str | int | float | bool | None]]:
+    """Build structured LLDP data for JSON export."""
+    rows: list[dict[str, str | int | float | bool | None]] = []
+    for d in devices:
+        for entry in d.lldp_info:
+            rows.append({
+                "device": d.name, "local_port": entry.local_port_name,
+                "local_port_idx": entry.local_port_idx,
+                "chassis_id": entry.chassis_id, "port_id": entry.port_id,
+                "port_desc": entry.port_desc,
+            })
+    return rows
 
 
 def _build_lldp_section(devices: list[Any]) -> DocumentationSection:
@@ -115,6 +143,7 @@ def _build_lldp_section(devices: list[Any]) -> DocumentationSection:
         title="LLDP Neighbors",
         content=content,
         item_count=lldp_count,
+        data=_build_lldp_data(devices),
     )
 
 

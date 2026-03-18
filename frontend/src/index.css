@@ -103,6 +103,58 @@ body {
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .mt-safe { margin-top: env(safe-area-inset-top, 0px); }
 
+/* ── Documentation prose table styling ── */
+.doc-prose table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 13px;
+}
+.dark .doc-prose table { border-color: rgba(255, 255, 255, 0.08); }
+
+.doc-prose thead { background: #f0f2f5; }
+.dark .doc-prose thead { background: #1a1f2b; }
+
+.doc-prose th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 12px;
+  color: #6b7280;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.dark .doc-prose th {
+  color: #8b95a5;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.doc-prose td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  color: #1a1d23;
+}
+.dark .doc-prose td {
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+  color: #f0f2f5;
+}
+
+.doc-prose tbody tr:nth-child(even) { background: rgba(0, 0, 0, 0.02); }
+.dark .doc-prose tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+
+.doc-prose tbody tr:hover { background: rgba(0, 111, 255, 0.04); }
+.dark .doc-prose tbody tr:hover { background: rgba(0, 111, 255, 0.06); }
+
+.doc-prose tbody tr:last-child td { border-bottom: none; }
+
+/* Monospace for technical data columns (IP, MAC, firmware, model, port) */
+.doc-prose td:nth-child(n+3) { font-family: var(--font-mono); font-size: 12px; }
+
 /* ── Mobile: hide ReactFlow minimap on small screens ── */
 @media (max-width: 767px) {
   .react-flow__minimap { display: none; }

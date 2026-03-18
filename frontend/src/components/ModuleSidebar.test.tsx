@@ -32,6 +32,7 @@ describe("ModuleSidebar", () => {
     expect(screen.getByText("Topology")).toBeInTheDocument();
     expect(screen.getByText("Metrics")).toBeInTheDocument();
     expect(screen.getByText("Health")).toBeInTheDocument();
+    expect(screen.getByText("Docs")).toBeInTheDocument();
   });
 
   it("shows active state on current route", () => {
@@ -52,6 +53,7 @@ describe("ModuleSidebar", () => {
     expect(screen.getByText("Topology").closest("a")).toHaveAttribute("href", "/topology");
     expect(screen.getByText("Metrics").closest("a")).toHaveAttribute("href", "/metrics");
     expect(screen.getByText("Health").closest("a")).toHaveAttribute("href", "/health");
+    expect(screen.getByText("Docs").closest("a")).toHaveAttribute("href", "/docs");
   });
 
   it("renders Settings button", () => {
@@ -103,7 +105,7 @@ describe("ModuleSidebar", () => {
     renderSidebar();
     fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(4);
+    expect(links.length).toBe(5);
     for (const link of links) {
       expect(link).toHaveAttribute("href");
     }

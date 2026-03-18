@@ -232,3 +232,14 @@ class AppLoginInput(BaseModel):
 class AppAuthStatus(BaseModel):
     required: bool
     authenticated: bool
+
+
+class DocumentationSection(BaseModel):
+    id: str
+    title: str
+    content: str
+    item_count: int = 0
+
+
+class DocumentationResponse(BaseModel):
+    sections: list[DocumentationSection]

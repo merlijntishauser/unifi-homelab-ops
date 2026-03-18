@@ -15,6 +15,7 @@ export const queryKeys = {
   metricsHistory: (mac: string) => ["metrics-history", mac] as const,
   healthSummary: ["health-summary"] as const,
   notifications: ["notifications"] as const,
+  docSections: ["doc-sections"] as const,
 };
 
 // --- Queries ---
@@ -121,6 +122,14 @@ export function useHealthSummary(enabled: boolean) {
     enabled,
     staleTime: 60_000,
     refetchInterval: 60_000,
+  });
+}
+
+export function useDocSections(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.docSections,
+    queryFn: api.getDocSections,
+    enabled,
   });
 }
 

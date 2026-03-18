@@ -302,3 +302,14 @@ export interface HealthSummaryResponse {
   topology: TopologySummary;
   metrics: MetricsSummary;
 }
+
+export interface DocumentationSection {
+  id: string;
+  title: string;
+  content: string;
+  item_count: number;
+}
+
+export interface DocumentationResponse {
+  sections: DocumentationSection[];
+}

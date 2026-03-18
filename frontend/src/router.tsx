@@ -5,6 +5,7 @@ import FirewallModule from "./components/FirewallModule";
 import TopologyModule from "./components/TopologyModule";
 import MetricsModule from "./components/MetricsModule";
 import HealthModule from "./components/HealthModule";
+import DocumentationModule from "./components/DocumentationModule";
 
 const routes: RouteObject[] = [
   {
@@ -15,6 +16,7 @@ const routes: RouteObject[] = [
       { path: "topology", element: <TopologyModule /> },
       { path: "metrics", element: <MetricsModule /> },
       { path: "health", element: <HealthModule /> },
+      { path: "docs", element: <DocumentationModule /> },
     ],
   },
 ];

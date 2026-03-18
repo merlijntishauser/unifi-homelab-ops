@@ -8,6 +8,7 @@ import type {
   AppAuthStatus,
   AppNotification,
   AuthStatus,
+  DocumentationResponse,
   HealthAnalysisResult,
   HealthSummaryResponse,
   MetricsDevicesResponse,
@@ -125,4 +126,10 @@ export const api = {
   getHealthSummary: () => fetchJson<HealthSummaryResponse>("/health/summary"),
   analyzeHealth: () =>
     fetchJson<HealthAnalysisResult>("/health/analyze", { method: "POST" }),
+  getDocSections: () => fetchJson<DocumentationResponse>("/docs/sections"),
+  getDocExport: async () => {
+    const res = await fetch(`${BASE}/docs/export`);
+    if (!res.ok) throw new Error("Export failed");
+    return res.text();
+  },
 };

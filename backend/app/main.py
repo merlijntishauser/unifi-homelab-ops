@@ -18,6 +18,7 @@ from app.logging import configure_logging
 from app.middleware import AccessLogMiddleware, AppAuthMiddleware
 from app.routers.analyze import router as analyze_router
 from app.routers.auth import router as auth_router
+from app.routers.documentation import router as documentation_router
 from app.routers.health import router as health_router
 from app.routers.metrics import router as metrics_router
 from app.routers.rules import router as rules_router
@@ -166,6 +167,9 @@ app.include_router(zone_filter_router, prefix="/api/firewall")
 
 # Topology module
 app.include_router(topology_router, prefix="/api/topology")
+
+# Documentation module
+app.include_router(documentation_router, prefix="/api/docs")
 
 # Metrics module
 app.include_router(metrics_router, prefix="/api/metrics")

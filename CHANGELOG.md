@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Safe area support for iOS notch and gesture bar
 - Touch-target compliance (44px minimum) on all interactive elements
 - `useIsMobile` and `useIsPhone` viewport hooks
+- Documentation Generator module: browsable network documentation with Mermaid topology, infrastructure inventory, device port overview, LLDP neighbors, firewall summary, and metrics snapshot sections
+- Markdown export for generated documentation
 
 ## [1.0.1] - 2026-03-16
 

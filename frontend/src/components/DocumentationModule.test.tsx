@@ -289,6 +289,29 @@ describe("DocumentationModule", () => {
     expect(screen.queryByText("Download JSON")).not.toBeInTheDocument();
   });
 
+  it("shows SVG and PNG download buttons for mermaid section", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.render).toHaveBeenCalled();
+    });
+    expect(screen.getByText("Download SVG")).toBeInTheDocument();
+    expect(screen.getByText("Download PNG")).toBeInTheDocument();
+  });
+
+  it("hides SVG/PNG buttons for non-mermaid sections", () => {
+    renderModule();
+    fireEvent.click(screen.getByText("Zones & Networks"));
+    expect(screen.queryByText("Download SVG")).not.toBeInTheDocument();
+    expect(screen.queryByText("Download PNG")).not.toBeInTheDocument();
+  });
+
   it("falls back to raw code when mermaid render fails", async () => {
     const { default: mermaidMock } = await import("mermaid");
     vi.mocked(mermaidMock.render).mockRejectedValueOnce(new Error("parse error"));
@@ -301,6 +324,418 @@ describe("DocumentationModule", () => {
     fireEvent.click(screen.getByText("Network Topology"));
     await waitFor(() => {
       expect(screen.getByText("invalid")).toBeInTheDocument();
+    });
+  });
+
+  it("copies markdown to clipboard when Copy MD is clicked", () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    renderModule();
+    fireEvent.click(screen.getByText("Firewall Rules"));
+    fireEvent.click(screen.getByText("Copy MD"));
+
+    expect(writeText).toHaveBeenCalledWith("**10 rules** configured.");
+  });
+
+  it("copies JSON to clipboard when Copy JSON is clicked", () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    renderModule();
+    fireEvent.click(screen.getByText("Zones & Networks"));
+    fireEvent.click(screen.getByText("Copy JSON"));
+
+    expect(writeText).toHaveBeenCalledWith(JSON.stringify([{ zone: "LAN", vlan: 1 }], null, 2));
+  });
+
+  it("handles clipboard failure gracefully", () => {
+    const writeText = vi.fn().mockRejectedValue(new Error("denied"));
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    renderModule();
+    fireEvent.click(screen.getByText("Firewall Rules"));
+    // Should not throw
+    fireEvent.click(screen.getByText("Copy MD"));
+    expect(writeText).toHaveBeenCalled();
+  });
+
+  it("downloads markdown file when Download MD is clicked", () => {
+    const createObjectURL = vi.fn(() => "blob:md-url");
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+    const clickSpy = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "a") {
+        return { href: "", download: "", click: clickSpy } as unknown as HTMLAnchorElement;
+      }
+      return originalCreateElement(tag);
+    });
+
+    renderModule();
+    fireEvent.click(screen.getByText("Firewall Rules"));
+    fireEvent.click(screen.getByText("Download MD"));
+
+    expect(createObjectURL).toHaveBeenCalled();
+    const blobArg = vi.mocked(createObjectURL).mock.calls[0][0] as Blob;
+    expect(blobArg).toBeInstanceOf(Blob);
+    expect(blobArg.type).toBe("text/markdown");
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:md-url");
+
+    vi.restoreAllMocks();
+  });
+
+  it("downloads JSON file when Download JSON is clicked", () => {
+    const createObjectURL = vi.fn(() => "blob:json-url");
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+    const clickSpy = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "a") {
+        return { href: "", download: "", click: clickSpy } as unknown as HTMLAnchorElement;
+      }
+      return originalCreateElement(tag);
+    });
+
+    renderModule();
+    fireEvent.click(screen.getByText("Zones & Networks"));
+    fireEvent.click(screen.getByText("Download JSON"));
+
+    expect(createObjectURL).toHaveBeenCalled();
+    const blobArg = vi.mocked(createObjectURL).mock.calls[0][0] as Blob;
+    expect(blobArg).toBeInstanceOf(Blob);
+    expect(blobArg.type).toBe("application/json");
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:json-url");
+
+    vi.restoreAllMocks();
+  });
+
+  it("downloads SVG when Download SVG is clicked on mermaid section", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.render).toHaveBeenCalled();
+    });
+
+    // Wait for the SVG to be inserted into the DOM via the ref
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
+    });
+
+    const serializeToString = vi.fn(() => "<svg>serialized</svg>");
+    vi.stubGlobal("XMLSerializer", class { serializeToString = serializeToString; });
+
+    const createObjectURL = vi.fn(() => "blob:svg-url");
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+    const clickSpy = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "a") {
+        return { href: "", download: "", click: clickSpy } as unknown as HTMLAnchorElement;
+      }
+      return originalCreateElement(tag);
+    });
+
+    fireEvent.click(screen.getByText("Download SVG"));
+
+    expect(serializeToString).toHaveBeenCalled();
+    expect(createObjectURL).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:svg-url");
+
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("downloads PNG when Download PNG is clicked on mermaid section", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.render).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
+    });
+
+    const serializeToString = vi.fn(() => "<svg>serialized</svg>");
+    vi.stubGlobal("XMLSerializer", class { serializeToString = serializeToString; });
+
+    const createObjectURL = vi.fn(() => "blob:png-url");
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+    const drawImage = vi.fn();
+    const scale = vi.fn();
+    const mockCanvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn(() => ({ drawImage, scale })),
+      toBlob: vi.fn((cb: (blob: Blob | null) => void) => {
+        cb(new Blob(["png-data"], { type: "image/png" }));
+      }),
+    };
+
+    const anchorClickSpy = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "canvas") return mockCanvas as unknown as HTMLCanvasElement;
+      if (tag === "a") return { href: "", download: "", click: anchorClickSpy } as unknown as HTMLAnchorElement;
+      return originalCreateElement(tag);
+    });
+
+    // Mock Image constructor to immediately call onload
+    const mockImage = { width: 100, height: 50, onload: null as (() => void) | null, src: "" };
+    vi.stubGlobal("Image", class {
+      width = mockImage.width;
+      height = mockImage.height;
+      onload: (() => void) | null = null;
+      _src = "";
+      get src() { return this._src; }
+      set src(val: string) {
+        this._src = val;
+        // Trigger onload asynchronously
+        setTimeout(() => { if (this.onload) this.onload(); }, 0);
+      }
+    });
+
+    fireEvent.click(screen.getByText("Download PNG"));
+
+    // Wait for the Image onload to fire (via setTimeout)
+    await waitFor(() => {
+      expect(drawImage).toHaveBeenCalled();
+    });
+
+    expect(serializeToString).toHaveBeenCalled();
+    expect(mockCanvas.getContext).toHaveBeenCalledWith("2d");
+    expect(scale).toHaveBeenCalledWith(2, 2);
+    expect(mockCanvas.toBlob).toHaveBeenCalled();
+    expect(anchorClickSpy).toHaveBeenCalled();
+    expect(revokeObjectURL).toHaveBeenCalled();
+
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("handles Download PNG gracefully when no SVG is present", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ninvalid\n```", item_count: 1, data: null },
+      ],
+    };
+
+    const { default: mermaidMock } = await import("mermaid");
+    vi.mocked(mermaidMock.render).mockRejectedValueOnce(new Error("fail"));
+
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    await waitFor(() => {
+      expect(screen.getByText("invalid")).toBeInTheDocument();
+    });
+
+    // No SVG in the DOM -- clicking Download PNG should not throw
+    fireEvent.click(screen.getByText("Download PNG"));
+  });
+
+  it("handles Download SVG gracefully when no SVG is present", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ninvalid\n```", item_count: 1, data: null },
+      ],
+    };
+
+    const { default: mermaidMock } = await import("mermaid");
+    vi.mocked(mermaidMock.render).mockRejectedValueOnce(new Error("fail"));
+
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    await waitFor(() => {
+      expect(screen.getByText("invalid")).toBeInTheDocument();
+    });
+
+    // No SVG in the DOM -- clicking Download SVG should not throw
+    fireEvent.click(screen.getByText("Download SVG"));
+  });
+
+  it("handles Download PNG when canvas getContext returns null", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.render).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
+    });
+
+    vi.stubGlobal("XMLSerializer", class { serializeToString = vi.fn(() => "<svg/>"); });
+
+    const createObjectURL = vi.fn(() => "blob:url");
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+    const mockCanvas = {
+      width: 0, height: 0,
+      getContext: vi.fn(() => null),
+      toBlob: vi.fn(),
+    };
+
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "canvas") return mockCanvas as unknown as HTMLCanvasElement;
+      return originalCreateElement(tag);
+    });
+
+    vi.stubGlobal("Image", class {
+      width = 100; height = 50; onload: (() => void) | null = null; _src = "";
+      get src() { return this._src; }
+      set src(val: string) { this._src = val; setTimeout(() => { if (this.onload) this.onload(); }, 0); }
+    });
+
+    fireEvent.click(screen.getByText("Download PNG"));
+
+    await waitFor(() => {
+      expect(mockCanvas.getContext).toHaveBeenCalledWith("2d");
+    });
+
+    // toBlob should NOT be called since getContext returned null
+    expect(mockCanvas.toBlob).not.toHaveBeenCalled();
+
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("handles Download PNG when toBlob returns null", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.render).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
+    });
+
+    vi.stubGlobal("XMLSerializer", class { serializeToString = vi.fn(() => "<svg/>"); });
+
+    const createObjectURL = vi.fn(() => "blob:url");
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+    const drawImage = vi.fn();
+    const scaleFn = vi.fn();
+    const mockCanvas = {
+      width: 0, height: 0,
+      getContext: vi.fn(() => ({ drawImage, scale: scaleFn })),
+      toBlob: vi.fn((cb: (blob: Blob | null) => void) => { cb(null); }),
+    };
+
+    const anchorClickSpy = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "canvas") return mockCanvas as unknown as HTMLCanvasElement;
+      if (tag === "a") return { href: "", download: "", click: anchorClickSpy } as unknown as HTMLAnchorElement;
+      return originalCreateElement(tag);
+    });
+
+    vi.stubGlobal("Image", class {
+      width = 100; height = 50; onload: (() => void) | null = null; _src = "";
+      get src() { return this._src; }
+      set src(val: string) { this._src = val; setTimeout(() => { if (this.onload) this.onload(); }, 0); }
+    });
+
+    fireEvent.click(screen.getByText("Download PNG"));
+
+    await waitFor(() => {
+      expect(drawImage).toHaveBeenCalled();
+    });
+
+    expect(mockCanvas.toBlob).toHaveBeenCalled();
+    // anchor click should NOT have been called since blob was null
+    expect(anchorClickSpy).not.toHaveBeenCalled();
+
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("renders mermaid diagram into ref div when render succeeds", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.render).toHaveBeenCalled();
+    });
+
+    // The rendered SVG should be inserted into the DOM
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
+    });
+  });
+
+  it("uses light theme variables when colorMode is light", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule({ colorMode: "light" as ColorMode });
+    fireEvent.click(screen.getByText("Network Topology"));
+
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.initialize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          themeVariables: expect.objectContaining({ background: "#f7f8fa" }),
+        }),
+      );
     });
   });
 });

@@ -105,9 +105,40 @@ function copyToClipboard(text: string): void {
   navigator.clipboard.writeText(text).catch(() => {});
 }
 
-function SectionActions({ section }: { section: DocumentationSection }) {
+function downloadSvgAsPng(containerRef: React.RefObject<HTMLDivElement | null>, filename: string): void {
+  const svg = containerRef.current?.querySelector("svg");
+  if (!svg) return;
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  img.onload = () => {
+    const scale = 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const pngUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = pngUrl;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(pngUrl);
+    }, "image/png");
+  };
+  img.src = url;
+}
+
+function SectionActions({ section, diagramRef }: { section: DocumentationSection; diagramRef?: React.RefObject<HTMLDivElement | null> }) {
   const slug = section.id;
   const jsonStr = section.data ? JSON.stringify(section.data, null, 2) : null;
+  const isMermaid = section.id === "mermaid-topology";
 
   return (
     <div className="flex items-center gap-1.5 mt-3 mb-2">
@@ -117,6 +148,17 @@ function SectionActions({ section }: { section: DocumentationSection }) {
         <>
           <button className={SECTION_BTN} onClick={() => copyToClipboard(jsonStr)}>Copy JSON</button>
           <button className={SECTION_BTN} onClick={() => downloadFile(jsonStr, `${slug}.json`, "application/json")}>Download JSON</button>
+        </>
+      )}
+      {isMermaid && diagramRef && (
+        <>
+          <button className={SECTION_BTN} onClick={() => {
+            const svg = diagramRef.current?.querySelector("svg");
+            if (!svg) return;
+            const svgData = new XMLSerializer().serializeToString(svg);
+            downloadFile(svgData, "network-topology.svg", "image/svg+xml");
+          }}>Download SVG</button>
+          <button className={SECTION_BTN} onClick={() => downloadSvgAsPng(diagramRef, "network-topology.png")}>Download PNG</button>
         </>
       )}
     </div>
@@ -131,6 +173,7 @@ interface SectionCardProps {
 }
 
 function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   return (
     <div className="bg-ui-surface dark:bg-noc-surface rounded-lg overflow-hidden">
       <button
@@ -157,8 +200,8 @@ function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) 
       </button>
       {expanded && (
         <div className="px-4 pb-4 border-t border-ui-border dark:border-noc-border">
-          <SectionActions section={section} />
-          <div className="prose prose-sm dark:prose-invert max-w-none mt-3 text-ui-text-secondary dark:text-noc-text-secondary [&_h1]:text-ui-text [&_h1]:dark:text-noc-text [&_h2]:text-ui-text [&_h2]:dark:text-noc-text [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:pt-6 [&_h2]:border-t [&_h2]:border-ui-border/50 [&_h2]:dark:border-noc-border/50 [&_h3]:text-ui-text [&_h3]:dark:text-noc-text [&_h3]:mt-6 [&_h3]:mb-2 [&_h4]:mt-3 [&_h4]:mb-1 [&_strong]:text-ui-text [&_strong]:dark:text-noc-text [&_code]:text-ub-blue [&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_table]:w-full [&_table]:mb-4 [&_th]:text-left [&_th]:text-ui-text-secondary [&_th]:dark:text-noc-text-secondary [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide [&_th]:py-2 [&_th]:px-3 [&_th]:border-b [&_th]:border-ui-border [&_th]:dark:border-noc-border [&_td]:py-2 [&_td]:px-3 [&_td]:text-sm [&_td]:border-b [&_td]:border-ui-border/50 [&_td]:dark:border-noc-border/50">
+          <SectionActions section={section} diagramRef={contentRef} />
+          <div ref={contentRef} className="prose prose-sm dark:prose-invert max-w-none mt-3 text-ui-text-secondary dark:text-noc-text-secondary [&_h1]:text-ui-text [&_h1]:dark:text-noc-text [&_h2]:text-ui-text [&_h2]:dark:text-noc-text [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:pt-6 [&_h2]:border-t [&_h2]:border-ui-border/50 [&_h2]:dark:border-noc-border/50 [&_h3]:text-ui-text [&_h3]:dark:text-noc-text [&_h3]:mt-6 [&_h3]:mb-2 [&_h4]:mt-3 [&_h4]:mb-1 [&_strong]:text-ui-text [&_strong]:dark:text-noc-text [&_code]:text-ub-blue [&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_table]:w-full [&_table]:mb-4 [&_th]:text-left [&_th]:text-ui-text-secondary [&_th]:dark:text-noc-text-secondary [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide [&_th]:py-2 [&_th]:px-3 [&_th]:border-b [&_th]:border-ui-border [&_th]:dark:border-noc-border [&_td]:py-2 [&_td]:px-3 [&_td]:text-sm [&_td]:border-b [&_td]:border-ui-border/50 [&_td]:dark:border-noc-border/50">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
               code({ className, children }) {
                 if (className === "language-mermaid") {

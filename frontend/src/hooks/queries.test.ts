@@ -12,6 +12,17 @@ import {
   useHealthSummary,
   useHealthAnalysis,
   useDismissNotification,
+  useDocSections,
+  useRacks,
+  useRack,
+  useCreateRack,
+  useUpdateRack,
+  useDeleteRack,
+  useAddRackItem,
+  useUpdateRackItem,
+  useDeleteRackItem,
+  useMoveRackItem,
+  useImportRackFromTopology,
 } from "./queries";
 
 vi.mock("../api/client", () => ({
@@ -24,6 +35,17 @@ vi.mock("../api/client", () => ({
     getHealthSummary: vi.fn(),
     analyzeHealth: vi.fn(),
     dismissNotification: vi.fn(),
+    getDocSections: vi.fn(),
+    getRacks: vi.fn(),
+    getRack: vi.fn(),
+    createRack: vi.fn(),
+    updateRack: vi.fn(),
+    deleteRack: vi.fn(),
+    addRackItem: vi.fn(),
+    updateRackItem: vi.fn(),
+    deleteRackItem: vi.fn(),
+    moveRackItem: vi.fn(),
+    importRackFromTopology: vi.fn(),
   },
 }));
 
@@ -82,5 +104,90 @@ describe("health query hooks", () => {
     const { result } = renderHook(() => useDismissNotification(), { wrapper });
     expect(result.current.mutate).toBeDefined();
     expect(result.current.isPending).toBe(false);
+  });
+});
+
+describe("docs query hooks", () => {
+  it("useDocSections does not fetch when disabled", () => {
+    const { result } = renderHook(() => useDocSections(false), { wrapper });
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.isLoading).toBe(false);
+  });
+});
+
+describe("rack query hooks", () => {
+  it("useRacks returns query", () => {
+    const { result } = renderHook(() => useRacks(), { wrapper });
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it("useRack does not fetch when id is null", () => {
+    const { result } = renderHook(() => useRack(null), { wrapper });
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("useCreateRack calls api and invalidates", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.createRack).mockResolvedValue({ id: 1, name: "R1", size: "19-inch", height_u: 12, location: "", items: [], total_power: 0, used_u: 0 });
+    const { result } = renderHook(() => useCreateRack(), { wrapper });
+    await result.current.mutateAsync({ name: "R1" });
+    expect(api.createRack).toHaveBeenCalledWith({ name: "R1" });
+  });
+
+  it("useUpdateRack calls api", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.updateRack).mockResolvedValue({ id: 1, name: "R2", size: "19-inch", height_u: 12, location: "", items: [], total_power: 0, used_u: 0 });
+    const { result } = renderHook(() => useUpdateRack(), { wrapper });
+    await result.current.mutateAsync({ id: 1, data: { name: "R2" } });
+    expect(api.updateRack).toHaveBeenCalled();
+  });
+
+  it("useDeleteRack calls api", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.deleteRack).mockResolvedValue(undefined as never);
+    const { result } = renderHook(() => useDeleteRack(), { wrapper });
+    await result.current.mutateAsync(1);
+    expect(api.deleteRack).toHaveBeenCalledWith(1);
+  });
+
+  it("useAddRackItem calls api", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.addRackItem).mockResolvedValue({ id: 1, position_u: 1, height_u: 1, device_type: "switch", label: "SW", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null });
+    const { result } = renderHook(() => useAddRackItem(), { wrapper });
+    await result.current.mutateAsync({ rackId: 1, data: { position_u: 1, label: "SW" } });
+    expect(api.addRackItem).toHaveBeenCalled();
+  });
+
+  it("useUpdateRackItem calls api", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.updateRackItem).mockResolvedValue({ id: 1, position_u: 1, height_u: 1, device_type: "switch", label: "SW", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null });
+    const { result } = renderHook(() => useUpdateRackItem(), { wrapper });
+    await result.current.mutateAsync({ rackId: 1, itemId: 1, data: { position_u: 1, label: "SW" } });
+    expect(api.updateRackItem).toHaveBeenCalled();
+  });
+
+  it("useDeleteRackItem calls api", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.deleteRackItem).mockResolvedValue(undefined as never);
+    const { result } = renderHook(() => useDeleteRackItem(), { wrapper });
+    await result.current.mutateAsync({ rackId: 1, itemId: 1 });
+    expect(api.deleteRackItem).toHaveBeenCalled();
+  });
+
+  it("useMoveRackItem calls api", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.moveRackItem).mockResolvedValue({ id: 1, position_u: 3, height_u: 1, device_type: "switch", label: "SW", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null });
+    const { result } = renderHook(() => useMoveRackItem(), { wrapper });
+    await result.current.mutateAsync({ rackId: 1, itemId: 1, positionU: 3 });
+    expect(api.moveRackItem).toHaveBeenCalled();
+  });
+
+  it("useImportRackFromTopology calls api", async () => {
+    const { api } = await import("../api/client");
+    vi.mocked(api.importRackFromTopology).mockResolvedValue([]);
+    const { result } = renderHook(() => useImportRackFromTopology(), { wrapper });
+    await result.current.mutateAsync(1);
+    expect(api.importRackFromTopology).toHaveBeenCalledWith(1);
   });
 });

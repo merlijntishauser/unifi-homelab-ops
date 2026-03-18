@@ -6,6 +6,7 @@ import TopologyModule from "./components/TopologyModule";
 import MetricsModule from "./components/MetricsModule";
 import HealthModule from "./components/HealthModule";
 import DocumentationModule from "./components/DocumentationModule";
+import RackPlannerModule from "./components/RackPlannerModule";
 
 const routes: RouteObject[] = [
   {
@@ -17,6 +18,7 @@ const routes: RouteObject[] = [
       { path: "metrics", element: <MetricsModule /> },
       { path: "health", element: <HealthModule /> },
       { path: "docs", element: <DocumentationModule /> },
+      { path: "rack-planner", element: <RackPlannerModule /> },
     ],
   },
 ];

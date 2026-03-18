@@ -51,6 +51,19 @@ const docIcon = (
   </svg>
 );
 
+const rackIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
+    <rect x="4" y="2" width="16" height="20" rx="2" />
+    <line x1="4" y1="7" x2="20" y2="7" />
+    <line x1="4" y1="12" x2="20" y2="12" />
+    <line x1="4" y1="17" x2="20" y2="17" />
+    <circle cx="8" cy="4.5" r="0.5" fill="currentColor" />
+    <circle cx="8" cy="9.5" r="0.5" fill="currentColor" />
+    <circle cx="8" cy="14.5" r="0.5" fill="currentColor" />
+    <circle cx="8" cy="19.5" r="0.5" fill="currentColor" />
+  </svg>
+);
+
 const settingsIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
     <circle cx="12" cy="12" r="3" />
@@ -70,6 +83,7 @@ const navItems: NavItem[] = [
   { to: "/metrics", label: "Metrics", icon: activityIcon },
   { to: "/health", label: "Health", icon: heartPulseIcon },
   { to: "/docs", label: "Docs", icon: docIcon },
+  { to: "/rack-planner", label: "Rack", icon: rackIcon },
 ];
 
 const navLinkClass = (isActive: boolean) =>

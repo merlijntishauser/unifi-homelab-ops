@@ -383,4 +383,96 @@ describe("api client", () => {
       );
     });
   });
+
+  describe("rack planner endpoints", () => {
+    it("getRacks fetches from /racks", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.getRacks();
+      expect(mockFetch).toHaveBeenCalledWith("/api/racks", expect.objectContaining({}));
+    });
+
+    it("getRack fetches by id", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.getRack(1);
+      expect(mockFetch).toHaveBeenCalledWith("/api/racks/1", expect.objectContaining({}));
+    });
+
+    it("createRack sends POST", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.createRack({ name: "R1" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks");
+      expect(init.method).toBe("POST");
+    });
+
+    it("updateRack sends PUT", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.updateRack(1, { name: "R2" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks/1");
+      expect(init.method).toBe("PUT");
+    });
+
+    it("deleteRack sends DELETE", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse(null));
+      await api.deleteRack(1);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks/1");
+      expect(init.method).toBe("DELETE");
+    });
+
+    it("addRackItem sends POST to items", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.addRackItem(1, { position_u: 1, label: "SW" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks/1/items");
+      expect(init.method).toBe("POST");
+    });
+
+    it("updateRackItem sends PUT", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.updateRackItem(1, 2, { position_u: 1, label: "SW" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks/1/items/2");
+      expect(init.method).toBe("PUT");
+    });
+
+    it("deleteRackItem sends DELETE", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse(null));
+      await api.deleteRackItem(1, 2);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks/1/items/2");
+      expect(init.method).toBe("DELETE");
+    });
+
+    it("moveRackItem sends PATCH", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.moveRackItem(1, 2, 5);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks/1/items/2/move");
+      expect(init.method).toBe("PATCH");
+    });
+
+    it("getRackBom fetches BOM", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ rack_name: "R1", entries: [] }));
+      await api.getRackBom(1);
+      expect(mockFetch).toHaveBeenCalledWith("/api/racks/1/bom", expect.objectContaining({}));
+    });
+
+    it("importRackFromTopology sends POST", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.importRackFromTopology(1);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/racks/1/import");
+      expect(init.method).toBe("POST");
+    });
+  });
+
+  describe("docs endpoints", () => {
+    it("getDocSections fetches sections", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ sections: [] }));
+      await api.getDocSections();
+      expect(mockFetch).toHaveBeenCalledWith("/api/docs/sections", expect.objectContaining({}));
+    });
+  });
 });

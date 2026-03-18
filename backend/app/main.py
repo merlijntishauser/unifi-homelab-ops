@@ -21,6 +21,7 @@ from app.routers.auth import router as auth_router
 from app.routers.documentation import router as documentation_router
 from app.routers.health import router as health_router
 from app.routers.metrics import router as metrics_router
+from app.routers.rack_planner import router as rack_planner_router
 from app.routers.rules import router as rules_router
 from app.routers.settings import router as settings_router
 from app.routers.simulate import router as simulate_router
@@ -173,6 +174,9 @@ app.include_router(documentation_router, prefix="/api/docs")
 
 # Metrics module
 app.include_router(metrics_router, prefix="/api/metrics")
+
+# Rack planner module
+app.include_router(rack_planner_router, prefix="/api/racks")
 
 # Health module
 app.include_router(health_router, prefix="/api/health")

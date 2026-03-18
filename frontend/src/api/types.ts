@@ -313,3 +313,68 @@ export interface DocumentationSection {
 export interface DocumentationResponse {
   sections: DocumentationSection[];
 }
+
+export interface RackItemInput {
+  position_u: number;
+  height_u?: number;
+  device_type?: string;
+  label: string;
+  power_watts?: number;
+  device_mac?: string | null;
+  notes?: string;
+}
+
+export interface RackItem {
+  id: number;
+  position_u: number;
+  height_u: number;
+  device_type: string;
+  label: string;
+  power_watts: number;
+  device_mac: string | null;
+  notes: string;
+  device_name: string | null;
+  device_model: string | null;
+  device_status: string | null;
+}
+
+export interface RackInput {
+  name: string;
+  size?: string;
+  height_u?: number;
+  location?: string;
+}
+
+export interface Rack {
+  id: number;
+  name: string;
+  size: string;
+  height_u: number;
+  location: string;
+  items: RackItem[];
+  total_power: number;
+  used_u: number;
+}
+
+export interface RackSummary {
+  id: number;
+  name: string;
+  size: string;
+  height_u: number;
+  location: string;
+  item_count: number;
+  used_u: number;
+  total_power: number;
+}
+
+export interface BomEntry {
+  item_type: string;
+  label: string;
+  quantity: number;
+  notes: string;
+}
+
+export interface BomResponse {
+  rack_name: string;
+  entries: BomEntry[];
+}

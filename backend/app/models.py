@@ -234,6 +234,72 @@ class AppAuthStatus(BaseModel):
     authenticated: bool
 
 
+class RackItemInput(BaseModel):
+    position_u: int
+    height_u: int = 1
+    device_type: str = "other"
+    label: str
+    power_watts: float = 0.0
+    device_mac: str | None = None
+    notes: str = ""
+
+
+class RackItem(BaseModel):
+    id: int
+    position_u: int
+    height_u: int
+    device_type: str
+    label: str
+    power_watts: float
+    device_mac: str | None = None
+    notes: str = ""
+    # Enriched from topology (optional)
+    device_name: str | None = None
+    device_model: str | None = None
+    device_status: str | None = None
+
+
+class RackInput(BaseModel):
+    name: str
+    size: str = "19-inch"
+    height_u: int = 12
+    location: str = ""
+
+
+class Rack(BaseModel):
+    id: int
+    name: str
+    size: str
+    height_u: int
+    location: str
+    items: list[RackItem] = []
+    total_power: float = 0.0
+    used_u: int = 0
+
+
+class RackSummary(BaseModel):
+    id: int
+    name: str
+    size: str
+    height_u: int
+    location: str
+    item_count: int = 0
+    used_u: int = 0
+    total_power: float = 0.0
+
+
+class BomEntry(BaseModel):
+    item_type: str
+    label: str
+    quantity: int = 1
+    notes: str = ""
+
+
+class BomResponse(BaseModel):
+    rack_name: str
+    entries: list[BomEntry]
+
+
 class DocumentationSection(BaseModel):
     id: str
     title: str

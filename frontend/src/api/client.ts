@@ -8,11 +8,17 @@ import type {
   AppAuthStatus,
   AppNotification,
   AuthStatus,
+  BomResponse,
   DocumentationResponse,
   HealthAnalysisResult,
   HealthSummaryResponse,
   MetricsDevicesResponse,
   MetricsHistoryResponse,
+  Rack,
+  RackInput,
+  RackItem,
+  RackItemInput,
+  RackSummary,
   Rule,
   SimulateRequest,
   SimulateResponse,
@@ -132,4 +138,26 @@ export const api = {
     if (!res.ok) throw new Error("Export failed");
     return res.text();
   },
+  getRacks: () => fetchJson<RackSummary[]>("/racks"),
+  getRack: (id: number) => fetchJson<Rack>(`/racks/${id}`),
+  createRack: (data: RackInput) =>
+    fetchJson<Rack>("/racks", { method: "POST", body: JSON.stringify(data) }),
+  updateRack: (id: number, data: RackInput) =>
+    fetchJson<Rack>(`/racks/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteRack: (id: number) =>
+    fetchJson<void>(`/racks/${id}`, { method: "DELETE" }),
+  addRackItem: (rackId: number, data: RackItemInput) =>
+    fetchJson<RackItem>(`/racks/${rackId}/items`, { method: "POST", body: JSON.stringify(data) }),
+  updateRackItem: (rackId: number, itemId: number, data: RackItemInput) =>
+    fetchJson<RackItem>(`/racks/${rackId}/items/${itemId}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteRackItem: (rackId: number, itemId: number) =>
+    fetchJson<void>(`/racks/${rackId}/items/${itemId}`, { method: "DELETE" }),
+  moveRackItem: (rackId: number, itemId: number, positionU: number) =>
+    fetchJson<RackItem>(`/racks/${rackId}/items/${itemId}/move`, {
+      method: "PATCH",
+      body: JSON.stringify({ position_u: positionU }),
+    }),
+  getRackBom: (id: number) => fetchJson<BomResponse>(`/racks/${id}/bom`),
+  importRackFromTopology: (id: number) =>
+    fetchJson<RackItem[]>(`/racks/${id}/import`, { method: "POST" }),
 };

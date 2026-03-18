@@ -67,6 +67,30 @@ class DeviceMetricRow(Base):
     poe_consumption: Mapped[float | None] = mapped_column(sa.Float, nullable=True)
 
 
+class RackRow(Base):
+    __tablename__ = "racks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    size: Mapped[str] = mapped_column(Text, nullable=False, default="19-inch")
+    height_u: Mapped[int] = mapped_column(Integer, nullable=False, default=12)
+    location: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+
+class RackItemRow(Base):
+    __tablename__ = "rack_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    rack_id: Mapped[int] = mapped_column(Integer, sa.ForeignKey("racks.id", ondelete="CASCADE"), nullable=False)
+    position_u: Mapped[int] = mapped_column(Integer, nullable=False)
+    height_u: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    device_type: Mapped[str] = mapped_column(Text, nullable=False, default="other")
+    label: Mapped[str] = mapped_column(Text, nullable=False)
+    power_watts: Mapped[float] = mapped_column(sa.Float, nullable=False, default=0.0)
+    device_mac: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+
 class NotificationRow(Base):
     __tablename__ = "notifications"
 

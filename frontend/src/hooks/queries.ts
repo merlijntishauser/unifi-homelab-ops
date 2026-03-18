@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
-import type { AiAnalyzeRequest, AiConfigInput, SimulateRequest } from "../api/types";
+import type { AiAnalyzeRequest, AiConfigInput, RackInput, RackItemInput, SimulateRequest } from "../api/types";
 
 export const queryKeys = {
   zones: ["zones"] as const,
@@ -16,6 +16,7 @@ export const queryKeys = {
   healthSummary: ["health-summary"] as const,
   notifications: ["notifications"] as const,
   docSections: ["doc-sections"] as const,
+  racks: ["racks"] as const,
 };
 
 // --- Queries ---
@@ -133,6 +134,21 @@ export function useDocSections(enabled: boolean) {
   });
 }
 
+export function useRacks() {
+  return useQuery({
+    queryKey: queryKeys.racks,
+    queryFn: () => api.getRacks(),
+  });
+}
+
+export function useRack(id: number | null) {
+  return useQuery({
+    queryKey: [...queryKeys.racks, id],
+    queryFn: () => api.getRack(id!),
+    enabled: id !== null,
+  });
+}
+
 // --- Mutations ---
 
 export function useAppLogin() {
@@ -228,5 +244,71 @@ export function useDismissNotification() {
   return useMutation({
     mutationFn: (id: number) => api.dismissNotification(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notifications }),
+  });
+}
+
+export function useCreateRack() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: RackInput) => api.createRack(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
+  });
+}
+
+export function useUpdateRack() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: number; data: RackInput }) => api.updateRack(vars.id, vars.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
+  });
+}
+
+export function useDeleteRack() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteRack(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
+  });
+}
+
+export function useAddRackItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { rackId: number; data: RackItemInput }) => api.addRackItem(vars.rackId, vars.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
+  });
+}
+
+export function useUpdateRackItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { rackId: number; itemId: number; data: RackItemInput }) =>
+      api.updateRackItem(vars.rackId, vars.itemId, vars.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
+  });
+}
+
+export function useDeleteRackItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { rackId: number; itemId: number }) => api.deleteRackItem(vars.rackId, vars.itemId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
+  });
+}
+
+export function useMoveRackItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { rackId: number; itemId: number; positionU: number }) =>
+      api.moveRackItem(vars.rackId, vars.itemId, vars.positionU),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
+  });
+}
+
+export function useImportRackFromTopology() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (rackId: number) => api.importRackFromTopology(rackId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
   });
 }

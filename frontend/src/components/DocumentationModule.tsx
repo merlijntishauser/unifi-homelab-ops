@@ -10,17 +10,21 @@ import type { DocumentationSection } from "../api/types";
 let mermaidIdCounter = 0;
 
 const MERMAID_DARK = {
-  background: "#0b0e14", primaryColor: "#1a1f2b", primaryTextColor: "#f0f2f5",
-  primaryBorderColor: "#2d3340", secondaryColor: "#141820", tertiaryColor: "#1e2430",
-  lineColor: "#006fff", textColor: "#f0f2f5", mainBkg: "#1a1f2b",
-  nodeBorder: "#2d3340", clusterBkg: "#141820", fontSize: "14px",
+  background: "#0b0e14", primaryColor: "#1e2430", primaryTextColor: "#f0f2f5",
+  primaryBorderColor: "#3d4455", secondaryColor: "#141820", tertiaryColor: "#1a1f2b",
+  lineColor: "#006fff", textColor: "#f0f2f5", mainBkg: "#1e2430",
+  nodeBorder: "#3d4455", nodeTextColor: "#f0f2f5", clusterBkg: "#141820",
+  edgeLabelBackground: "#141820", fontSize: "14px",
+  noteBkgColor: "#1e2430", noteTextColor: "#f0f2f5", noteBorderColor: "#3d4455",
 };
 
 const MERMAID_LIGHT = {
-  background: "#f7f8fa", primaryColor: "#e8f0fe", primaryTextColor: "#1a1d23",
-  primaryBorderColor: "#c4d5f0", secondaryColor: "#f0f2f5", tertiaryColor: "#ffffff",
-  lineColor: "#006fff", textColor: "#1a1d23", mainBkg: "#e8f0fe",
-  nodeBorder: "#c4d5f0", clusterBkg: "#f0f2f5", fontSize: "14px",
+  background: "#f7f8fa", primaryColor: "#dbeafe", primaryTextColor: "#1a1d23",
+  primaryBorderColor: "#93c5fd", secondaryColor: "#f0f2f5", tertiaryColor: "#ffffff",
+  lineColor: "#006fff", textColor: "#1a1d23", mainBkg: "#dbeafe",
+  nodeBorder: "#93c5fd", nodeTextColor: "#1a1d23", clusterBkg: "#f0f2f5",
+  edgeLabelBackground: "#ffffff", fontSize: "14px",
+  noteBkgColor: "#dbeafe", noteTextColor: "#1a1d23", noteBorderColor: "#93c5fd",
 };
 
 async function renderMermaidSvg(code: string, isDark: boolean): Promise<string> {
@@ -30,7 +34,10 @@ async function renderMermaidSvg(code: string, isDark: boolean): Promise<string> 
   });
   const id = `mermaid-${++mermaidIdCounter}`;
   const { svg } = await mermaid.render(id, code);
-  return DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } });
+  return DOMPurify.sanitize(svg, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    ADD_TAGS: ["foreignObject"],
+  });
 }
 
 function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import mermaid from "mermaid";
 import DOMPurify from "dompurify";
 import { useAppContext } from "../hooks/useAppContext";
@@ -123,7 +124,7 @@ function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) 
       {expanded && (
         <div className="px-4 pb-4 border-t border-ui-border dark:border-noc-border">
           <div className="prose prose-sm dark:prose-invert max-w-none mt-3 text-ui-text-secondary dark:text-noc-text-secondary [&_h1]:text-ui-text [&_h1]:dark:text-noc-text [&_h2]:text-ui-text [&_h2]:dark:text-noc-text [&_h3]:text-ui-text [&_h3]:dark:text-noc-text [&_strong]:text-ui-text [&_strong]:dark:text-noc-text [&_code]:text-ub-blue [&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_table]:w-full [&_th]:text-left [&_th]:text-ui-text-secondary [&_th]:dark:text-noc-text-secondary [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide [&_th]:py-2 [&_th]:px-3 [&_th]:border-b [&_th]:border-ui-border [&_th]:dark:border-noc-border [&_td]:py-2 [&_td]:px-3 [&_td]:text-sm [&_td]:border-b [&_td]:border-ui-border/50 [&_td]:dark:border-noc-border/50">
-            <ReactMarkdown components={{
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
               code({ className, children }) {
                 if (className === "language-mermaid") {
                   return <MermaidDiagram code={String(children).trim()} isDark={isDark} />;

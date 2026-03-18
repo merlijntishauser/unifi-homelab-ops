@@ -323,6 +323,8 @@ export interface RackItemInput {
   power_watts?: number;
   device_mac?: string | null;
   notes?: string;
+  width_fraction?: number;
+  position_x?: number;
 }
 
 export interface RackItem {
@@ -337,6 +339,8 @@ export interface RackItem {
   device_name: string | null;
   device_model: string | null;
   device_status: string | null;
+  width_fraction: number;
+  position_x: number;
 }
 
 export interface RackInput {

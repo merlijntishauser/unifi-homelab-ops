@@ -29,6 +29,10 @@ _DEVICE_TYPE_MAP: dict[str, str] = {
 _NON_RACKMOUNT_TYPES = {"ap"}
 
 
+_VALID_WIDTH_FRACTIONS = {0.25, 0.5, 1.0}
+_VALID_POSITION_X = {0.0, 0.25, 0.5, 0.75}
+
+
 def _row_to_rack_item(row: RackItemRow) -> RackItem:
     """Convert a RackItemRow to a RackItem model."""
     return RackItem(
@@ -40,6 +44,8 @@ def _row_to_rack_item(row: RackItemRow) -> RackItem:
         power_watts=row.power_watts,
         device_mac=row.device_mac,
         notes=row.notes,
+        width_fraction=row.width_fraction,
+        position_x=row.position_x,
     )
 
 
@@ -87,15 +93,40 @@ def _get_items_for_rack(rack_id: int) -> list[RackItemRow]:
         session.close()
 
 
+def _validate_width_and_position_x(width_fraction: float, position_x: float) -> None:
+    """Validate width_fraction and position_x values."""
+    if width_fraction not in _VALID_WIDTH_FRACTIONS:
+        msg = f"width_fraction must be one of {sorted(_VALID_WIDTH_FRACTIONS)}, got {width_fraction}"
+        raise ValueError(msg)
+    if position_x not in _VALID_POSITION_X:
+        msg = f"position_x must be one of {sorted(_VALID_POSITION_X)}, got {position_x}"
+        raise ValueError(msg)
+    if position_x + width_fraction > 1.0:
+        msg = f"position_x ({position_x}) + width_fraction ({width_fraction}) exceeds rack width"
+        raise ValueError(msg)
+
+
 def _check_overlap(
-    rack_id: int, position_u: int, height_u: int, rack_height: int, exclude_item_id: int | None = None,
+    rack_id: int,
+    position_u: int,
+    height_u: int,
+    rack_height: int,
+    width_fraction: float = 1.0,
+    position_x: float = 0.0,
+    exclude_item_id: int | None = None,
 ) -> None:
     """Validate that the item fits in the rack and does not overlap existing items."""
+    _validate_width_and_position_x(width_fraction, position_x)
+    if height_u < 0:
+        msg = f"Height must be >= 0, got {height_u}"
+        raise ValueError(msg)
+
+    # 0U items mount on side rails -- skip position and overlap checks
+    if height_u == 0:
+        return
+
     if position_u < 1:
         msg = f"Position must be >= 1, got {position_u}"
-        raise ValueError(msg)
-    if height_u < 1:
-        msg = f"Height must be >= 1, got {height_u}"
         raise ValueError(msg)
     top_u = position_u + height_u - 1
     if top_u > rack_height:
@@ -103,11 +134,20 @@ def _check_overlap(
         raise ValueError(msg)
 
     existing = _get_items_for_rack(rack_id)
+    x_right = position_x + width_fraction
     for item in existing:
         if exclude_item_id is not None and item.id == exclude_item_id:
             continue
+        # Skip 0U items -- they don't occupy rack unit space
+        if item.height_u == 0:
+            continue
         item_top = item.position_u + item.height_u - 1
-        if position_u <= item_top and top_u >= item.position_u:
+        vertical_overlap = position_u <= item_top and top_u >= item.position_u
+        if not vertical_overlap:
+            continue
+        item_x_right = item.position_x + item.width_fraction
+        horizontal_overlap = position_x < item_x_right and x_right > item.position_x
+        if horizontal_overlap:
             msg = f"Position {position_u}-{top_u}U overlaps with '{item.label}' at {item.position_u}-{item_top}U"
             raise ValueError(msg)
 
@@ -214,7 +254,10 @@ def delete_rack(rack_id: int) -> None:
 def add_rack_item(rack_id: int, data: RackItemInput) -> RackItem:
     """Add an item to a rack."""
     rack_row = _get_rack_row_or_raise(rack_id)
-    _check_overlap(rack_id, data.position_u, data.height_u, rack_row.height_u)
+    _check_overlap(
+        rack_id, data.position_u, data.height_u, rack_row.height_u,
+        width_fraction=data.width_fraction, position_x=data.position_x,
+    )
     session = get_session()
     try:
         row = RackItemRow(
@@ -226,6 +269,8 @@ def add_rack_item(rack_id: int, data: RackItemInput) -> RackItem:
             power_watts=data.power_watts,
             device_mac=data.device_mac,
             notes=data.notes,
+            width_fraction=data.width_fraction,
+            position_x=data.position_x,
         )
         session.add(row)
         session.commit()
@@ -240,7 +285,10 @@ def add_rack_item(rack_id: int, data: RackItemInput) -> RackItem:
 def update_rack_item(rack_id: int, item_id: int, data: RackItemInput) -> RackItem:
     """Update a rack item."""
     rack_row = _get_rack_row_or_raise(rack_id)
-    _check_overlap(rack_id, data.position_u, data.height_u, rack_row.height_u, exclude_item_id=item_id)
+    _check_overlap(
+        rack_id, data.position_u, data.height_u, rack_row.height_u,
+        width_fraction=data.width_fraction, position_x=data.position_x, exclude_item_id=item_id,
+    )
     session = get_session()
     try:
         row = session.get(RackItemRow, item_id)
@@ -254,6 +302,8 @@ def update_rack_item(rack_id: int, item_id: int, data: RackItemInput) -> RackIte
         row.power_watts = data.power_watts
         row.device_mac = data.device_mac
         row.notes = data.notes
+        row.width_fraction = data.width_fraction
+        row.position_x = data.position_x
         session.commit()
         result = _row_to_rack_item(row)
         session.expunge(row)
@@ -278,7 +328,7 @@ def delete_rack_item(rack_id: int, item_id: int) -> None:
         session.close()
 
 
-def move_rack_item(rack_id: int, item_id: int, new_position_u: int) -> RackItem:
+def move_rack_item(rack_id: int, item_id: int, new_position_u: int, new_position_x: float = 0.0) -> RackItem:
     """Move a rack item to a new position."""
     rack_row = _get_rack_row_or_raise(rack_id)
     session = get_session()
@@ -288,11 +338,15 @@ def move_rack_item(rack_id: int, item_id: int, new_position_u: int) -> RackItem:
             msg = f"Item {item_id} not found in rack {rack_id}"
             raise ValueError(msg)
         height_u = row.height_u
+        width_fraction = row.width_fraction
         session.expunge(row)
     finally:
         session.close()
 
-    _check_overlap(rack_id, new_position_u, height_u, rack_row.height_u, exclude_item_id=item_id)
+    _check_overlap(
+        rack_id, new_position_u, height_u, rack_row.height_u,
+        width_fraction=width_fraction, position_x=new_position_x, exclude_item_id=item_id,
+    )
 
     session = get_session()
     try:
@@ -301,6 +355,7 @@ def move_rack_item(rack_id: int, item_id: int, new_position_u: int) -> RackItem:
             msg = f"Item {item_id} not found"
             raise ValueError(msg)
         row.position_u = new_position_u
+        row.position_x = new_position_x
         session.commit()
         result = _row_to_rack_item(row)
         session.expunge(row)

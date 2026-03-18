@@ -28,6 +28,7 @@ router = APIRouter(tags=["rack-planner"])
 
 class MoveRequest(BaseModel):
     position_u: int
+    position_x: float = 0.0
 
 
 @router.get("")
@@ -99,7 +100,7 @@ async def rack_item_delete(rack_id: int, item_id: int) -> Response:
 @router.patch("/{rack_id}/items/{item_id}/move")
 async def rack_item_move(rack_id: int, item_id: int, body: MoveRequest) -> RackItem:
     try:
-        return move_rack_item(rack_id, item_id, body.position_u)
+        return move_rack_item(rack_id, item_id, body.position_u, body.position_x)
     except ValueError as exc:
         detail = str(exc)
         if "not found" in detail:

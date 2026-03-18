@@ -166,10 +166,10 @@ class TestAddRackItem:
         with pytest.raises(ValueError, match="Position must be >= 1"):
             add_rack_item(rack_id, RackItemInput(position_u=0, label="Bad"))
 
-    def test_height_below_one_raises(self) -> None:
+    def test_height_below_zero_raises(self) -> None:
         rack_id = _create_test_rack()
-        with pytest.raises(ValueError, match="Height must be >= 1"):
-            add_rack_item(rack_id, RackItemInput(position_u=1, height_u=0, label="Bad"))
+        with pytest.raises(ValueError, match="Height must be >= 0"):
+            add_rack_item(rack_id, RackItemInput(position_u=1, height_u=-1, label="Bad"))
 
     def test_adjacent_items_no_overlap(self) -> None:
         rack_id = _create_test_rack()
@@ -386,3 +386,177 @@ class TestImportFromTopology:
     def test_not_found_raises(self) -> None:
         with pytest.raises(ValueError, match="not found"):
             import_from_topology(9999, MOCK_CREDENTIALS)
+
+
+class TestHalfWidthItems:
+    def test_half_width_items_side_by_side(self) -> None:
+        rack_id = _create_test_rack()
+        left = add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Left", width_fraction=0.5, position_x=0.0,
+        ))
+        right = add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Right", width_fraction=0.5, position_x=0.5,
+        ))
+        assert left.width_fraction == 0.5
+        assert left.position_x == 0.0
+        assert right.width_fraction == 0.5
+        assert right.position_x == 0.5
+
+    def test_half_width_items_overlapping_raises(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Left", width_fraction=0.5, position_x=0.0,
+        ))
+        with pytest.raises(ValueError, match="overlaps"):
+            add_rack_item(rack_id, RackItemInput(
+                position_u=1, label="Overlap", width_fraction=0.5, position_x=0.25,
+            ))
+
+    def test_half_width_different_rows_no_overlap(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Row 1", width_fraction=0.5, position_x=0.0,
+        ))
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=2, label="Row 2", width_fraction=0.5, position_x=0.0,
+        ))
+        assert item.position_u == 2
+
+
+class TestQuarterWidthItems:
+    def test_four_quarter_width_items_in_one_row(self) -> None:
+        rack_id = _create_test_rack()
+        items = []
+        for i, x in enumerate([0.0, 0.25, 0.5, 0.75]):
+            item = add_rack_item(rack_id, RackItemInput(
+                position_u=1, label=f"Q{i}", width_fraction=0.25, position_x=x,
+            ))
+            items.append(item)
+        assert len(items) == 4
+        assert all(i.width_fraction == 0.25 for i in items)
+
+    def test_quarter_width_overlap_raises(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Half", width_fraction=0.5, position_x=0.0,
+        ))
+        with pytest.raises(ValueError, match="overlaps"):
+            add_rack_item(rack_id, RackItemInput(
+                position_u=1, label="Quarter", width_fraction=0.25, position_x=0.25,
+            ))
+
+    def test_quarter_after_half_no_overlap(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Half", width_fraction=0.5, position_x=0.0,
+        ))
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Quarter", width_fraction=0.25, position_x=0.5,
+        ))
+        assert item.position_x == 0.5
+
+
+class TestZeroUItems:
+    def test_zero_u_item_is_allowed(self) -> None:
+        rack_id = _create_test_rack()
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=0, height_u=0, label="Cable Manager",
+        ))
+        assert item.height_u == 0
+        assert item.position_u == 0
+
+    def test_zero_u_does_not_cause_overlap(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(
+            position_u=0, height_u=0, label="Cable Manager",
+        ))
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Switch",
+        ))
+        assert item.position_u == 1
+
+    def test_zero_u_items_coexist(self) -> None:
+        rack_id = _create_test_rack()
+        a = add_rack_item(rack_id, RackItemInput(position_u=0, height_u=0, label="CM-1"))
+        b = add_rack_item(rack_id, RackItemInput(position_u=0, height_u=0, label="CM-2"))
+        assert a.height_u == 0
+        assert b.height_u == 0
+
+
+class TestFiveUItems:
+    def test_five_u_item_fits(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, height_u=5, label="Server",
+        ))
+        assert item.height_u == 5
+
+    def test_five_u_item_overlap(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=5, label="Server 1"))
+        with pytest.raises(ValueError, match="overlaps"):
+            add_rack_item(rack_id, RackItemInput(position_u=3, height_u=2, label="Server 2"))
+
+
+class TestWidthValidation:
+    def test_position_x_plus_width_exceeds_rack(self) -> None:
+        rack_id = _create_test_rack()
+        with pytest.raises(ValueError, match="exceeds rack width"):
+            add_rack_item(rack_id, RackItemInput(
+                position_u=1, label="Bad", width_fraction=0.5, position_x=0.75,
+            ))
+
+    def test_invalid_width_fraction(self) -> None:
+        rack_id = _create_test_rack()
+        with pytest.raises(ValueError, match="width_fraction must be one of"):
+            add_rack_item(rack_id, RackItemInput(
+                position_u=1, label="Bad", width_fraction=0.3,
+            ))
+
+    def test_invalid_position_x(self) -> None:
+        rack_id = _create_test_rack()
+        with pytest.raises(ValueError, match="position_x must be one of"):
+            add_rack_item(rack_id, RackItemInput(
+                position_u=1, label="Bad", position_x=0.1,
+            ))
+
+    def test_full_width_at_nonzero_x_raises(self) -> None:
+        rack_id = _create_test_rack()
+        with pytest.raises(ValueError, match="exceeds rack width"):
+            add_rack_item(rack_id, RackItemInput(
+                position_u=1, label="Bad", width_fraction=1.0, position_x=0.25,
+            ))
+
+
+class TestMoveWithPositionX:
+    def test_move_with_position_x(self) -> None:
+        rack_id = _create_test_rack()
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Half", width_fraction=0.5, position_x=0.0,
+        ))
+        moved = move_rack_item(rack_id, item.id, 3, new_position_x=0.5)
+        assert moved.position_u == 3
+        assert moved.position_x == 0.5
+
+    def test_move_half_width_to_occupied_half_raises(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(
+            position_u=3, label="Existing", width_fraction=0.5, position_x=0.5,
+        ))
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Mover", width_fraction=0.5, position_x=0.0,
+        ))
+        with pytest.raises(ValueError, match="overlaps"):
+            move_rack_item(rack_id, item.id, 3, new_position_x=0.5)
+
+    def test_move_half_width_to_free_half(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(
+            position_u=3, label="Existing", width_fraction=0.5, position_x=0.0,
+        ))
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, label="Mover", width_fraction=0.5, position_x=0.0,
+        ))
+        moved = move_rack_item(rack_id, item.id, 3, new_position_x=0.5)
+        assert moved.position_u == 3
+        assert moved.position_x == 0.5

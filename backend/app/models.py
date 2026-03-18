@@ -242,6 +242,8 @@ class RackItemInput(BaseModel):
     power_watts: float = 0.0
     device_mac: str | None = None
     notes: str = ""
+    width_fraction: float = 1.0
+    position_x: float = 0.0
 
 
 class RackItem(BaseModel):
@@ -253,6 +255,8 @@ class RackItem(BaseModel):
     power_watts: float
     device_mac: str | None = None
     notes: str = ""
+    width_fraction: float = 1.0
+    position_x: float = 0.0
     # Enriched from topology (optional)
     device_name: str | None = None
     device_model: str | None = None

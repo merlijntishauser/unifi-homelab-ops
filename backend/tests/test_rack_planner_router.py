@@ -316,3 +316,83 @@ async def test_delete_rack_cascades_items(client: AsyncClient) -> None:
     # Verify the rack is gone
     get_resp = await client.get(f"/api/racks/{rack_id}")
     assert get_resp.status_code == 404
+
+
+async def test_add_half_width_items_side_by_side(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
+    rack_id = create_resp.json()["id"]
+    resp1 = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "label": "Left", "width_fraction": 0.5, "position_x": 0.0,
+    })
+    assert resp1.status_code == 201
+    assert resp1.json()["width_fraction"] == 0.5
+    resp2 = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "label": "Right", "width_fraction": 0.5, "position_x": 0.5,
+    })
+    assert resp2.status_code == 201
+    assert resp2.json()["position_x"] == 0.5
+
+
+async def test_add_half_width_items_overlap(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
+    rack_id = create_resp.json()["id"]
+    await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "label": "Left", "width_fraction": 0.5, "position_x": 0.0,
+    })
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "label": "Overlap", "width_fraction": 0.5, "position_x": 0.25,
+    })
+    assert resp.status_code == 409
+
+
+async def test_add_zero_u_item(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
+    rack_id = create_resp.json()["id"]
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 0, "height_u": 0, "label": "Cable Manager",
+    })
+    assert resp.status_code == 201
+    assert resp.json()["height_u"] == 0
+
+
+async def test_add_five_u_item(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 12})
+    rack_id = create_resp.json()["id"]
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "height_u": 5, "label": "Server",
+    })
+    assert resp.status_code == 201
+    assert resp.json()["height_u"] == 5
+
+
+async def test_invalid_width_fraction(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
+    rack_id = create_resp.json()["id"]
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "label": "Bad", "width_fraction": 0.3,
+    })
+    assert resp.status_code == 409
+
+
+async def test_position_x_plus_width_exceeds_rack(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
+    rack_id = create_resp.json()["id"]
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "label": "Bad", "width_fraction": 0.5, "position_x": 0.75,
+    })
+    assert resp.status_code == 409
+
+
+async def test_move_with_position_x(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
+    rack_id = create_resp.json()["id"]
+    item_resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "label": "Half", "width_fraction": 0.5,
+    })
+    item_id = item_resp.json()["id"]
+    resp = await client.patch(f"/api/racks/{rack_id}/items/{item_id}/move", json={
+        "position_u": 3, "position_x": 0.5,
+    })
+    assert resp.status_code == 200
+    assert resp.json()["position_u"] == 3
+    assert resp.json()["position_x"] == 0.5

@@ -118,6 +118,8 @@ const sampleRack = {
       device_name: null,
       device_model: null,
       device_status: null,
+      width_fraction: 1.0,
+      position_x: 0.0,
     },
     {
       id: 11,
@@ -131,6 +133,8 @@ const sampleRack = {
       device_name: "Gateway",
       device_model: "UDM-Pro",
       device_status: "online",
+      width_fraction: 1.0,
+      position_x: 0.0,
     },
   ],
 };
@@ -360,6 +364,8 @@ describe("RackPlannerModule", () => {
             position_u: 1,
             power_watts: 0,
             notes: "",
+            width_fraction: 1.0,
+            position_x: 0.0,
           },
         },
         expect.objectContaining({ onSuccess: expect.any(Function) }),
@@ -474,6 +480,8 @@ describe("RackPlannerModule", () => {
             device_name: null,
             device_model: null,
             device_status: null,
+            width_fraction: 1.0,
+            position_x: 0.0,
           },
         ],
       };
@@ -549,6 +557,8 @@ describe("RackPlannerModule", () => {
             device_name: null,
             device_model: null,
             device_status: null,
+            width_fraction: 1.0,
+            position_x: 0.0,
           },
         ],
       };
@@ -584,15 +594,21 @@ describe("RackPlannerModule", () => {
       });
 
       // Change device type
-      const typeSelect = form.querySelector("select")!;
+      const typeSelect = screen.getByLabelText("Type") as HTMLSelectElement;
       fireEvent.change(typeSelect, { target: { value: "gateway" } });
 
-      // Get all number inputs: height_u, position_u, power_watts
-      const numberInputs = form.querySelectorAll<HTMLInputElement>("input[type='number']");
-      // height_u (index 0), position_u (index 1), power_watts (index 2)
-      fireEvent.change(numberInputs[0], { target: { value: "2" } });
-      fireEvent.change(numberInputs[1], { target: { value: "3" } });
-      fireEvent.change(numberInputs[2], { target: { value: "25.5" } });
+      // Change height
+      fireEvent.change(screen.getByLabelText("Height (U)"), { target: { value: "2" } });
+
+      // Change width to half to also test width/posX
+      fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.5" } });
+
+      // Position X dropdown should now be visible -- choose Right (0.5)
+      fireEvent.change(screen.getByTestId("add-item-position-x"), { target: { value: "0.5" } });
+
+      // Change position U and power
+      fireEvent.change(screen.getByLabelText("Position (U)"), { target: { value: "3" } });
+      fireEvent.change(screen.getByLabelText("Power (W)"), { target: { value: "25.5" } });
 
       // Change notes -- last text input in the form
       const textInputs = form.querySelectorAll<HTMLInputElement>("input[type='text']");
@@ -609,40 +625,36 @@ describe("RackPlannerModule", () => {
             position_u: 3,
             power_watts: 25.5,
             notes: "Test note",
+            width_fraction: 0.5,
+            position_x: 0.5,
           },
         },
         expect.objectContaining({ onSuccess: expect.any(Function) }),
       );
     });
 
-    it("Add Item form height defaults to 1 on invalid input", () => {
+    it("Add Item form height defaults to 0 on invalid input", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
-      const form = screen.getByTestId("add-item-form");
-      const numberInputs = form.querySelectorAll<HTMLInputElement>("input[type='number']");
       // Set height to invalid value (NaN from parseInt)
-      fireEvent.change(numberInputs[0], { target: { value: "" } });
-      expect(numberInputs[0].value).toBe("1");
+      fireEvent.change(screen.getByLabelText("Height (U)"), { target: { value: "" } });
+      expect((screen.getByLabelText("Height (U)") as HTMLInputElement).value).toBe("0");
     });
 
     it("Add Item form position defaults to 1 on invalid input", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
-      const form = screen.getByTestId("add-item-form");
-      const numberInputs = form.querySelectorAll<HTMLInputElement>("input[type='number']");
       // Set position to invalid value (NaN from parseInt)
-      fireEvent.change(numberInputs[1], { target: { value: "" } });
-      expect(numberInputs[1].value).toBe("1");
+      fireEvent.change(screen.getByLabelText("Position (U)"), { target: { value: "" } });
+      expect((screen.getByLabelText("Position (U)") as HTMLInputElement).value).toBe("1");
     });
 
     it("Add Item form power defaults to 0 on invalid input", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
-      const form = screen.getByTestId("add-item-form");
-      const numberInputs = form.querySelectorAll<HTMLInputElement>("input[type='number']");
       // Set power to invalid value (NaN from parseFloat)
-      fireEvent.change(numberInputs[2], { target: { value: "" } });
-      expect(numberInputs[2].value).toBe("0");
+      fireEvent.change(screen.getByLabelText("Power (W)"), { target: { value: "" } });
+      expect((screen.getByLabelText("Power (W)") as HTMLInputElement).value).toBe("0");
     });
 
     it("Add Item form Add button is disabled when label is empty", () => {
@@ -706,10 +718,10 @@ describe("RackPlannerModule", () => {
         ...sampleRack,
         height_u: 8,
         items: [
-          { id: 40, position_u: 1, height_u: 1, device_type: "ups", label: "CyberPower", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
-          { id: 41, position_u: 2, height_u: 1, device_type: "patch-panel", label: "PP-24", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
-          { id: 42, position_u: 3, height_u: 1, device_type: "ap", label: "U6-LR", power_watts: 8, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
-          { id: 43, position_u: 4, height_u: 1, device_type: "unknown-type", label: "Mystery Box", power_watts: 5, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
+          { id: 40, position_u: 1, height_u: 1, device_type: "ups", label: "CyberPower", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          { id: 41, position_u: 2, height_u: 1, device_type: "patch-panel", label: "PP-24", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          { id: 42, position_u: 3, height_u: 1, device_type: "ap", label: "U6-LR", power_watts: 8, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          { id: 43, position_u: 4, height_u: 1, device_type: "unknown-type", label: "Mystery Box", power_watts: 5, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
         ],
       };
       renderModule();
@@ -729,8 +741,8 @@ describe("RackPlannerModule", () => {
         ...sampleRack,
         height_u: 4,
         items: [
-          { id: 50, position_u: 1, height_u: 2, device_type: "switch", label: "Overlap-A", power_watts: 10, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
-          { id: 51, position_u: 2, height_u: 2, device_type: "gateway", label: "Overlap-B", power_watts: 20, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
+          { id: 50, position_u: 1, height_u: 2, device_type: "switch", label: "Overlap-A", power_watts: 10, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          { id: 51, position_u: 2, height_u: 2, device_type: "gateway", label: "Overlap-B", power_watts: 20, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
         ],
       };
       renderModule();
@@ -855,6 +867,8 @@ describe("RackPlannerModule", () => {
             device_type: "switch",
             device_mac: "aa:bb:cc:dd:ee:01",
             height_u: 1,
+            width_fraction: 1.0,
+            position_x: 0.0,
           },
         });
       });
@@ -902,8 +916,8 @@ describe("RackPlannerModule", () => {
           ...sampleRack,
           height_u: 2,
           items: [
-            { id: 60, position_u: 1, height_u: 1, device_type: "switch", label: "A", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
-            { id: 61, position_u: 2, height_u: 1, device_type: "switch", label: "B", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null },
+            { id: 60, position_u: 1, height_u: 1, device_type: "switch", label: "A", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+            { id: 61, position_u: 2, height_u: 1, device_type: "switch", label: "B", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
           ],
         };
         renderModule();
@@ -936,6 +950,170 @@ describe("RackPlannerModule", () => {
         expect.objectContaining({ height_u: 6 }),
         expect.any(Object),
       );
+    });
+
+    describe("fractional width items", () => {
+      it("renders half-width items side by side at the same U position", () => {
+        rackMock.data = {
+          ...sampleRack,
+          height_u: 4,
+          items: [
+            { id: 70, position_u: 1, height_u: 1, device_type: "switch", label: "Left Half", power_watts: 10, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 0.5, position_x: 0.0 },
+            { id: 71, position_u: 1, height_u: 1, device_type: "switch", label: "Right Half", power_watts: 10, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 0.5, position_x: 0.5 },
+          ],
+        };
+        renderModule();
+        fireEvent.click(screen.getByTestId("rack-card-1"));
+        expect(screen.getByTestId("rack-item-70")).toBeInTheDocument();
+        expect(screen.getByTestId("rack-item-71")).toBeInTheDocument();
+        expect(screen.getByText("Left Half")).toBeInTheDocument();
+        expect(screen.getByText("Right Half")).toBeInTheDocument();
+
+        // Check that fractional items have absolute positioning with correct width/left
+        const leftItem = screen.getByTestId("rack-item-70");
+        expect(leftItem.style.width).toBe("50%");
+        expect(leftItem.style.left).toBe("0%");
+        const rightItem = screen.getByTestId("rack-item-71");
+        expect(rightItem.style.width).toBe("50%");
+        expect(rightItem.style.left).toBe("50%");
+      });
+
+      it("does not apply absolute positioning to full-width items", () => {
+        openEditor();
+        const item = screen.getByTestId("rack-item-10");
+        expect(item.style.width).toBe("");
+        expect(item.style.left).toBe("");
+      });
+    });
+
+    describe("0U items", () => {
+      it("shows 0U items in a separate side-mounted section", () => {
+        rackMock.data = {
+          ...sampleRack,
+          height_u: 4,
+          items: [
+            { id: 80, position_u: 1, height_u: 1, device_type: "switch", label: "Normal Switch", power_watts: 10, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+            { id: 81, position_u: 1, height_u: 0, device_type: "ups", label: "Side UPS", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          ],
+        };
+        renderModule();
+        fireEvent.click(screen.getByTestId("rack-card-1"));
+
+        expect(screen.getByTestId("zero-u-section")).toBeInTheDocument();
+        expect(screen.getByText("Side-mounted (0U)")).toBeInTheDocument();
+        expect(screen.getByTestId("rack-item-81")).toBeInTheDocument();
+        expect(screen.getByText("Side UPS")).toBeInTheDocument();
+        // Normal item should also be in the grid
+        expect(screen.getByTestId("rack-item-80")).toBeInTheDocument();
+      });
+
+      it("does not show 0U section when there are no 0U items", () => {
+        openEditor();
+        expect(screen.queryByTestId("zero-u-section")).not.toBeInTheDocument();
+      });
+
+      it("0U items do not occupy rack grid slots", () => {
+        rackMock.data = {
+          ...sampleRack,
+          height_u: 2,
+          items: [
+            { id: 82, position_u: 1, height_u: 0, device_type: "ups", label: "Side Rail PDU", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          ],
+        };
+        renderModule();
+        fireEvent.click(screen.getByTestId("rack-card-1"));
+
+        // Both U slots should be empty since the 0U item doesn't occupy them
+        expect(screen.getByTestId("empty-slot-1")).toBeInTheDocument();
+        expect(screen.getByTestId("empty-slot-2")).toBeInTheDocument();
+      });
+    });
+
+    describe("AddItemForm width and position X", () => {
+      function openAddForm() {
+        openEditor();
+        fireEvent.click(screen.getByTestId("add-item-button"));
+      }
+
+      it("shows width dropdown with Full, Half, Quarter options", () => {
+        openAddForm();
+        const widthSelect = screen.getByTestId("add-item-width") as HTMLSelectElement;
+        expect(widthSelect).toBeInTheDocument();
+        const options = Array.from(widthSelect.options).map((o) => o.text);
+        expect(options).toEqual(["Full (1U)", "Half (1/2)", "Quarter (1/4)"]);
+      });
+
+      it("does not show Position X dropdown when width is Full", () => {
+        openAddForm();
+        expect(screen.queryByTestId("add-item-position-x")).not.toBeInTheDocument();
+      });
+
+      it("shows Position X dropdown when width is Half", () => {
+        openAddForm();
+        fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.5" } });
+        const posXSelect = screen.getByTestId("add-item-position-x") as HTMLSelectElement;
+        expect(posXSelect).toBeInTheDocument();
+        const options = Array.from(posXSelect.options).map((o) => o.text);
+        // Half-width can be at Left (0.0), Center-Left (0.25), or Center-Right (0.5)
+        expect(options).toEqual(["Left", "Center-Left", "Center-Right"]);
+      });
+
+      it("shows all Position X options for Quarter width", () => {
+        openAddForm();
+        fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.25" } });
+        const posXSelect = screen.getByTestId("add-item-position-x") as HTMLSelectElement;
+        const options = Array.from(posXSelect.options).map((o) => o.text);
+        expect(options).toEqual(["Left", "Center-Left", "Center-Right", "Right"]);
+      });
+
+      it("resets Position X to 0.0 when width changes and current position is invalid", () => {
+        openAddForm();
+        // Set quarter width and choose Right (0.75)
+        fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.25" } });
+        fireEvent.change(screen.getByTestId("add-item-position-x"), { target: { value: "0.75" } });
+
+        // Change to half width -- 0.75 is invalid for half (0.75 + 0.5 > 1.0)
+        fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.5" } });
+        const posXSelect = screen.getByTestId("add-item-position-x") as HTMLSelectElement;
+        expect(posXSelect.value).toBe("0");
+      });
+
+      it("preserves Position X when width changes and current position is still valid", () => {
+        openAddForm();
+        // Set quarter width and choose Center-Right (0.5)
+        fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.25" } });
+        fireEvent.change(screen.getByTestId("add-item-position-x"), { target: { value: "0.5" } });
+
+        // Change to half width -- 0.5 is valid for half (0.5 + 0.5 = 1.0)
+        fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.5" } });
+        const posXSelect = screen.getByTestId("add-item-position-x") as HTMLSelectElement;
+        expect(posXSelect.value).toBe("0.5");
+      });
+
+      it("shows 0U note when height is set to 0", () => {
+        openAddForm();
+        fireEvent.change(screen.getByLabelText("Height (U)"), { target: { value: "0" } });
+        expect(screen.getByText("0U items mount on side rails")).toBeInTheDocument();
+      });
+
+      it("submits fractional width item with correct data", () => {
+        openAddForm();
+        fireEvent.change(screen.getByPlaceholderText("e.g. USW-24-PoE"), { target: { value: "Quarter Device" } });
+        fireEvent.change(screen.getByTestId("add-item-width"), { target: { value: "0.25" } });
+        fireEvent.change(screen.getByTestId("add-item-position-x"), { target: { value: "0.75" } });
+        fireEvent.click(screen.getByText("Add"));
+        expect(addItemMock.mutate).toHaveBeenCalledWith(
+          {
+            rackId: 1,
+            data: expect.objectContaining({
+              label: "Quarter Device",
+              width_fraction: 0.25,
+              position_x: 0.75,
+            }),
+          },
+          expect.objectContaining({ onSuccess: expect.any(Function) }),
+        );
+      });
     });
   });
 

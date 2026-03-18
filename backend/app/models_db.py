@@ -89,6 +89,8 @@ class RackItemRow(Base):
     power_watts: Mapped[float] = mapped_column(sa.Float, nullable=False, default=0.0)
     device_mac: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    width_fraction: Mapped[float] = mapped_column(sa.Float, nullable=False, default=1.0)
+    position_x: Mapped[float] = mapped_column(sa.Float, nullable=False, default=0.0)
 
 
 class NotificationRow(Base):

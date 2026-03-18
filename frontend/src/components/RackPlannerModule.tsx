@@ -324,6 +324,8 @@ interface AddItemState {
   positionU: number;
   powerWatts: number;
   notes: string;
+  widthFraction: number;
+  positionX: number;
 }
 
 const initialAddItemState: AddItemState = {
@@ -333,7 +335,25 @@ const initialAddItemState: AddItemState = {
   positionU: 1,
   powerWatts: 0,
   notes: "",
+  widthFraction: 1.0,
+  positionX: 0.0,
 };
+
+const WIDTH_OPTIONS: { label: string; value: number }[] = [
+  { label: "Full (1U)", value: 1.0 },
+  { label: "Half (1/2)", value: 0.5 },
+  { label: "Quarter (1/4)", value: 0.25 },
+];
+
+function getValidPositionXOptions(widthFraction: number): { label: string; value: number }[] {
+  const all = [
+    { label: "Left", value: 0.0 },
+    { label: "Center-Left", value: 0.25 },
+    { label: "Center-Right", value: 0.5 },
+    { label: "Right", value: 0.75 },
+  ];
+  return all.filter((opt) => opt.value + widthFraction <= 1.0);
+}
 
 function addItemReducer(state: AddItemState, update: Partial<AddItemState>): AddItemState {
   return { ...state, ...update };
@@ -341,7 +361,9 @@ function addItemReducer(state: AddItemState, update: Partial<AddItemState>): Add
 
 function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
   const [form, dispatch] = useReducer(addItemReducer, initialAddItemState);
-  const { label, deviceType, heightU, positionU, powerWatts, notes } = form;
+  const { label, deviceType, heightU, positionU, powerWatts, notes, widthFraction, positionX } = form;
+
+  const validPositionXOptions = useMemo(() => getValidPositionXOptions(widthFraction), [widthFraction]);
 
   return (
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4" data-testid="add-item-form">
@@ -377,12 +399,50 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
             id="add-item-height"
             type="number"
             value={heightU}
-            onChange={(e) => dispatch({ heightU: parseInt(e.target.value) || 1 })}
-            min={1}
-            max={4}
+            onChange={(e) => { const v = parseInt(e.target.value); dispatch({ heightU: isNaN(v) ? 0 : v }); }}
+            min={0}
+            max={5}
             className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
           />
+          {heightU === 0 && (
+            <p className="text-[10px] text-ui-text-dim dark:text-noc-text-dim mt-0.5">0U items mount on side rails</p>
+          )}
         </div>
+        <div>
+          <label htmlFor="add-item-width" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Width</label>
+          <select
+            id="add-item-width"
+            value={widthFraction}
+            onChange={(e) => {
+              const newWidth = parseFloat(e.target.value);
+              const newValidOptions = getValidPositionXOptions(newWidth);
+              const currentXStillValid = newValidOptions.some((opt) => opt.value === positionX);
+              dispatch({ widthFraction: newWidth, positionX: currentXStillValid ? positionX : 0.0 });
+            }}
+            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            data-testid="add-item-width"
+          >
+            {WIDTH_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+        {widthFraction < 1.0 && (
+          <div>
+            <label htmlFor="add-item-position-x" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Position X</label>
+            <select
+              id="add-item-position-x"
+              value={positionX}
+              onChange={(e) => dispatch({ positionX: parseFloat(e.target.value) })}
+              className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+              data-testid="add-item-position-x"
+            >
+              {validPositionXOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div>
           <label htmlFor="add-item-position" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Position (U)</label>
           <input
@@ -429,6 +489,8 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
                 position_u: positionU,
                 power_watts: powerWatts,
                 notes: notes.trim(),
+                width_fraction: widthFraction,
+                position_x: positionX,
               });
             }
           }}
@@ -497,10 +559,12 @@ interface RackSlotItemProps {
 
 function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
   const meta = getDeviceTypeMeta(item.device_type);
+  const isFractional = item.width_fraction < 1.0;
 
   return (
     <div
-      className={`flex items-center gap-2 px-3 h-full rounded border ${meta.bgClass} ${meta.borderClass} cursor-grab active:cursor-grabbing select-none`}
+      className={`flex items-center gap-2 px-3 h-full rounded border ${meta.bgClass} ${meta.borderClass} cursor-grab active:cursor-grabbing select-none ${isFractional ? "absolute" : ""}`}
+      style={isFractional ? { width: `${item.width_fraction * 100}%`, left: `${item.position_x * 100}%` } : undefined}
       draggable
       onDragStart={(e) => onDragStart(e, item)}
       data-testid={`rack-item-${item.id}`}
@@ -586,6 +650,61 @@ function DevicePicker({ rackId, onAdd }: DevicePickerProps) {
   );
 }
 
+// --- Rack slot builder (extracted to reduce RackEditor complexity) ---
+
+interface BuildRackSlotsArgs {
+  rack: Rack;
+  occupiedSlots: Map<number, RackItem[]>;
+  handleDrop: (e: React.DragEvent, targetU: number) => void;
+  handleDragOver: (e: React.DragEvent) => void;
+  handleDragStart: (e: React.DragEvent, item: RackItem) => void;
+  handleDeleteItem: (itemId: number) => void;
+}
+
+function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handleDragStart, handleDeleteItem }: BuildRackSlotsArgs): React.ReactNode[] {
+  const slots: React.ReactNode[] = [];
+  let u = rack.height_u;
+  const renderedItemIds = new Set<number>();
+  while (u >= 1) {
+    const currentU = u;
+    const items = occupiedSlots.get(currentU);
+    if (items && items.length > 0) {
+      const topItems = items.filter((item) => item.position_u + item.height_u - 1 === currentU && !renderedItemIds.has(item.id));
+      if (topItems.length > 0) {
+        const maxHeight = Math.max(...topItems.map((item) => item.height_u));
+        for (const item of topItems) renderedItemIds.add(item.id);
+        const hasFractional = topItems.some((item) => item.width_fraction < 1.0);
+        slots.push(
+          <div key={`slot-${currentU}`} className="flex" style={{ gridRow: `span ${maxHeight}` }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
+            <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{currentU}</span>
+            <div className={`flex-1 min-w-0 ${hasFractional ? "relative" : ""}`}>
+              {topItems.length === 1 && !hasFractional ? (
+                <RackSlotItem item={topItems[0]} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+              ) : (
+                topItems.map((item) => (
+                  <RackSlotItem key={item.id} item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+                ))
+              )}
+            </div>
+          </div>,
+        );
+        u -= maxHeight;
+      } else {
+        u--;
+      }
+    } else {
+      slots.push(
+        <div key={`empty-${currentU}`} className="flex" onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver} data-testid={`empty-slot-${currentU}`}>
+          <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{currentU}</span>
+          <div className="flex-1 border border-dashed border-ui-border/50 dark:border-noc-border/50 rounded h-full" />
+        </div>,
+      );
+      u--;
+    }
+  }
+  return slots;
+}
+
 // --- RackEditor ---
 
 interface RackEditorProps {
@@ -606,13 +725,22 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
 
   const rack: Rack | undefined = rackQuery.data;
 
-  // Build a map of occupied U positions
+  // Separate 0U items from standard items
+  const zeroUItems = useMemo(() => {
+    if (!rack) return [];
+    return rack.items.filter((item) => item.height_u === 0);
+  }, [rack]);
+
+  // Build a map of occupied U positions (multiple items per slot for fractional widths)
   const occupiedSlots = useMemo(() => {
-    if (!rack) return new Map<number, RackItem>();
-    const map = new Map<number, RackItem>();
+    if (!rack) return new Map<number, RackItem[]>();
+    const map = new Map<number, RackItem[]>();
     for (const item of rack.items) {
+      if (item.height_u === 0) continue;
       for (let u = item.position_u; u < item.position_u + item.height_u; u++) {
-        map.set(u, item);
+        const existing = map.get(u) ?? [];
+        existing.push(item);
+        map.set(u, existing);
       }
     }
     return map;
@@ -672,7 +800,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
       }
     }
     const positionU = freeSlots.length > 0 ? freeSlots[0] : 1;
-    addItem.mutate({ rackId, data: { position_u: positionU, label: device.name, device_type: device.type, device_mac: device.mac, height_u: 1 } });
+    addItem.mutate({ rackId, data: { position_u: positionU, label: device.name, device_type: device.type, device_mac: device.mac, height_u: 1, width_fraction: 1.0, position_x: 0.0 } });
   }, [rackId, addItem, rack, occupiedSlots]);
 
   const handleShowBom = useCallback(async () => {
@@ -689,51 +817,9 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
     );
   }
 
-  // Build slot rows from top to bottom (highest U first)
-  const slots: React.ReactNode[] = [];
-  let u = rack.height_u;
-  while (u >= 1) {
-    const currentU = u;
-    const item = occupiedSlots.get(currentU);
-    if (item && item.position_u + item.height_u - 1 === currentU) {
-      // This is the top U of an item -- render the item spanning its height
-      slots.push(
-        <div
-          key={`item-${item.id}`}
-          className="flex"
-          style={{ gridRow: `span ${item.height_u}` }}
-        >
-          <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">
-            {currentU}
-          </span>
-          <div className="flex-1 min-w-0">
-            <RackSlotItem item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
-          </div>
-        </div>,
-      );
-      u -= item.height_u;
-    } else if (item) {
-      // Middle/bottom part of a multi-U item -- skip
-      u--;
-    } else {
-      // Empty slot
-      slots.push(
-        <div
-          key={`empty-${currentU}`}
-          className="flex"
-          onDrop={(e) => handleDrop(e, currentU)}
-          onDragOver={handleDragOver}
-          data-testid={`empty-slot-${currentU}`}
-        >
-          <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">
-            {currentU}
-          </span>
-          <div className="flex-1 border border-dashed border-ui-border/50 dark:border-noc-border/50 rounded h-full" />
-        </div>,
-      );
-      u--;
-    }
-  }
+  const slots = buildRackSlots({
+    rack, occupiedSlots, handleDrop, handleDragOver, handleDragStart, handleDeleteItem,
+  });
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -785,6 +871,25 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
         >
           {slots}
         </div>
+        {zeroUItems.length > 0 && (
+          <div className="max-w-2xl mt-4" data-testid="zero-u-section">
+            <h4 className="text-xs font-semibold text-ui-text-secondary dark:text-noc-text-secondary uppercase tracking-wide mb-2">
+              Side-mounted (0U)
+            </h4>
+            <div className="grid auto-rows-[2rem] gap-px">
+              {zeroUItems.map((item) => (
+                <div key={`zero-u-${item.id}`} className="flex">
+                  <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">
+                    0U
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <RackSlotItem item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

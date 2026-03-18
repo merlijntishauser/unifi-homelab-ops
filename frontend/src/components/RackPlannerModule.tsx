@@ -582,11 +582,14 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
         </span>
       )}
       <button
+        draggable={false}
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
+          e.preventDefault();
           onDelete(item.id);
         }}
-        className="shrink-0 text-ui-text-dim dark:text-noc-text-dim hover:text-status-danger transition-colors"
+        className="shrink-0 p-1 -m-1 text-ui-text-dim dark:text-noc-text-dim hover:text-status-danger transition-colors"
         aria-label={`Delete ${item.label}`}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">

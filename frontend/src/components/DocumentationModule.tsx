@@ -1,9 +1,63 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import mermaid from "mermaid";
+import DOMPurify from "dompurify";
 import { useAppContext } from "../hooks/useAppContext";
 import { useDocSections } from "../hooks/queries";
 import { api } from "../api/client";
 import type { DocumentationSection } from "../api/types";
+
+let mermaidIdCounter = 0;
+
+const MERMAID_DARK = {
+  background: "#0b0e14", primaryColor: "#1a1f2b", primaryTextColor: "#f0f2f5",
+  primaryBorderColor: "#2d3340", secondaryColor: "#141820", tertiaryColor: "#1e2430",
+  lineColor: "#006fff", textColor: "#f0f2f5", mainBkg: "#1a1f2b",
+  nodeBorder: "#2d3340", clusterBkg: "#141820", fontSize: "14px",
+};
+
+const MERMAID_LIGHT = {
+  background: "#f7f8fa", primaryColor: "#e8f0fe", primaryTextColor: "#1a1d23",
+  primaryBorderColor: "#c4d5f0", secondaryColor: "#f0f2f5", tertiaryColor: "#ffffff",
+  lineColor: "#006fff", textColor: "#1a1d23", mainBkg: "#e8f0fe",
+  nodeBorder: "#c4d5f0", clusterBkg: "#f0f2f5", fontSize: "14px",
+};
+
+async function renderMermaidSvg(code: string, isDark: boolean): Promise<string> {
+  mermaid.initialize({
+    startOnLoad: false, theme: "base", securityLevel: "loose",
+    themeVariables: isDark ? MERMAID_DARK : MERMAID_LIGHT,
+  });
+  const id = `mermaid-${++mermaidIdCounter}`;
+  const { svg } = await mermaid.render(id, code);
+  return DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } });
+}
+
+function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [svgHtml, setSvgHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    renderMermaidSvg(code, isDark).then(setSvgHtml).catch(() => setSvgHtml(null));
+  }, [code, isDark]);
+
+  useEffect(() => {
+    if (ref.current && svgHtml) {
+      ref.current.replaceChildren();
+      ref.current.insertAdjacentHTML("afterbegin", svgHtml);
+    }
+  }, [svgHtml]);
+
+  if (!svgHtml) {
+    return (
+      <pre className="overflow-x-auto text-xs font-mono bg-ui-raised dark:bg-noc-raised p-4 rounded-lg">
+        <code>{code}</code>
+      </pre>
+    );
+  }
+
+  return <div ref={ref} className="overflow-x-auto [&_svg]:max-w-full" />;
+}
 
 const BTN =
   "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
@@ -31,9 +85,10 @@ interface SectionCardProps {
   section: DocumentationSection;
   expanded: boolean;
   onToggle: () => void;
+  isDark: boolean;
 }
 
-function SectionCard({ section, expanded, onToggle }: SectionCardProps) {
+function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) {
   return (
     <div className="bg-ui-surface dark:bg-noc-surface rounded-lg overflow-hidden">
       <button
@@ -61,7 +116,17 @@ function SectionCard({ section, expanded, onToggle }: SectionCardProps) {
       {expanded && (
         <div className="px-4 pb-4 border-t border-ui-border dark:border-noc-border">
           <div className="prose prose-sm dark:prose-invert max-w-none mt-3 text-ui-text-secondary dark:text-noc-text-secondary [&_h1]:text-ui-text [&_h1]:dark:text-noc-text [&_h2]:text-ui-text [&_h2]:dark:text-noc-text [&_h3]:text-ui-text [&_h3]:dark:text-noc-text [&_strong]:text-ui-text [&_strong]:dark:text-noc-text [&_code]:text-ub-blue [&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_table]:w-full [&_th]:text-left [&_th]:text-ui-text-secondary [&_th]:dark:text-noc-text-secondary [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide [&_th]:py-2 [&_th]:px-3 [&_th]:border-b [&_th]:border-ui-border [&_th]:dark:border-noc-border [&_td]:py-2 [&_td]:px-3 [&_td]:text-sm [&_td]:border-b [&_td]:border-ui-border/50 [&_td]:dark:border-noc-border/50">
-            <ReactMarkdown>{section.content}</ReactMarkdown>
+            <ReactMarkdown components={{
+              code({ className, children }) {
+                if (className === "language-mermaid") {
+                  return <MermaidDiagram code={String(children).trim()} isDark={isDark} />;
+                }
+                return <code className={className}>{children}</code>;
+              },
+              pre({ children }) {
+                return <>{children}</>;
+              },
+            }}>{section.content}</ReactMarkdown>
           </div>
         </div>
       )}
@@ -69,7 +134,7 @@ function SectionCard({ section, expanded, onToggle }: SectionCardProps) {
   );
 }
 
-function SectionsList({ sections, expandedIds, onToggle }: { sections: DocumentationSection[]; expandedIds: Set<string>; onToggle: (id: string) => void }) {
+function SectionsList({ sections, expandedIds, onToggle, isDark }: { sections: DocumentationSection[]; expandedIds: Set<string>; onToggle: (id: string) => void; isDark: boolean }) {
   if (sections.length === 0) {
     return (
       <div className="text-center py-12">
@@ -86,6 +151,7 @@ function SectionsList({ sections, expandedIds, onToggle }: { sections: Documenta
           section={section}
           expanded={expandedIds.has(section.id)}
           onToggle={() => onToggle(section.id)}
+          isDark={isDark}
         />
       ))}
     </div>
@@ -93,8 +159,9 @@ function SectionsList({ sections, expandedIds, onToggle }: { sections: Documenta
 }
 
 export default function DocumentationModule() {
-  const { connectionInfo } = useAppContext();
+  const { connectionInfo, colorMode } = useAppContext();
   const authed = connectionInfo !== null;
+  const isDark = colorMode === "dark";
 
   const sectionsQuery = useDocSections(authed);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -153,7 +220,7 @@ export default function DocumentationModule() {
         ) : sectionsQuery.error ? (
           <ErrorMessage error={sectionsQuery.error} fallback="Failed to load documentation" />
         ) : (
-          <SectionsList sections={sections} expandedIds={expandedIds} onToggle={handleToggle} />
+          <SectionsList sections={sections} expandedIds={expandedIds} onToggle={handleToggle} isDark={isDark} />
         )}
       </div>
     </div>

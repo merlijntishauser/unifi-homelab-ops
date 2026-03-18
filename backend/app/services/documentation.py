@@ -46,7 +46,8 @@ def _build_mermaid_section(devices: list[Any]) -> DocumentationSection:
     gateway_macs = [d.mac for d in devices if d.type in gateway_types]
     topology = build_topology(devices, include_ports=True, only_unifi=False, gateways=gateway_macs)
     edges = topology.tree_edges if topology.tree_edges else topology.raw_edges
-    content = render_mermaid(edges)
+    mermaid_src = render_mermaid(edges)
+    content = f"```mermaid\n{mermaid_src}\n```"
     return DocumentationSection(
         id="mermaid-topology",
         title="Network Topology",

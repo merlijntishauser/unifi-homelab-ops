@@ -27,6 +27,17 @@ vi.mock("../hooks/queries", async () => {
 
 const mockGetDocExport = vi.fn<() => Promise<string>>();
 
+vi.mock("mermaid", () => ({
+  default: {
+    initialize: vi.fn(),
+    render: vi.fn().mockResolvedValue({ svg: "<svg>mocked diagram</svg>" }),
+  },
+}));
+
+vi.mock("dompurify", () => ({
+  default: { sanitize: (html: string) => html },
+}));
+
 vi.mock("../api/client", async () => {
   const actual = await vi.importActual("../api/client");
   return {
@@ -241,5 +252,34 @@ describe("DocumentationModule", () => {
     expect(screen.getByText(/10 rules/)).toBeInTheDocument();
     // Zones section content should also be visible (rendered as markdown heading)
     expect(screen.getByText("Zones")).toBeInTheDocument();
+  });
+
+  it("renders mermaid code blocks as diagrams", async () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1 },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+    const { default: mermaidMod } = await import("mermaid");
+    await waitFor(() => {
+      expect(mermaidMod.render).toHaveBeenCalled();
+    });
+  });
+
+  it("falls back to raw code when mermaid render fails", async () => {
+    const { default: mermaidMock } = await import("mermaid");
+    vi.mocked(mermaidMock.render).mockRejectedValueOnce(new Error("parse error"));
+    sectionsMock.data = {
+      sections: [
+        { id: "topology", title: "Network Topology", content: "```mermaid\ninvalid\n```", item_count: 1 },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Network Topology"));
+    await waitFor(() => {
+      expect(screen.getByText("invalid")).toBeInTheDocument();
+    });
   });
 });

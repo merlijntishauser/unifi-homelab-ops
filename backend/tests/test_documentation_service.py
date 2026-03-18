@@ -127,8 +127,9 @@ class TestBuildInventorySection:
         with (
             patch("app.services.documentation.build_device_inventory", return_value=inventory),
             patch("app.services.documentation.render_device_inventory_table", return_value="| Name | Model |"),
+            patch("app.services.documentation.resolve_hostnames", return_value={}),
         ):
-            section = _build_inventory_section(devices)
+            section = _build_inventory_section(devices, CREDENTIALS)
 
         assert section.id == "device-inventory"
         assert section.title == "Device Inventory"

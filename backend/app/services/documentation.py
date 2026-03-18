@@ -15,6 +15,7 @@ from unifi_topology import (
     build_topology,
     fetch_devices,
     normalize_devices,
+    resolve_hostnames,
 )
 from unifi_topology.model.edges import build_port_map
 from unifi_topology.render import (
@@ -56,10 +57,25 @@ def _build_mermaid_section(devices: list[Any]) -> DocumentationSection:
     )
 
 
-def _build_inventory_section(devices: list[Any]) -> DocumentationSection:
+def _resolve_device_hostnames(devices: list[Any], credentials: UnifiCredentials) -> dict[str, str]:
+    """Resolve hostnames for device IPs using the controller as DNS server."""
+    try:
+        from urllib.parse import urlparse
+        dns_server = urlparse(credentials.url).hostname
+        if not dns_server:
+            return {}
+        ips = [d.ip for d in devices if d.ip]
+        return resolve_hostnames(ips, dns_server)
+    except Exception:  # noqa: BLE001
+        log.warning("hostname_resolution_failed")
+        return {}
+
+
+def _build_inventory_section(devices: list[Any], credentials: UnifiCredentials) -> DocumentationSection:
     """Build the device inventory table section."""
-    inventory = build_device_inventory(devices)
-    content = render_device_inventory_table(inventory)
+    hostnames = _resolve_device_hostnames(devices, credentials)
+    inventory = build_device_inventory(devices, hostnames)
+    content = render_device_inventory_table(inventory, include_hostname=True)
     return DocumentationSection(
         id="device-inventory",
         title="Device Inventory",
@@ -190,7 +206,7 @@ def get_documentation_sections(credentials: UnifiCredentials) -> list[Documentat
 
     sections = [
         _build_mermaid_section(devices),
-        _build_inventory_section(devices),
+        _build_inventory_section(devices, credentials),
         _build_port_overview_section(devices),
         _build_lldp_section(devices),
         _build_firewall_section(credentials),

@@ -30,13 +30,13 @@ def _login() -> None:
 
 
 async def test_list_racks_empty(client: AsyncClient) -> None:
-    resp = await client.get("/api/racks/")
+    resp = await client.get("/api/racks")
     assert resp.status_code == 200
     assert resp.json() == []
 
 
 async def test_create_rack(client: AsyncClient) -> None:
-    resp = await client.post("/api/racks/", json={"name": "Main Rack", "height_u": 12})
+    resp = await client.post("/api/racks", json={"name": "Main Rack", "height_u": 12})
     assert resp.status_code == 201
     data = resp.json()
     assert data["name"] == "Main Rack"
@@ -48,7 +48,7 @@ async def test_create_rack(client: AsyncClient) -> None:
 
 
 async def test_create_rack_with_all_fields(client: AsyncClient) -> None:
-    resp = await client.post("/api/racks/", json={
+    resp = await client.post("/api/racks", json={
         "name": "Small Rack", "size": "10-inch", "height_u": 6, "location": "Closet",
     })
     assert resp.status_code == 201
@@ -58,15 +58,15 @@ async def test_create_rack_with_all_fields(client: AsyncClient) -> None:
 
 
 async def test_list_racks_after_create(client: AsyncClient) -> None:
-    await client.post("/api/racks/", json={"name": "Rack A"})
-    await client.post("/api/racks/", json={"name": "Rack B"})
-    resp = await client.get("/api/racks/")
+    await client.post("/api/racks", json={"name": "Rack A"})
+    await client.post("/api/racks", json={"name": "Rack B"})
+    resp = await client.get("/api/racks")
     assert resp.status_code == 200
     assert len(resp.json()) == 2
 
 
 async def test_get_rack(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "My Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "My Rack"})
     rack_id = create_resp.json()["id"]
     resp = await client.get(f"/api/racks/{rack_id}")
     assert resp.status_code == 200
@@ -79,7 +79,7 @@ async def test_get_rack_not_found(client: AsyncClient) -> None:
 
 
 async def test_update_rack(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Old Name"})
+    create_resp = await client.post("/api/racks", json={"name": "Old Name"})
     rack_id = create_resp.json()["id"]
     resp = await client.put(f"/api/racks/{rack_id}", json={"name": "New Name", "height_u": 24})
     assert resp.status_code == 200
@@ -93,7 +93,7 @@ async def test_update_rack_not_found(client: AsyncClient) -> None:
 
 
 async def test_delete_rack(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "To Delete"})
+    create_resp = await client.post("/api/racks", json={"name": "To Delete"})
     rack_id = create_resp.json()["id"]
     resp = await client.delete(f"/api/racks/{rack_id}")
     assert resp.status_code == 204
@@ -107,7 +107,7 @@ async def test_delete_rack_not_found(client: AsyncClient) -> None:
 
 
 async def test_add_rack_item(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     resp = await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 1, "height_u": 2, "device_type": "switch",
@@ -126,7 +126,7 @@ async def test_add_rack_item_rack_not_found(client: AsyncClient) -> None:
 
 
 async def test_add_rack_item_overlap(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 1, "height_u": 2, "label": "First",
@@ -138,7 +138,7 @@ async def test_add_rack_item_overlap(client: AsyncClient) -> None:
 
 
 async def test_add_rack_item_exceeds_height(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack", "height_u": 4})
+    create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 4})
     rack_id = create_resp.json()["id"]
     resp = await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 4, "height_u": 2, "label": "Too Tall",
@@ -147,7 +147,7 @@ async def test_add_rack_item_exceeds_height(client: AsyncClient) -> None:
 
 
 async def test_update_rack_item(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     item_resp = await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 1, "label": "Old",
@@ -161,7 +161,7 @@ async def test_update_rack_item(client: AsyncClient) -> None:
 
 
 async def test_update_rack_item_not_found(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     resp = await client.put(f"/api/racks/{rack_id}/items/9999", json={
         "position_u": 1, "label": "X",
@@ -170,7 +170,7 @@ async def test_update_rack_item_not_found(client: AsyncClient) -> None:
 
 
 async def test_update_rack_item_overlap(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 1, "label": "First"})
     item_resp = await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 3, "label": "Second"})
@@ -182,7 +182,7 @@ async def test_update_rack_item_overlap(client: AsyncClient) -> None:
 
 
 async def test_delete_rack_item(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     item_resp = await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 1, "label": "Item"})
     item_id = item_resp.json()["id"]
@@ -191,14 +191,14 @@ async def test_delete_rack_item(client: AsyncClient) -> None:
 
 
 async def test_delete_rack_item_not_found(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     resp = await client.delete(f"/api/racks/{rack_id}/items/9999")
     assert resp.status_code == 404
 
 
 async def test_move_rack_item(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     item_resp = await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 1, "label": "Device"})
     item_id = item_resp.json()["id"]
@@ -208,7 +208,7 @@ async def test_move_rack_item(client: AsyncClient) -> None:
 
 
 async def test_move_rack_item_overlap(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 1, "label": "First"})
     item_resp = await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 3, "label": "Second"})
@@ -218,14 +218,14 @@ async def test_move_rack_item_overlap(client: AsyncClient) -> None:
 
 
 async def test_move_rack_item_not_found(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     resp = await client.patch(f"/api/racks/{rack_id}/items/9999/move", json={"position_u": 1})
     assert resp.status_code == 404
 
 
 async def test_get_bom(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack", "height_u": 6})
+    create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 6})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 1, "height_u": 2, "label": "Switch", "power_watts": 25.0,
@@ -243,7 +243,7 @@ async def test_get_bom_not_found(client: AsyncClient) -> None:
 
 
 async def test_import_requires_credentials(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     resp = await client.post(f"/api/racks/{rack_id}/import")
     assert resp.status_code == 401
@@ -251,7 +251,7 @@ async def test_import_requires_credentials(client: AsyncClient) -> None:
 
 async def test_import_from_topology(client: AsyncClient) -> None:
     _login()
-    create_resp = await client.post("/api/racks/", json={"name": "Rack", "height_u": 12})
+    create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 12})
     rack_id = create_resp.json()["id"]
 
     mock_response = TopologyDevicesResponse(
@@ -282,7 +282,7 @@ async def test_import_rack_not_found(client: AsyncClient) -> None:
 
 
 async def test_rack_items_appear_in_get_rack(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 1, "label": "Switch"})
     await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 2, "label": "Panel"})
@@ -294,12 +294,12 @@ async def test_rack_items_appear_in_get_rack(client: AsyncClient) -> None:
 
 
 async def test_rack_summary_stats(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 1, "height_u": 2, "label": "Switch", "power_watts": 30.0,
     })
-    resp = await client.get("/api/racks/")
+    resp = await client.get("/api/racks")
     data = resp.json()
     assert len(data) == 1
     assert data[0]["item_count"] == 1
@@ -308,7 +308,7 @@ async def test_rack_summary_stats(client: AsyncClient) -> None:
 
 
 async def test_delete_rack_cascades_items(client: AsyncClient) -> None:
-    create_resp = await client.post("/api/racks/", json={"name": "Rack"})
+    create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={"position_u": 1, "label": "Item"})
     resp = await client.delete(f"/api/racks/{rack_id}")

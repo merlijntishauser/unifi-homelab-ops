@@ -276,9 +276,27 @@ function RackOverview({ onSelectRack }: RackOverviewProps) {
             </p>
           </div>
         ) : racks.length === 0 && !showNewForm ? (
-          <div className="flex flex-col items-center justify-center h-full text-ui-text-dim dark:text-noc-text-dim">
-            <p className="text-sm">No racks configured</p>
-            <p className="text-xs mt-1">Click "New Rack" to create one.</p>
+          <div className="flex flex-col items-center justify-center h-full gap-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16 text-ui-text-dim dark:text-noc-text-dim">
+              <rect x="4" y="2" width="16" height="20" rx="2" />
+              <line x1="4" y1="7" x2="20" y2="7" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="17" x2="20" y2="17" />
+              <circle cx="8" cy="4.5" r="0.5" fill="currentColor" />
+              <circle cx="8" cy="9.5" r="0.5" fill="currentColor" />
+              <circle cx="8" cy="14.5" r="0.5" fill="currentColor" />
+              <circle cx="8" cy="19.5" r="0.5" fill="currentColor" />
+            </svg>
+            <div className="text-center">
+              <p className="text-base font-semibold text-ui-text dark:text-noc-text">No racks yet</p>
+              <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary mt-1">Design your homelab rack layout with drag-and-drop device placement.</p>
+            </div>
+            <button
+              onClick={() => setShowNewForm(true)}
+              className="rounded-lg bg-ub-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
+            >
+              Create Your First Rack
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

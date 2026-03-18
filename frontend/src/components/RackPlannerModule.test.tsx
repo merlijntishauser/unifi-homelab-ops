@@ -196,8 +196,8 @@ describe("RackPlannerModule", () => {
     it("shows empty state when no racks", () => {
       racksMock.data = [];
       renderModule();
-      expect(screen.getByText("No racks configured")).toBeInTheDocument();
-      expect(screen.getByText(/Click "New Rack" to create one/)).toBeInTheDocument();
+      expect(screen.getByText("No racks yet")).toBeInTheDocument();
+      expect(screen.getByText("Create Your First Rack")).toBeInTheDocument();
     });
 
     it("shows loading state when racks are loading", () => {

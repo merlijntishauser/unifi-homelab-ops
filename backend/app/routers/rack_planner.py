@@ -29,12 +29,12 @@ class MoveRequest(BaseModel):
     position_u: int
 
 
-@router.get("/")
+@router.get("")
 async def rack_list() -> list[RackSummary]:
     return list_racks()
 
 
-@router.post("/", status_code=201)
+@router.post("", status_code=201)
 async def rack_create(data: RackInput) -> Rack:
     return create_rack(data)
 

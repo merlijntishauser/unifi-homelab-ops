@@ -150,6 +150,30 @@ const downloadIcon = (
   </svg>
 );
 
+const checkIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+function CopyButton({ label, text, ariaLabel }: { label: string; text: string; ariaLabel: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    copyToClipboard(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      className={copied ? ACTION_BTN.replace("text-ub-blue", "text-status-success").replace("border-ub-blue", "border-status-success").replace("hover:bg-ub-blue", "hover:bg-status-success") : ACTION_BTN}
+      aria-label={ariaLabel}
+      onClick={handleCopy}
+    >
+      {copied ? checkIcon : copyIcon} {copied ? "Copied" : label}
+    </button>
+  );
+}
+
 function SectionActions({ section, diagramRef }: { section: DocumentationSection; diagramRef?: React.RefObject<HTMLDivElement | null> }) {
   const slug = section.id;
   const jsonStr = section.data ? JSON.stringify(section.data, null, 2) : null;
@@ -157,12 +181,12 @@ function SectionActions({ section, diagramRef }: { section: DocumentationSection
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap mt-3 mb-2">
-      <button className={ACTION_BTN} aria-label="Copy MD" onClick={() => copyToClipboard(section.content)}>{copyIcon} MD</button>
+      <CopyButton label="MD" text={section.content} ariaLabel="Copy MD" />
       <button className={ACTION_BTN} aria-label="Download MD" onClick={() => downloadFile(section.content, `${slug}.md`, "text/markdown")}>{downloadIcon} MD</button>
       {jsonStr && (
         <>
           <span className="w-px h-4 bg-ui-border dark:bg-noc-border" />
-          <button className={ACTION_BTN} aria-label="Copy JSON" onClick={() => copyToClipboard(jsonStr)}>{copyIcon} JSON</button>
+          <CopyButton label="JSON" text={jsonStr} ariaLabel="Copy JSON" />
           <button className={ACTION_BTN} aria-label="Download JSON" onClick={() => downloadFile(jsonStr, `${slug}.json`, "application/json")}>{downloadIcon} JSON</button>
         </>
       )}

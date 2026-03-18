@@ -570,6 +570,11 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
       onDragStart={(e) => onDragStart(e, item)}
       data-testid={`rack-item-${item.id}`}
     >
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0 text-ui-text-dim dark:text-noc-text-dim opacity-40">
+        <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+        <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+        <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+      </svg>
       <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim shrink-0 w-14 truncate">
         {item.device_type}
       </span>

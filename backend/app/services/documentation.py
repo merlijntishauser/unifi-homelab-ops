@@ -78,11 +78,19 @@ def _build_inventory_section(devices: list[Any], credentials: UnifiCredentials) 
     hostnames = _resolve_device_hostnames(devices, credentials)
     inventory = build_device_inventory(devices, hostnames)
     content = render_device_inventory_table(inventory, include_hostname=True)
+    data: list[dict[str, str | int | float | bool | None]] = [
+        {
+            "name": d.name, "type": d.device_type, "model": d.model_name, "ip": d.ip,
+            "hostname": d.hostname, "mac": d.mac, "firmware": d.firmware,
+        }
+        for d in inventory
+    ]
     return DocumentationSection(
         id="device-inventory",
         title="Device Inventory",
         content=content,
         item_count=len(inventory),
+        data=data,
     )
 
 
@@ -162,11 +170,22 @@ def _build_firewall_section(credentials: UnifiCredentials) -> DocumentationSecti
         lines.append("")
 
     content = "\n".join(lines)
+    data: list[dict[str, str | int | float | bool | None]] = [
+        {
+            "source": zone_name_lookup.get(p.source_zone_id, p.source_zone_id),
+            "destination": zone_name_lookup.get(p.destination_zone_id, p.destination_zone_id),
+            "rules": len(p.rules), "allow": p.allow_count, "block": p.block_count,
+            "grade": p.analysis.grade if p.analysis else None,
+            "score": p.analysis.score if p.analysis else None,
+        }
+        for p in zone_pairs
+    ]
     return DocumentationSection(
         id="firewall-summary",
         title="Firewall Summary",
         content=content,
         item_count=len(zone_pairs),
+        data=data,
     )
 
 
@@ -200,11 +219,20 @@ def _build_metrics_section(credentials: UnifiCredentials) -> DocumentationSectio
     lines.append("")
 
     content = "\n".join(lines)
+    data: list[dict[str, str | int | float | bool | None]] = [
+        {
+            "name": s.name, "type": s.type, "cpu": round(s.cpu, 1), "mem": round(s.mem, 1),
+            "uptime_hours": s.uptime // 3600 if s.uptime else 0,
+            "clients": s.num_sta, "status": s.status,
+        }
+        for s in snapshots
+    ]
     return DocumentationSection(
         id="metrics-snapshot",
         title="Metrics Snapshot",
         content=content,
         item_count=len(snapshots),
+        data=data,
     )
 
 

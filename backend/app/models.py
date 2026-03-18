@@ -305,6 +305,7 @@ class DocumentationSection(BaseModel):
     title: str
     content: str
     item_count: int = 0
+    data: list[dict[str, str | int | float | bool | None]] | None = None
 
 
 class DocumentationResponse(BaseModel):

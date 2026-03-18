@@ -308,6 +308,7 @@ export interface DocumentationSection {
   title: string;
   content: string;
   item_count: number;
+  data: Record<string, string | number | boolean | null>[] | null;
 }
 
 export interface DocumentationResponse {

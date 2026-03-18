@@ -8,10 +8,10 @@ import DocumentationModule from "./DocumentationModule";
 const sectionsMock = vi.hoisted(() => ({
   data: {
     sections: [
-      { id: "zones", title: "Zones & Networks", content: "## Zones\n\n| Zone | VLAN |\n|------|------|\n| LAN | 1 |", item_count: 3 },
-      { id: "rules", title: "Firewall Rules", content: "**10 rules** configured.", item_count: 10 },
+      { id: "zones", title: "Zones & Networks", content: "## Zones\n\n| Zone | VLAN |\n|------|------|\n| LAN | 1 |", item_count: 3, data: [{ zone: "LAN", vlan: 1 }] },
+      { id: "rules", title: "Firewall Rules", content: "**10 rules** configured.", item_count: 10, data: null },
     ],
-  } as { sections: Array<{ id: string; title: string; content: string; item_count: number }> } | undefined,
+  } as { sections: Array<{ id: string; title: string; content: string; item_count: number; data: Record<string, string | number | boolean | null>[] | null }> } | undefined,
   isLoading: false,
   error: null as Error | null,
   refetch: vi.fn(),
@@ -95,8 +95,8 @@ function renderModule(ctx?: Partial<AppContextValue>) {
 beforeEach(() => {
   sectionsMock.data = {
     sections: [
-      { id: "zones", title: "Zones & Networks", content: "## Zones\n\n| Zone | VLAN |\n|------|------|\n| LAN | 1 |", item_count: 3 },
-      { id: "rules", title: "Firewall Rules", content: "**10 rules** configured.", item_count: 10 },
+      { id: "zones", title: "Zones & Networks", content: "## Zones\n\n| Zone | VLAN |\n|------|------|\n| LAN | 1 |", item_count: 3, data: [{ zone: "LAN", vlan: 1 }] },
+      { id: "rules", title: "Firewall Rules", content: "**10 rules** configured.", item_count: 10, data: null },
     ],
   };
   sectionsMock.isLoading = false;
@@ -257,7 +257,7 @@ describe("DocumentationModule", () => {
   it("renders mermaid code blocks as diagrams", async () => {
     sectionsMock.data = {
       sections: [
-        { id: "topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1 },
+        { id: "topology", title: "Network Topology", content: "```mermaid\ngraph TD;\nA-->B;\n```", item_count: 1, data: null },
       ],
     };
     renderModule();
@@ -266,6 +266,27 @@ describe("DocumentationModule", () => {
     await waitFor(() => {
       expect(mermaidMod.render).toHaveBeenCalled();
     });
+  });
+
+  it("shows copy/download MD buttons when section expanded", () => {
+    renderModule();
+    fireEvent.click(screen.getByText("Zones & Networks"));
+    expect(screen.getByText("Copy MD")).toBeInTheDocument();
+    expect(screen.getByText("Download MD")).toBeInTheDocument();
+  });
+
+  it("shows JSON buttons when section has data", () => {
+    renderModule();
+    fireEvent.click(screen.getByText("Zones & Networks"));
+    expect(screen.getByText("Copy JSON")).toBeInTheDocument();
+    expect(screen.getByText("Download JSON")).toBeInTheDocument();
+  });
+
+  it("hides JSON buttons when section has no data", () => {
+    renderModule();
+    fireEvent.click(screen.getByText("Firewall Rules"));
+    expect(screen.queryByText("Copy JSON")).not.toBeInTheDocument();
+    expect(screen.queryByText("Download JSON")).not.toBeInTheDocument();
   });
 
   it("falls back to raw code when mermaid render fails", async () => {

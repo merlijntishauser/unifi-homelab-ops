@@ -89,6 +89,40 @@ function ErrorMessage({ error, fallback }: { error: Error | null; fallback: stri
   );
 }
 
+const SECTION_BTN = "px-2 py-1 text-xs rounded border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors";
+
+function downloadFile(content: string, filename: string, mime: string): void {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function copyToClipboard(text: string): void {
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+function SectionActions({ section }: { section: DocumentationSection }) {
+  const slug = section.id;
+  const jsonStr = section.data ? JSON.stringify(section.data, null, 2) : null;
+
+  return (
+    <div className="flex items-center gap-1.5 mt-3 mb-2">
+      <button className={SECTION_BTN} onClick={() => copyToClipboard(section.content)}>Copy MD</button>
+      <button className={SECTION_BTN} onClick={() => downloadFile(section.content, `${slug}.md`, "text/markdown")}>Download MD</button>
+      {jsonStr && (
+        <>
+          <button className={SECTION_BTN} onClick={() => copyToClipboard(jsonStr)}>Copy JSON</button>
+          <button className={SECTION_BTN} onClick={() => downloadFile(jsonStr, `${slug}.json`, "application/json")}>Download JSON</button>
+        </>
+      )}
+    </div>
+  );
+}
+
 interface SectionCardProps {
   section: DocumentationSection;
   expanded: boolean;
@@ -123,6 +157,7 @@ function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) 
       </button>
       {expanded && (
         <div className="px-4 pb-4 border-t border-ui-border dark:border-noc-border">
+          <SectionActions section={section} />
           <div className="prose prose-sm dark:prose-invert max-w-none mt-3 text-ui-text-secondary dark:text-noc-text-secondary [&_h1]:text-ui-text [&_h1]:dark:text-noc-text [&_h2]:text-ui-text [&_h2]:dark:text-noc-text [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:pt-6 [&_h2]:border-t [&_h2]:border-ui-border/50 [&_h2]:dark:border-noc-border/50 [&_h3]:text-ui-text [&_h3]:dark:text-noc-text [&_h3]:mt-6 [&_h3]:mb-2 [&_h4]:mt-3 [&_h4]:mb-1 [&_strong]:text-ui-text [&_strong]:dark:text-noc-text [&_code]:text-ub-blue [&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_table]:w-full [&_table]:mb-4 [&_th]:text-left [&_th]:text-ui-text-secondary [&_th]:dark:text-noc-text-secondary [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide [&_th]:py-2 [&_th]:px-3 [&_th]:border-b [&_th]:border-ui-border [&_th]:dark:border-noc-border [&_td]:py-2 [&_td]:px-3 [&_td]:text-sm [&_td]:border-b [&_td]:border-ui-border/50 [&_td]:dark:border-noc-border/50">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
               code({ className, children }) {

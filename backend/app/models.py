@@ -236,7 +236,7 @@ class AppAuthStatus(BaseModel):
 
 class RackItemInput(BaseModel):
     position_u: int
-    height_u: int = 1
+    height_u: float = 1
     device_type: str = "other"
     label: str
     power_watts: float = 0.0
@@ -249,7 +249,7 @@ class RackItemInput(BaseModel):
 class RackItem(BaseModel):
     id: int
     position_u: int
-    height_u: int
+    height_u: float
     device_type: str
     label: str
     power_watts: float
@@ -278,7 +278,7 @@ class Rack(BaseModel):
     location: str
     items: list[RackItem] = []
     total_power: float = 0.0
-    used_u: int = 0
+    used_u: float = 0
 
 
 class RackSummary(BaseModel):
@@ -288,7 +288,7 @@ class RackSummary(BaseModel):
     height_u: int
     location: str
     item_count: int = 0
-    used_u: int = 0
+    used_u: float = 0
     total_power: float = 0.0
 
 

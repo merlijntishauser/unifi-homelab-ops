@@ -109,7 +109,7 @@ def _validate_width_and_position_x(width_fraction: float, position_x: float) -> 
 def _check_overlap(
     rack_id: int,
     position_u: int,
-    height_u: int,
+    height_u: float,
     rack_height: int,
     width_fraction: float = 1.0,
     position_x: float = 0.0,
@@ -120,6 +120,9 @@ def _check_overlap(
     if height_u < 0:
         msg = f"Height must be >= 0, got {height_u}"
         raise ValueError(msg)
+    if height_u > 0 and height_u % 0.5 != 0:
+        msg = f"Height must be a multiple of 0.5, got {height_u}"
+        raise ValueError(msg)
 
     # 0U items mount on side rails -- skip position and overlap checks
     if height_u == 0:
@@ -128,8 +131,8 @@ def _check_overlap(
     if position_u < 1:
         msg = f"Position must be >= 1, got {position_u}"
         raise ValueError(msg)
-    top_u = position_u + height_u - 1
-    if top_u > rack_height:
+    item_end = position_u + height_u
+    if item_end - 1 > rack_height:
         msg = f"Item at position {position_u} with height {height_u}U exceeds rack height {rack_height}U"
         raise ValueError(msg)
 
@@ -141,14 +144,17 @@ def _check_overlap(
         # Skip 0U items -- they don't occupy rack unit space
         if item.height_u == 0:
             continue
-        item_top = item.position_u + item.height_u - 1
-        vertical_overlap = position_u <= item_top and top_u >= item.position_u
+        existing_end = item.position_u + item.height_u
+        vertical_overlap = position_u < existing_end and item_end > item.position_u
         if not vertical_overlap:
             continue
         item_x_right = item.position_x + item.width_fraction
         horizontal_overlap = position_x < item_x_right and x_right > item.position_x
         if horizontal_overlap:
-            msg = f"Position {position_u}-{top_u}U overlaps with '{item.label}' at {item.position_u}-{item_top}U"
+            msg = (
+                f"Position {position_u}-{item_end - 1}U overlaps with "
+                f"'{item.label}' at {item.position_u}-{existing_end - 1}U"
+            )
             raise ValueError(msg)
 
 
@@ -378,15 +384,18 @@ def get_bom(rack_id: int) -> BomResponse:
             item_type="device",
             label=item.label,
             quantity=1,
-            notes=f"{item.height_u}U, {item.power_watts}W" if item.power_watts > 0 else f"{item.height_u}U",
+            notes=f"{item.height_u:g}U, {item.power_watts}W" if item.power_watts > 0 else f"{item.height_u:g}U",
         ))
 
     # Calculate empty U slots and suggest blanking plates
-    used_slots: set[int] = set()
+    used_half_slots: set[float] = set()
     for item in item_rows:
-        for u in range(item.position_u, item.position_u + item.height_u):
-            used_slots.add(u)
-    empty_u = rack_row.height_u - len(used_slots)
+        s = float(item.position_u)
+        while s < item.position_u + item.height_u:
+            used_half_slots.add(s)
+            s += 0.5
+    total_half_slots = rack_row.height_u * 2
+    empty_u = (total_half_slots - len(used_half_slots)) // 2
     if empty_u > 0:
         entries.append(BomEntry(
             item_type="blanking-plate",
@@ -445,10 +454,13 @@ def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[Ra
     existing_macs = {item.device_mac for item in existing_items if item.device_mac}
 
     # Find next available position (stack from bottom)
+    # Track integer U slots as occupied if any part is used
     used_slots: set[int] = set()
     for item in existing_items:
-        for u in range(item.position_u, item.position_u + item.height_u):
-            used_slots.add(u)
+        s = float(item.position_u)
+        while s < item.position_u + item.height_u:
+            used_slots.add(int(s))
+            s += 0.5
 
     imported: list[RackItem] = []
     for device in topology.devices:

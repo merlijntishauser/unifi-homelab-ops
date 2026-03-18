@@ -365,6 +365,37 @@ async def test_add_five_u_item(client: AsyncClient) -> None:
     assert resp.json()["height_u"] == 5
 
 
+async def test_add_half_u_item(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 12})
+    rack_id = create_resp.json()["id"]
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "height_u": 0.5, "label": "Half-U Panel",
+    })
+    assert resp.status_code == 201
+    assert resp.json()["height_u"] == 0.5
+
+
+async def test_add_half_u_item_overlap(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 12})
+    rack_id = create_resp.json()["id"]
+    await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "height_u": 0.5, "label": "Half-A",
+    })
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "height_u": 0.5, "label": "Half-B",
+    })
+    assert resp.status_code == 409
+
+
+async def test_invalid_height_not_multiple_of_half(client: AsyncClient) -> None:
+    create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 12})
+    rack_id = create_resp.json()["id"]
+    resp = await client.post(f"/api/racks/{rack_id}/items", json={
+        "position_u": 1, "height_u": 0.3, "label": "Bad",
+    })
+    assert resp.status_code == 409
+
+
 async def test_invalid_width_fraction(client: AsyncClient) -> None:
     create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]

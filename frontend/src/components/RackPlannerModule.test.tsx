@@ -636,9 +636,16 @@ describe("RackPlannerModule", () => {
     it("Add Item form height defaults to 0 on invalid input", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
-      // Set height to invalid value (NaN from parseInt)
+      // Set height to invalid value (NaN from parseFloat)
       fireEvent.change(screen.getByLabelText("Height (U)"), { target: { value: "" } });
       expect((screen.getByLabelText("Height (U)") as HTMLInputElement).value).toBe("0");
+    });
+
+    it("Add Item form height input has step 0.5", () => {
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      const heightInput = screen.getByLabelText("Height (U)") as HTMLInputElement;
+      expect(heightInput.step).toBe("0.5");
     });
 
     it("Add Item form position defaults to 1 on invalid input", () => {
@@ -950,6 +957,40 @@ describe("RackPlannerModule", () => {
         expect.objectContaining({ height_u: 6 }),
         expect.any(Object),
       );
+    });
+
+    describe("half-U items", () => {
+      it("renders a 0.5U item in the rack grid", () => {
+        rackMock.data = {
+          ...sampleRack,
+          height_u: 4,
+          items: [
+            { id: 90, position_u: 1, height_u: 0.5, device_type: "patch-panel", label: "Half-U Panel", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          ],
+        };
+        renderModule();
+        fireEvent.click(screen.getByTestId("rack-card-1"));
+        expect(screen.getByTestId("rack-item-90")).toBeInTheDocument();
+        expect(screen.getByText("Half-U Panel")).toBeInTheDocument();
+      });
+
+      it("submits 0.5U height from add item form", () => {
+        openEditor();
+        fireEvent.click(screen.getByTestId("add-item-button"));
+        fireEvent.change(screen.getByPlaceholderText("e.g. USW-24-PoE"), { target: { value: "Half Device" } });
+        fireEvent.change(screen.getByLabelText("Height (U)"), { target: { value: "0.5" } });
+        fireEvent.click(screen.getByText("Add"));
+        expect(addItemMock.mutate).toHaveBeenCalledWith(
+          {
+            rackId: 1,
+            data: expect.objectContaining({
+              label: "Half Device",
+              height_u: 0.5,
+            }),
+          },
+          expect.objectContaining({ onSuccess: expect.any(Function) }),
+        );
+      });
     });
 
     describe("fractional width items", () => {

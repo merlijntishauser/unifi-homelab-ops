@@ -498,6 +498,63 @@ class TestFiveUItems:
             add_rack_item(rack_id, RackItemInput(position_u=3, height_u=2, label="Server 2"))
 
 
+class TestHalfUItems:
+    def test_half_u_item_fits(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, height_u=0.5, label="Half-U Patch Panel",
+        ))
+        assert item.height_u == 0.5
+
+    def test_half_u_item_overlap_same_position(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=0.5, label="Half-A"))
+        with pytest.raises(ValueError, match="overlaps"):
+            add_rack_item(rack_id, RackItemInput(position_u=1, height_u=0.5, label="Half-B"))
+
+    def test_half_u_no_overlap_with_adjacent(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=0.5, label="Half"))
+        item = add_rack_item(rack_id, RackItemInput(position_u=2, height_u=1, label="Full"))
+        assert item.position_u == 2
+
+    def test_half_u_overlap_with_full_u(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=1, label="Full"))
+        with pytest.raises(ValueError, match="overlaps"):
+            add_rack_item(rack_id, RackItemInput(position_u=1, height_u=0.5, label="Half"))
+
+    def test_one_and_half_u_item(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        item = add_rack_item(rack_id, RackItemInput(
+            position_u=1, height_u=1.5, label="1.5U Device",
+        ))
+        assert item.height_u == 1.5
+
+    def test_invalid_height_not_multiple_of_half(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        with pytest.raises(ValueError, match="multiple of 0.5"):
+            add_rack_item(rack_id, RackItemInput(position_u=1, height_u=0.3, label="Bad"))
+
+    def test_half_u_used_u_calculation(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=0.5, label="Half"))
+        add_rack_item(rack_id, RackItemInput(position_u=2, height_u=1, label="Full"))
+        rack = get_rack(rack_id)
+        assert rack.used_u == 1.5
+
+    def test_half_u_items_side_by_side_with_width(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        left = add_rack_item(rack_id, RackItemInput(
+            position_u=1, height_u=0.5, label="Left", width_fraction=0.5, position_x=0.0,
+        ))
+        right = add_rack_item(rack_id, RackItemInput(
+            position_u=1, height_u=0.5, label="Right", width_fraction=0.5, position_x=0.5,
+        ))
+        assert left.height_u == 0.5
+        assert right.height_u == 0.5
+
+
 class TestWidthValidation:
     def test_position_x_plus_width_exceeds_rack(self) -> None:
         rack_id = _create_test_rack()

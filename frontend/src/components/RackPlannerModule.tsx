@@ -399,9 +399,10 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
             id="add-item-height"
             type="number"
             value={heightU}
-            onChange={(e) => { const v = parseInt(e.target.value); dispatch({ heightU: isNaN(v) ? 0 : v }); }}
+            onChange={(e) => { const v = parseFloat(e.target.value); dispatch({ heightU: isNaN(v) ? 0 : v }); }}
             min={0}
             max={5}
+            step={0.5}
             className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
           />
           {heightU === 0 && (
@@ -663,20 +664,27 @@ interface BuildRackSlotsArgs {
 
 function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handleDragStart, handleDeleteItem }: BuildRackSlotsArgs): React.ReactNode[] {
   const slots: React.ReactNode[] = [];
-  let u = rack.height_u;
   const renderedItemIds = new Set<number>();
-  while (u >= 1) {
-    const currentU = u;
+  let skip = 0;
+  // Each grid row = 0.5U. Iterate bottom-up (U=1 first) so spans flow naturally upward.
+  for (let halfIdx = 0; halfIdx < rack.height_u * 2; halfIdx++) {
+    const currentU = 1 + halfIdx * 0.5;
+    if (skip > 0) {
+      skip--;
+      continue;
+    }
     const items = occupiedSlots.get(currentU);
     if (items && items.length > 0) {
-      const topItems = items.filter((item) => item.position_u + item.height_u - 1 === currentU && !renderedItemIds.has(item.id));
+      const topItems = items.filter((item) => item.position_u === currentU && !renderedItemIds.has(item.id));
       if (topItems.length > 0) {
         const maxHeight = Math.max(...topItems.map((item) => item.height_u));
+        const gridSpan = Math.round(maxHeight * 2);
         for (const item of topItems) renderedItemIds.add(item.id);
         const hasFractional = topItems.some((item) => item.width_fraction < 1.0);
-        slots.push(
-          <div key={`slot-${currentU}`} className="flex" style={{ gridRow: `span ${maxHeight}` }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
-            <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{currentU}</span>
+        const uLabel = Number.isInteger(currentU) ? String(currentU) : "";
+        slots.unshift(
+          <div key={`slot-${currentU}`} className="flex" style={{ gridRow: `span ${gridSpan}` }} onDrop={(e) => handleDrop(e, Math.ceil(currentU))} onDragOver={handleDragOver}>
+            <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{uLabel}</span>
             <div className={`flex-1 min-w-0 ${hasFractional ? "relative" : ""}`}>
               {topItems.length === 1 && !hasFractional ? (
                 <RackSlotItem item={topItems[0]} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
@@ -688,19 +696,25 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
             </div>
           </div>,
         );
-        u -= maxHeight;
-      } else {
-        u--;
+        skip = gridSpan - 1;
+        continue;
       }
-    } else {
-      slots.push(
-        <div key={`empty-${currentU}`} className="flex" onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver} data-testid={`empty-slot-${currentU}`}>
+      // Occupied but not a bottom-slot (mid/top of item) -- covered by item's span
+      continue;
+    }
+    // Unoccupied half-slot
+    if (Number.isInteger(currentU)) {
+      // Empty whole-U: span 2 grid rows
+      slots.unshift(
+        <div key={`empty-${currentU}`} className="flex" style={{ gridRow: "span 2" }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver} data-testid={`empty-slot-${currentU}`}>
           <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{currentU}</span>
           <div className="flex-1 border border-dashed border-ui-border/50 dark:border-noc-border/50 rounded h-full" />
         </div>,
       );
-      u--;
+      skip = 1;
     }
+    // Non-integer unoccupied half-slot (e.g., 1.5 when there's a 0.5U at 1.0): no grid element needed
+    // because the grid doesn't need a filler -- this will be naturally handled by adjacent spans
   }
   return slots;
 }
@@ -731,16 +745,16 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
     return rack.items.filter((item) => item.height_u === 0);
   }, [rack]);
 
-  // Build a map of occupied U positions (multiple items per slot for fractional widths)
+  // Build a map of occupied half-U positions (multiple items per slot for fractional widths)
   const occupiedSlots = useMemo(() => {
     if (!rack) return new Map<number, RackItem[]>();
     const map = new Map<number, RackItem[]>();
     for (const item of rack.items) {
       if (item.height_u === 0) continue;
-      for (let u = item.position_u; u < item.position_u + item.height_u; u++) {
-        const existing = map.get(u) ?? [];
+      for (let s = item.position_u; s < item.position_u + item.height_u; s += 0.5) {
+        const existing = map.get(s) ?? [];
         existing.push(item);
-        map.set(u, existing);
+        map.set(s, existing);
       }
     }
     return map;
@@ -796,7 +810,8 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
     const freeSlots: number[] = [];
     if (rack) {
       for (let s = 1; s <= rack.height_u; s++) {
-        if (!occupiedSlots.has(s)) freeSlots.push(s);
+        // A 1U item needs both half-slots free (s and s+0.5)
+        if (!occupiedSlots.has(s) && !occupiedSlots.has(s + 0.5)) freeSlots.push(s);
       }
     }
     const positionU = freeSlots.length > 0 ? freeSlots[0] : 1;
@@ -866,7 +881,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
           </div>
         )}
         <div
-          className="max-w-2xl grid auto-rows-[2rem] gap-px"
+          className="max-w-2xl grid auto-rows-[1rem] gap-px"
           data-testid="rack-grid"
         >
           {slots}

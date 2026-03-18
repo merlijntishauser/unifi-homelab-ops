@@ -450,9 +450,10 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
             id="add-item-position"
             type="number"
             value={positionU}
-            onChange={(e) => dispatch({ positionU: parseInt(e.target.value) || 1 })}
+            onChange={(e) => dispatch({ positionU: parseFloat(e.target.value) || 1 })}
             min={1}
             max={maxPositionU}
+            step={0.5}
             className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
           />
         </div>

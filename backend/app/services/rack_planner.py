@@ -108,7 +108,7 @@ def _validate_width_and_position_x(width_fraction: float, position_x: float) -> 
 
 def _check_overlap(
     rack_id: int,
-    position_u: int,
+    position_u: float,
     height_u: float,
     rack_height: int,
     width_fraction: float = 1.0,
@@ -128,8 +128,8 @@ def _check_overlap(
     if height_u == 0:
         return
 
-    if position_u < 1:
-        msg = f"Position must be >= 1, got {position_u}"
+    if position_u < 1 or position_u % 0.5 != 0:
+        msg = f"Position must be >= 1 and a multiple of 0.5, got {position_u}"
         raise ValueError(msg)
     item_end = position_u + height_u
     if item_end - 1 > rack_height:
@@ -334,7 +334,7 @@ def delete_rack_item(rack_id: int, item_id: int) -> None:
         session.close()
 
 
-def move_rack_item(rack_id: int, item_id: int, new_position_u: int, new_position_x: float = 0.0) -> RackItem:
+def move_rack_item(rack_id: int, item_id: int, new_position_u: float, new_position_x: float = 0.0) -> RackItem:
     """Move a rack item to a new position."""
     rack_row = _get_rack_row_or_raise(rack_id)
     session = get_session()

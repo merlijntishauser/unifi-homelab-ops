@@ -235,7 +235,7 @@ class AppAuthStatus(BaseModel):
 
 
 class RackItemInput(BaseModel):
-    position_u: int
+    position_u: float
     height_u: float = 1
     device_type: str = "other"
     label: str
@@ -248,7 +248,7 @@ class RackItemInput(BaseModel):
 
 class RackItem(BaseModel):
     id: int
-    position_u: int
+    position_u: float
     height_u: float
     device_type: str
     label: str

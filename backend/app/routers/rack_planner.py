@@ -27,7 +27,7 @@ router = APIRouter(tags=["rack-planner"])
 
 
 class MoveRequest(BaseModel):
-    position_u: int
+    position_u: float
     position_x: float = 0.0
 
 

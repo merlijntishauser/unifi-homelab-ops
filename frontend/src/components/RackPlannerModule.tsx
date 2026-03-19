@@ -690,19 +690,15 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
         const gridSpan = Math.round(maxHeight * 2);
         for (const item of topItems) renderedItemIds.add(item.id);
         const hasFractional = topItems.some((item) => item.width_fraction < 1.0);
-        const uLabel = Number.isInteger(currentU) ? String(currentU) : "";
         slots.unshift(
-          <div key={`slot-${currentU}`} className="flex" style={{ gridRow: `span ${gridSpan}` }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
-            <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">{uLabel}</span>
-            <div className={`flex-1 min-w-0 ${hasFractional ? "relative" : ""}`}>
-              {topItems.length === 1 && !hasFractional ? (
-                <RackSlotItem item={topItems[0]} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
-              ) : (
-                topItems.map((item) => (
-                  <RackSlotItem key={item.id} item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
-                ))
-              )}
-            </div>
+          <div key={`slot-${currentU}`} className={hasFractional ? "relative" : ""} style={{ gridRow: `span ${gridSpan}` }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
+            {topItems.length === 1 && !hasFractional ? (
+              <RackSlotItem item={topItems[0]} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+            ) : (
+              topItems.map((item) => (
+                <RackSlotItem key={item.id} item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+              ))
+            )}
           </div>,
         );
         skip = gridSpan - 1;
@@ -714,10 +710,13 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
     // Unoccupied half-slot -- each is its own drop target for 0.5U precision
     const isWholeU = Number.isInteger(currentU);
     slots.unshift(
-      <div key={`empty-${currentU}`} className="flex" onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver} data-testid={`empty-slot-${currentU}`}>
-        <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-0.5 shrink-0 select-none">{isWholeU ? currentU : ""}</span>
-        <div className={`flex-1 border border-dashed rounded h-full ${isWholeU ? "border-ui-border/50 dark:border-noc-border/50" : "border-ui-border/25 dark:border-noc-border/25"}`} />
-      </div>,
+      <div
+        key={`empty-${currentU}`}
+        className={`border border-dashed rounded ${isWholeU ? "border-ui-border/50 dark:border-noc-border/50" : "border-ui-border/25 dark:border-noc-border/25"}`}
+        onDrop={(e) => handleDrop(e, currentU)}
+        onDragOver={handleDragOver}
+        data-testid={`empty-slot-${currentU}`}
+      />,
     );
     // Non-integer unoccupied half-slot (e.g., 1.5 when there's a 0.5U at 1.0): no grid element needed
     // because the grid doesn't need a filler -- this will be naturally handled by adjacent spans
@@ -886,11 +885,22 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             <BomView bom={bom} onClose={() => setBom(null)} />
           </div>
         )}
-        <div
-          className="max-w-2xl grid auto-rows-[1rem] gap-px"
-          data-testid="rack-grid"
-        >
-          {slots}
+        <div className="max-w-2xl flex" data-testid="rack-grid">
+          {/* Fixed U labels column */}
+          <div className="shrink-0 w-8 grid gap-px" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+            {Array.from({ length: rack.height_u }, (_, i) => {
+              const u = rack.height_u - i;
+              return (
+                <div key={u} className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim text-right pr-2 pt-0.5 select-none" style={{ gridRow: "span 2" }}>
+                  {u}
+                </div>
+              );
+            })}
+          </div>
+          {/* Draggable items grid */}
+          <div className="flex-1 min-w-0 grid auto-rows-[1rem] gap-px">
+            {slots}
+          </div>
         </div>
         {zeroUItems.length > 0 && (
           <div className="max-w-2xl mt-4" data-testid="zero-u-section">

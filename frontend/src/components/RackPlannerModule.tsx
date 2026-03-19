@@ -891,7 +891,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             {Array.from({ length: rack.height_u }, (_, i) => {
               const u = rack.height_u - i;
               return (
-                <div key={u} className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim text-right pr-2 pt-0.5 select-none" style={{ gridRow: "span 2" }}>
+                <div key={u} className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim text-right pr-2 select-none flex items-center justify-end" style={{ gridRow: "span 2" }}>
                   {u}
                 </div>
               );

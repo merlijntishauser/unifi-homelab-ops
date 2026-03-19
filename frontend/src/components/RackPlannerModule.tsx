@@ -690,8 +690,11 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
         const gridSpan = Math.round(maxHeight * 2);
         for (const item of topItems) renderedItemIds.add(item.id);
         const hasFractional = topItems.some((item) => item.width_fraction < 1.0);
+        const slotBorder = Number.isInteger(currentU)
+          ? { borderBottom: "1px dashed var(--rack-u-border)" }
+          : { borderBottom: "1px dotted var(--rack-half-u-border)" };
         slots.unshift(
-          <div key={`slot-${currentU}`} className={hasFractional ? "relative" : ""} style={{ gridRow: `span ${gridSpan}` }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
+          <div key={`slot-${currentU}`} className={hasFractional ? "relative" : ""} style={{ gridRow: `span ${gridSpan}`, ...slotBorder }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
             {topItems.length === 1 && !hasFractional ? (
               <RackSlotItem item={topItems[0]} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
             ) : (
@@ -712,7 +715,11 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
     slots.unshift(
       <div
         key={`empty-${currentU}`}
-        className={`border border-dashed rounded ${isWholeU ? "border-ui-border/50 dark:border-noc-border/50" : "border-ui-border/25 dark:border-noc-border/25"}`}
+        className="rack-slot"
+        style={isWholeU
+          ? { borderBottom: "1px dashed var(--rack-u-border)" }
+          : { borderBottom: "1px dotted var(--rack-half-u-border)" }
+        }
         onDrop={(e) => handleDrop(e, currentU)}
         onDragOver={handleDragOver}
         data-testid={`empty-slot-${currentU}`}
@@ -887,7 +894,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
         )}
         <div className="max-w-2xl flex" data-testid="rack-grid">
           {/* Fixed U labels column */}
-          <div className="shrink-0 w-8 grid gap-px" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+          <div className="shrink-0 w-8 grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
             {Array.from({ length: rack.height_u }, (_, i) => {
               const u = rack.height_u - i;
               return (
@@ -897,8 +904,8 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
               );
             })}
           </div>
-          {/* Draggable items grid */}
-          <div className="flex-1 min-w-0 grid auto-rows-[1rem] gap-px">
+          {/* Draggable items grid with rack border */}
+          <div className="flex-1 min-w-0 border-t-2 border-b-2 border-ui-text-dim/30 dark:border-noc-text-dim/30 rounded grid auto-rows-[1rem]">
             {slots}
           </div>
         </div>

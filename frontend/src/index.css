@@ -103,6 +103,16 @@ body {
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .mt-safe { margin-top: env(safe-area-inset-top, 0px); }
 
+/* ── Rack planner shelf borders ── */
+:root {
+  --rack-u-border: rgba(0, 0, 0, 0.20);
+  --rack-half-u-border: rgba(0, 0, 0, 0.08);
+}
+.dark {
+  --rack-u-border: rgba(255, 255, 255, 0.20);
+  --rack-half-u-border: rgba(255, 255, 255, 0.08);
+}
+
 /* ── Documentation prose table styling ── */
 .doc-prose table {
   width: 100%;

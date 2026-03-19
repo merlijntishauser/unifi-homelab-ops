@@ -944,8 +944,8 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
       </div>
       <div className="flex-1 overflow-y-auto p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Rack grid (left side on desktop, fills available space) */}
-          <div className="flex-1 min-w-0" style={{ maxWidth: rack.size === "10-inch" ? "28rem" : undefined }} data-testid="rack-grid">
+          {/* Rack grid (fixed width, represents physical rack) */}
+          <div className="shrink-0" style={{ width: rack.size === "10-inch" ? "20rem" : "36rem" }} data-testid="rack-grid">
           <div className="flex">
             {/* Fixed U labels column */}
             <div className="shrink-0 w-8 grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
@@ -996,7 +996,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
 
           {/* Side panel (right side on desktop, below on mobile) */}
           {(showAddForm || showDevicePicker || bom) && (
-            <div className="lg:w-80 lg:shrink-0 min-w-0">
+            <div className="flex-1 min-w-0 lg:max-w-md">
               {showAddForm && (
                 <AddItemForm
                   onSubmit={handleAddItem}

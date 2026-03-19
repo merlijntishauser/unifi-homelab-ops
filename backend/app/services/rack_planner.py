@@ -257,18 +257,43 @@ def delete_rack(rack_id: int) -> None:
         session.close()
 
 
+def _find_free_position(
+    rack_id: int, height_u: float, rack_height: int,
+    width_fraction: float, position_x: float, preferred_u: float,
+) -> float:
+    """Find a free position, trying preferred_u first then scanning from bottom."""
+    if height_u == 0:
+        return preferred_u
+    try:
+        _check_overlap(rack_id, preferred_u, height_u, rack_height, width_fraction, position_x)
+        return preferred_u
+    except ValueError:
+        pass
+    # Scan from bottom in 0.5U steps
+    u = 1.0
+    while u + height_u - 0.5 <= rack_height:
+        try:
+            _check_overlap(rack_id, u, height_u, rack_height, width_fraction, position_x)
+            return u
+        except ValueError:
+            u += 0.5
+    msg = f"No free position for a {height_u}U item in this rack"
+    raise ValueError(msg)
+
+
 def add_rack_item(rack_id: int, data: RackItemInput) -> RackItem:
-    """Add an item to a rack."""
+    """Add an item to a rack, auto-finding a free position if the requested one is occupied."""
     rack_row = _get_rack_row_or_raise(rack_id)
-    _check_overlap(
-        rack_id, data.position_u, data.height_u, rack_row.height_u,
-        width_fraction=data.width_fraction, position_x=data.position_x,
+    _validate_width_and_position_x(data.width_fraction, data.position_x)
+    position_u = _find_free_position(
+        rack_id, data.height_u, rack_row.height_u,
+        data.width_fraction, data.position_x, data.position_u,
     )
     session = get_session()
     try:
         row = RackItemRow(
             rack_id=rack_id,
-            position_u=data.position_u,
+            position_u=position_u,
             height_u=data.height_u,
             device_type=data.device_type,
             label=data.label,

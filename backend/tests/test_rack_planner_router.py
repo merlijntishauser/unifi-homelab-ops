@@ -125,7 +125,7 @@ async def test_add_rack_item_rack_not_found(client: AsyncClient) -> None:
     assert resp.status_code == 404
 
 
-async def test_add_rack_item_overlap(client: AsyncClient) -> None:
+async def test_add_rack_item_overlap_auto_places(client: AsyncClient) -> None:
     create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={
@@ -134,16 +134,18 @@ async def test_add_rack_item_overlap(client: AsyncClient) -> None:
     resp = await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 2, "label": "Second",
     })
-    assert resp.status_code == 409
+    assert resp.status_code == 201
+    assert resp.json()["position_u"] == 3
 
 
-async def test_add_rack_item_exceeds_height(client: AsyncClient) -> None:
+async def test_add_rack_item_exceeds_height_auto_places(client: AsyncClient) -> None:
     create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 4})
     rack_id = create_resp.json()["id"]
     resp = await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 4, "height_u": 2, "label": "Too Tall",
     })
-    assert resp.status_code == 409
+    assert resp.status_code == 201
+    assert resp.json()["position_u"] == 1
 
 
 async def test_update_rack_item(client: AsyncClient) -> None:
@@ -333,7 +335,7 @@ async def test_add_half_width_items_side_by_side(client: AsyncClient) -> None:
     assert resp2.json()["position_x"] == 0.5
 
 
-async def test_add_half_width_items_overlap(client: AsyncClient) -> None:
+async def test_add_half_width_items_overlap_auto_places(client: AsyncClient) -> None:
     create_resp = await client.post("/api/racks", json={"name": "Rack"})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={
@@ -342,7 +344,8 @@ async def test_add_half_width_items_overlap(client: AsyncClient) -> None:
     resp = await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 1, "label": "Overlap", "width_fraction": 0.5, "position_x": 0.25,
     })
-    assert resp.status_code == 409
+    assert resp.status_code == 201
+    assert resp.json()["position_u"] == 2
 
 
 async def test_add_zero_u_item(client: AsyncClient) -> None:
@@ -375,7 +378,7 @@ async def test_add_half_u_item(client: AsyncClient) -> None:
     assert resp.json()["height_u"] == 0.5
 
 
-async def test_add_half_u_item_overlap(client: AsyncClient) -> None:
+async def test_add_half_u_item_overlap_auto_places(client: AsyncClient) -> None:
     create_resp = await client.post("/api/racks", json={"name": "Rack", "height_u": 12})
     rack_id = create_resp.json()["id"]
     await client.post(f"/api/racks/{rack_id}/items", json={
@@ -384,7 +387,8 @@ async def test_add_half_u_item_overlap(client: AsyncClient) -> None:
     resp = await client.post(f"/api/racks/{rack_id}/items", json={
         "position_u": 1, "height_u": 0.5, "label": "Half-B",
     })
-    assert resp.status_code == 409
+    assert resp.status_code == 201
+    assert resp.json()["position_u"] == 1.5
 
 
 async def test_invalid_height_not_multiple_of_half(client: AsyncClient) -> None:

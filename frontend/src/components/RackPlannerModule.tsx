@@ -851,10 +851,12 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   const deleteItem = useDeleteRackItem();
   const moveItem = useMoveRackItem();
   const deleteRack = useDeleteRack();
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showDevicePicker, setShowDevicePicker] = useState(false);
-  const [bom, setBom] = useState<BomResponse | null>(null);
-  const [dragItemId, setDragItemId] = useState<number | null>(null);
+  const [editorState, setEditorState] = useReducer(
+    (s: { showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; dragItemId: number | null; addError: string | null },
+     u: Partial<{ showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; dragItemId: number | null; addError: string | null }>) => ({ ...s, ...u }),
+    { showAddForm: false, showDevicePicker: false, bom: null, dragItemId: null, addError: null },
+  );
+  const { showAddForm, showDevicePicker, bom, dragItemId, addError } = editorState;
 
   const rack: Rack | undefined = rackQuery.data;
 
@@ -880,7 +882,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   }, [rack]);
 
   const handleDragStart = useCallback((e: React.DragEvent, item: RackItem) => {
-    setDragItemId(item.id);
+    setEditorState({ dragItemId: item.id });
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(item.id));
   }, []);
@@ -891,16 +893,16 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
       if (dragItemId === null || !rack) return;
       const item = rack.items.find((i) => i.id === dragItemId);
       if (!item) {
-        setDragItemId(null);
+        setEditorState({ dragItemId: null });
         return;
       }
       if (item.position_u === targetU) {
-        setDragItemId(null);
+        setEditorState({ dragItemId: null });
         return;
       }
       // Preserve horizontal position when dragging vertically
       moveItem.mutate({ rackId: rack.id, itemId: dragItemId, positionU: targetU, positionX: item.position_x });
-      setDragItemId(null);
+      setEditorState({ dragItemId: null });
     },
     [dragItemId, rack, moveItem],
   );
@@ -913,7 +915,14 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   const handleAddItem = useCallback(
     (data: RackItemInput) => {
       if (!rack) return;
-      addItem.mutate({ rackId: rack.id, data }, { onSuccess: () => setShowAddForm(false) });
+      setEditorState({ addError: null });
+      addItem.mutate(
+        { rackId: rack.id, data },
+        {
+          onSuccess: () => setEditorState({ showAddForm: false }),
+          onError: (err) => setEditorState({ addError: err instanceof Error ? err.message : "Failed to add item" }),
+        },
+      );
     },
     [rack, addItem],
   );
@@ -939,12 +948,16 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
       }
     }
     const positionU = freeSlots.length > 0 ? freeSlots[0] : 1;
-    addItem.mutate({ rackId, data: { position_u: positionU, label: device.name, device_type: device.type, device_mac: device.mac, height_u: 1, width_fraction: 1.0, position_x: 0.0 } });
+    setEditorState({ addError: null });
+    addItem.mutate(
+      { rackId, data: { position_u: positionU, label: device.name, device_type: device.type, device_mac: device.mac, height_u: 1, width_fraction: 1.0, position_x: 0.0 } },
+      { onError: (err) => setEditorState({ addError: err instanceof Error ? err.message : "Rack is full" }) },
+    );
   }, [rackId, addItem, rack, occupiedSlots]);
 
   const handleShowBom = useCallback(async () => {
     const data = await api.getRackBom(rackId);
-    setBom(data);
+    setEditorState({ bom: data });
   }, [rackId]);
 
   if (rackQuery.isLoading || !rack) {
@@ -973,10 +986,10 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
           {rack.size} / {rack.height_u}U / {rack.total_power.toFixed(1)}W
         </span>
         <div className="ml-auto" />
-        <button onClick={() => setShowAddForm((v) => !v)} className={btnClass} data-testid="add-item-button">
+        <button onClick={() => setEditorState({ showAddForm: !showAddForm })} className={btnClass} data-testid="add-item-button">
           Add Item
         </button>
-        <button onClick={() => setShowDevicePicker((v) => !v)} className={btnClass} data-testid="import-button">
+        <button onClick={() => setEditorState({ showDevicePicker: !showDevicePicker })} className={btnClass} data-testid="import-button">
           {showDevicePicker ? "Hide Devices" : "Add from Topology"}
         </button>
         <button onClick={handleShowBom} className={btnClass} data-testid="bom-button">
@@ -1057,18 +1070,23 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
           {/* Side panel (right side on desktop, below on mobile) */}
           {(showAddForm || showDevicePicker || bom) && (
             <div className="flex-1 min-w-0 lg:max-w-md">
+              {addError && (
+                <div className="mb-3 rounded-lg bg-status-danger-dim border border-status-danger/20 p-3 text-sm text-status-danger">
+                  {addError}
+                </div>
+              )}
               {showAddForm && (
                 <AddItemForm
-                  onSubmit={handleAddItem}
-                  onCancel={() => setShowAddForm(false)}
-                  maxPositionU={rack.height_u}
-                />
+                    onSubmit={handleAddItem}
+                    onCancel={() => { setEditorState({ showAddForm: false }); setEditorState({ addError: null }); }}
+                    maxPositionU={rack.height_u}
+                  />
               )}
               {showDevicePicker && (
                 <DevicePicker rackId={rackId} onAdd={handleAddFromTopology} />
               )}
               {bom && (
-                <BomView bom={bom} onClose={() => setBom(null)} />
+                <BomView bom={bom} onClose={() => setEditorState({ bom: null })} />
               )}
             </div>
           )}

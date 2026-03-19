@@ -372,6 +372,45 @@ describe("RackPlannerModule", () => {
       );
     });
 
+    it("shows error when add item fails", () => {
+      addItemMock.mutate.mockImplementationOnce((_data: unknown, opts: { onError?: (err: Error) => void }) => {
+        opts.onError?.(new Error("409: Rack is full"));
+      });
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      fireEvent.click(screen.getByText("Custom"));
+      fireEvent.change(screen.getByPlaceholderText("e.g. USW-24-PoE"), { target: { value: "Test" } });
+      fireEvent.click(screen.getByText("Add"));
+      expect(screen.getByText("409: Rack is full")).toBeInTheDocument();
+    });
+
+    it("clears error on cancel", () => {
+      addItemMock.mutate.mockImplementationOnce((_data: unknown, opts: { onError?: (err: Error) => void }) => {
+        opts.onError?.(new Error("409: Rack is full"));
+      });
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      fireEvent.click(screen.getByText("Custom"));
+      fireEvent.change(screen.getByPlaceholderText("e.g. USW-24-PoE"), { target: { value: "Test" } });
+      fireEvent.click(screen.getByText("Add"));
+      expect(screen.getByText("409: Rack is full")).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Cancel"));
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      expect(screen.queryByText("409: Rack is full")).not.toBeInTheDocument();
+    });
+
+    it("shows error when add item fails with non-Error object", () => {
+      addItemMock.mutate.mockImplementationOnce((_data: unknown, opts?: { onSuccess?: () => void; onError?: (err: unknown) => void }) => {
+        opts?.onError?.("something broke");
+      });
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      fireEvent.click(screen.getByText("Custom"));
+      fireEvent.change(screen.getByPlaceholderText("e.g. USW-24-PoE"), { target: { value: "Test" } });
+      fireEvent.click(screen.getByText("Add"));
+      expect(screen.getByText("Failed to add item")).toBeInTheDocument();
+    });
+
     it("Add Item form cancel hides the form", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
@@ -901,18 +940,21 @@ describe("RackPlannerModule", () => {
         const addButtons = screen.getAllByText("Add to Rack");
         fireEvent.click(addButtons[0]);
         // The rack has items at U1 (1U) and U3-U4 (2U). Free slots start at U2.
-        expect(addItemMock.mutate).toHaveBeenCalledWith({
-          rackId: 1,
-          data: {
-            position_u: 2,
-            label: "USW-Lite-8",
-            device_type: "switch",
-            device_mac: "aa:bb:cc:dd:ee:01",
-            height_u: 1,
-            width_fraction: 1.0,
-            position_x: 0.0,
+        expect(addItemMock.mutate).toHaveBeenCalledWith(
+          {
+            rackId: 1,
+            data: {
+              position_u: 2,
+              label: "USW-Lite-8",
+              device_type: "switch",
+              device_mac: "aa:bb:cc:dd:ee:01",
+              height_u: 1,
+              width_fraction: 1.0,
+              position_x: 0.0,
+            },
           },
-        });
+          expect.objectContaining({ onError: expect.any(Function) }),
+        );
       });
 
       it("fetches from the correct API endpoint with rackId", async () => {
@@ -950,10 +992,14 @@ describe("RackPlannerModule", () => {
           expect.objectContaining({
             data: expect.objectContaining({ position_u: 1 }),
           }),
+          expect.objectContaining({ onError: expect.any(Function) }),
         );
       });
 
-      it("places device at U1 as fallback when rack is completely full", async () => {
+      it("shows error when topology add fails on full rack", async () => {
+        addItemMock.mutate.mockImplementationOnce((_data: unknown, opts?: { onError?: (err: unknown) => void }) => {
+          opts?.onError?.("no room");
+        });
         rackMock.data = {
           ...sampleRack,
           height_u: 2,
@@ -968,14 +1014,8 @@ describe("RackPlannerModule", () => {
         await waitFor(() => {
           expect(screen.getByText("USW-Lite-8")).toBeInTheDocument();
         });
-        const addButtons = screen.getAllByText("Add to Rack");
-        fireEvent.click(addButtons[0]);
-        // No free slots, so fallback to position_u: 1
-        expect(addItemMock.mutate).toHaveBeenCalledWith(
-          expect.objectContaining({
-            data: expect.objectContaining({ position_u: 1 }),
-          }),
-        );
+        fireEvent.click(screen.getAllByText("Add to Rack")[0]);
+        expect(screen.getByText("Rack is full")).toBeInTheDocument();
       });
     });
 

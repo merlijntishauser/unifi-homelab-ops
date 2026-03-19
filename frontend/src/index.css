@@ -103,12 +103,44 @@ body {
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .mt-safe { margin-top: env(safe-area-inset-top, 0px); }
 
-/* ── Rack planner shelf borders ── */
+/* ── Rack planner device & shelf styling ── */
 :root {
+  --rack-bg: #e8eaee;
+  --rack-rail: linear-gradient(to right, #c8ccd4, #d5d9e0);
+  --rack-rail-screw: #a0a5ae;
+  --rack-border: #b0b5be;
+  --rack-device-border-right: rgba(0,0,0,0.08);
+  --rack-device-border-top: rgba(255,255,255,0.5);
+  --rack-device-border-bottom: rgba(0,0,0,0.1);
+  --rack-device-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.08);
+  --rack-device-text: #1a1d23;
+  --rack-device-text-dim: #6b7280;
+  --rack-face-gateway-top: #dbeafe; --rack-face-gateway-bottom: #bfdbfe;
+  --rack-face-switch-top: #ccfbf1; --rack-face-switch-bottom: #99f6e4;
+  --rack-face-patch-top: #e5e7eb; --rack-face-patch-bottom: #d1d5db;
+  --rack-face-ups-top: #fef3c7; --rack-face-ups-bottom: #fde68a;
+  --rack-face-ap-top: #ede9fe; --rack-face-ap-bottom: #ddd6fe;
+  --rack-face-other-top: #f3f4f6; --rack-face-other-bottom: #e5e7eb;
   --rack-u-border: rgba(0, 0, 0, 0.20);
   --rack-half-u-border: rgba(0, 0, 0, 0.08);
 }
 .dark {
+  --rack-bg: #141820;
+  --rack-rail: linear-gradient(to right, #1e2028, #282c34);
+  --rack-rail-screw: #454a52;
+  --rack-border: #454a52;
+  --rack-device-border-right: rgba(0,0,0,0.3);
+  --rack-device-border-top: rgba(255,255,255,0.1);
+  --rack-device-border-bottom: rgba(0,0,0,0.4);
+  --rack-device-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.3);
+  --rack-device-text: #f0f2f5;
+  --rack-device-text-dim: #8b95a5;
+  --rack-face-gateway-top: #1e4a7a; --rack-face-gateway-bottom: #153660;
+  --rack-face-switch-top: #1e4d4d; --rack-face-switch-bottom: #153838;
+  --rack-face-patch-top: #353840; --rack-face-patch-bottom: #2a2d35;
+  --rack-face-ups-top: #4d4228; --rack-face-ups-bottom: #3a321e;
+  --rack-face-ap-top: #302840; --rack-face-ap-bottom: #252030;
+  --rack-face-other-top: #353840; --rack-face-other-bottom: #2a2d35;
   --rack-u-border: rgba(255, 255, 255, 0.20);
   --rack-half-u-border: rgba(255, 255, 255, 0.08);
 }

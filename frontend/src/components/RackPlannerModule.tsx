@@ -16,56 +16,18 @@ import {
 
 interface DeviceTypeMeta {
   label: string;
-  faceTop: string;
-  faceBottom: string;
-  faceTopLight: string;
-  faceBottomLight: string;
+  faceVar: string;
   accent: string;
 }
 
 const DEVICE_TYPE_META: Record<string, DeviceTypeMeta> = {
-  gateway: {
-    label: "Gateway",
-    faceTop: "#1e4a7a", faceBottom: "#153660",
-    faceTopLight: "#dbeafe", faceBottomLight: "#bfdbfe",
-    accent: "#006fff",
-  },
-  switch: {
-    label: "Switch",
-    faceTop: "#1e4d4d", faceBottom: "#153838",
-    faceTopLight: "#ccfbf1", faceBottomLight: "#99f6e4",
-    accent: "#14b8a6",
-  },
-  "patch-panel": {
-    label: "Patch Panel",
-    faceTop: "#353840", faceBottom: "#2a2d35",
-    faceTopLight: "#e5e7eb", faceBottomLight: "#d1d5db",
-    accent: "#6b7280",
-  },
-  ups: {
-    label: "UPS",
-    faceTop: "#4d4228", faceBottom: "#3a321e",
-    faceTopLight: "#fef3c7", faceBottomLight: "#fde68a",
-    accent: "#f59e0b",
-  },
-  ap: {
-    label: "Access Point",
-    faceTop: "#302840", faceBottom: "#252030",
-    faceTopLight: "#ede9fe", faceBottomLight: "#ddd6fe",
-    accent: "#8b5cf6",
-  },
-  shelf: {
-    label: "Shelf",
-    faceTop: "#353840", faceBottom: "#2a2d35",
-    faceTopLight: "#f3f4f6", faceBottomLight: "#e5e7eb",
-    accent: "#4b5563",
-  },
-  other: {
-    label: "Other",
-    faceTop: "#353840", faceBottom: "#2a2d35",
-    faceTopLight: "#f3f4f6", faceBottomLight: "#e5e7eb",
-    accent: "#4b5563",
-  },
+  gateway: { label: "Gateway", faceVar: "gateway", accent: "#006fff" },
+  switch: { label: "Switch", faceVar: "switch", accent: "#14b8a6" },
+  "patch-panel": { label: "Patch Panel", faceVar: "patch", accent: "#6b7280" },
+  ups: { label: "UPS", faceVar: "ups", accent: "#f59e0b" },
+  ap: { label: "Access Point", faceVar: "ap", accent: "#8b5cf6" },
+  shelf: { label: "Shelf", faceVar: "other", accent: "#4b5563" },
+  other: { label: "Other", faceVar: "other", accent: "#4b5563" },
 };
 
 function getDeviceTypeMeta(type: string): DeviceTypeMeta {
@@ -654,23 +616,20 @@ function DevicePortIndicators({ type }: { type: string }) {
 function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
   const meta = getDeviceTypeMeta(item.device_type);
   const isFractional = item.width_fraction < 1.0;
-  const isDark = document.documentElement.classList.contains("dark");
-  const faceTop = isDark ? meta.faceTop : meta.faceTopLight;
-  const faceBottom = isDark ? meta.faceBottom : meta.faceBottomLight;
+  const v = meta.faceVar;
 
   return (
     <div
       className={`rack-device flex items-center gap-2 px-3 h-full rounded-sm cursor-grab active:cursor-grabbing select-none ${isFractional ? "absolute" : ""}`}
       style={{
         ...(isFractional ? { width: `${item.width_fraction * 100}%`, left: `${item.position_x * 100}%` } : undefined),
-        background: `linear-gradient(180deg, ${faceTop} 0%, ${faceBottom} 100%)`,
+        background: `linear-gradient(180deg, var(--rack-face-${v}-top) 0%, var(--rack-face-${v}-bottom) 100%)`,
         borderLeft: `3px solid ${meta.accent}`,
-        borderRight: `1px solid ${isDark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.08)"}`,
-        borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.5)"}`,
-        borderBottom: `1px solid ${isDark ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.1)"}`,
-        boxShadow: isDark
-          ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.15)"
-          : "inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.08)",
+        borderRight: "1px solid var(--rack-device-border-right)",
+        borderTop: "1px solid var(--rack-device-border-top)",
+        borderBottom: "1px solid var(--rack-device-border-bottom)",
+        boxShadow: "var(--rack-device-shadow)",
+        color: "var(--rack-device-text)",
       }}
       draggable
       onDragStart={(e) => onDragStart(e, item)}
@@ -679,17 +638,17 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
       {/* Status LED */}
       <div className="w-1.5 h-1.5 rounded-full bg-status-success shrink-0 shadow-[0_0_4px_rgba(0,214,143,0.5)]" />
       {/* Drag handle */}
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 shrink-0 text-ui-text-dim dark:text-white opacity-30">
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 shrink-0 opacity-30" style={{ color: "var(--rack-device-text-dim)" }}>
         <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
         <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
         <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
       </svg>
-      <span className="text-[11px] font-semibold text-ui-text dark:text-white/90 truncate flex-1">
+      <span className="text-[11px] font-semibold truncate flex-1" style={{ color: "var(--rack-device-text)" }}>
         {item.label}
       </span>
       <DevicePortIndicators type={item.device_type} />
       {item.power_watts > 0 && (
-        <span className="font-mono text-[9px] text-ui-text-dim dark:text-white/50 shrink-0">
+        <span className="font-mono text-[9px] shrink-0" style={{ color: "var(--rack-device-text-dim)" }}>
           {item.power_watts.toFixed(1)}W
         </span>
       )}
@@ -702,7 +661,8 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
           e.stopPropagation();
           onDelete(item.id);
         }}
-        className="shrink-0 p-1 text-ui-text-dim dark:text-white/30 hover:text-status-danger transition-colors z-10"
+        className="shrink-0 p-1 hover:text-status-danger transition-colors z-10"
+        style={{ color: "var(--rack-device-text-dim)" }}
         aria-label={`Delete ${item.label}`}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3">
@@ -1016,22 +976,22 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
               })}
             </div>
             {/* Left rack rail */}
-            <div className="shrink-0 w-3 bg-gradient-to-r from-[#c8ccd4] to-[#d5d9e0] dark:from-[#1e2028] dark:to-[#282c34] border-y-2 border-[#b0b5be] dark:border-[#353840] grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+            <div className="shrink-0 w-3 rounded-l grid" style={{ background: "var(--rack-rail)", borderTop: "2px solid var(--rack-border)", borderBottom: "2px solid var(--rack-border)", gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
               {Array.from({ length: rack.height_u }, (_, uIdx) => (
                 <div key={`rail-${uIdx}`} className="flex items-center justify-center" style={{ gridRow: "span 2" }}>
-                  <div className="w-1 h-1 rounded-full bg-[#a0a5ae] dark:bg-[#454a52]" />
+                  <div className="w-1 h-1 rounded-full" style={{ background: "var(--rack-rail-screw)" }} />
                 </div>
               ))}
             </div>
             {/* Device area */}
-            <div className="flex-1 min-w-0 border-y-2 border-[#b0b5be] dark:border-[#454a52] bg-[#e8eaee] dark:bg-[#141820] grid auto-rows-[1rem]">
+            <div className="flex-1 min-w-0 grid auto-rows-[1rem]" style={{ background: "var(--rack-bg)", borderTop: "2px solid var(--rack-border)", borderBottom: "2px solid var(--rack-border)" }}>
               {slots}
             </div>
             {/* Right rack rail */}
-            <div className="shrink-0 w-3 bg-gradient-to-l from-[#c8ccd4] to-[#d5d9e0] dark:from-[#1e2028] dark:to-[#282c34] border-y-2 border-[#b0b5be] dark:border-[#353840] grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+            <div className="shrink-0 w-3 rounded-r grid" style={{ background: "var(--rack-rail)", borderTop: "2px solid var(--rack-border)", borderBottom: "2px solid var(--rack-border)", gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
               {Array.from({ length: rack.height_u }, (_, uIdx) => (
                 <div key={`rail-${uIdx}`} className="flex items-center justify-center" style={{ gridRow: "span 2" }}>
-                  <div className="w-1 h-1 rounded-full bg-[#a0a5ae] dark:bg-[#454a52]" />
+                  <div className="w-1 h-1 rounded-full" style={{ background: "var(--rack-rail-screw)" }} />
                 </div>
               ))}
             </div>

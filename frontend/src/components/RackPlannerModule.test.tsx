@@ -41,6 +41,10 @@ const importMock = vi.hoisted(() => ({
   mutate: vi.fn(),
 }));
 
+const updateItemMock = vi.hoisted(() => ({
+  mutate: vi.fn(),
+}));
+
 vi.mock("../hooks/queries", async () => {
   const actual = await vi.importActual("../hooks/queries");
   return {
@@ -53,6 +57,7 @@ vi.mock("../hooks/queries", async () => {
     useDeleteRackItem: () => deleteItemMock,
     useMoveRackItem: () => moveItemMock,
     useImportRackFromTopology: () => importMock,
+    useUpdateRackItem: () => updateItemMock,
   };
 });
 
@@ -152,6 +157,7 @@ beforeEach(() => {
   deleteItemMock.mutate = vi.fn();
   moveItemMock.mutate = vi.fn();
   importMock.mutate = vi.fn();
+  updateItemMock.mutate = vi.fn();
 });
 
 describe("RackPlannerModule", () => {
@@ -582,6 +588,20 @@ describe("RackPlannerModule", () => {
       expect(moveItemMock.mutate).not.toHaveBeenCalled();
     });
 
+    it("drop on same position does not call move", () => {
+      openEditor();
+      // Drag item 10 (at position_u: 1)
+      const item = screen.getByTestId("rack-item-10");
+      fireEvent.dragStart(item, {
+        dataTransfer: { effectAllowed: "", setData: vi.fn() },
+      });
+      // Drop on the same item's container (position_u: 1) -- event bubbles up to the slot's onDrop
+      fireEvent.drop(item, {
+        dataTransfer: { getData: () => "10" },
+      });
+      expect(moveItemMock.mutate).not.toHaveBeenCalled();
+    });
+
     it("hides item power display when power_watts is 0", () => {
       rackMock.data = {
         ...sampleRack,
@@ -753,6 +773,45 @@ describe("RackPlannerModule", () => {
       fireEvent.click(screen.getByText("Cloud Gateway Fiber"));
       // Should switch to Custom tab with pre-filled values
       expect(screen.getByDisplayValue("Cloud Gateway Fiber")).toBeInTheDocument();
+    });
+
+    it("clicking item label opens edit form in side panel", () => {
+      openEditor();
+      const label = screen.getByText("USW-24-PoE");
+      fireEvent.click(label);
+      expect(screen.getByTestId("edit-item-form")).toBeInTheDocument();
+      expect(screen.getByText(/Edit: USW-24-PoE/)).toBeInTheDocument();
+      expect(screen.getByText("Save")).toBeInTheDocument();
+    });
+
+    it("edit form pre-fills with item values and defaults to Custom tab", () => {
+      openEditor();
+      fireEvent.click(screen.getByText("USW-24-PoE"));
+      // Should be on Custom tab with pre-filled values
+      expect(screen.getByDisplayValue("USW-24-PoE")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("30")).toBeInTheDocument(); // power_watts
+    });
+
+    it("edit form cancel closes the edit panel", () => {
+      openEditor();
+      fireEvent.click(screen.getByText("USW-24-PoE"));
+      expect(screen.getByTestId("edit-item-form")).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Cancel"));
+      expect(screen.queryByTestId("edit-item-form")).not.toBeInTheDocument();
+    });
+
+    it("edit form save calls updateRackItem and closes panel on success", () => {
+      openEditor();
+      fireEvent.click(screen.getByText("USW-24-PoE"));
+      expect(screen.getByTestId("edit-item-form")).toBeInTheDocument();
+      // Submit the edit form via Save button
+      fireEvent.click(screen.getByText("Save"));
+      expect(updateItemMock.mutate).toHaveBeenCalledTimes(1);
+      const call = updateItemMock.mutate.mock.calls[0];
+      expect(call[0]).toMatchObject({ rackId: 1, itemId: 10 });
+      // Trigger onSuccess to close the edit panel
+      act(() => call[1].onSuccess());
+      expect(screen.queryByTestId("edit-item-form")).not.toBeInTheDocument();
     });
 
     it("createRack onSuccess hides the form", () => {

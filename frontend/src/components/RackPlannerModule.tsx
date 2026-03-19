@@ -8,6 +8,7 @@ import {
   useCreateRack,
   useDeleteRack,
   useAddRackItem,
+  useUpdateRackItem,
   useDeleteRackItem,
   useMoveRackItem,
 } from "../hooks/queries";
@@ -288,6 +289,8 @@ interface AddItemFormProps {
   onSubmit: (data: RackItemInput) => void;
   onCancel: () => void;
   maxPositionU: number;
+  initialValues?: Partial<AddItemState>;
+  submitLabel?: string;
 }
 
 interface AddItemState {
@@ -332,10 +335,10 @@ function addItemReducer(state: AddItemState, update: Partial<AddItemState>): Add
   return { ...state, ...update };
 }
 
-function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
-  const [form, dispatch] = useReducer(addItemReducer, initialAddItemState);
+function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add" }: AddItemFormProps) {
+  const [form, dispatch] = useReducer(addItemReducer, { ...initialAddItemState, ...initialValues });
   const { label, deviceType, heightU, positionU, powerWatts, notes, widthFraction, positionX } = form;
-  const [tab, setTab] = useState<"unifi" | "custom">("unifi");
+  const [tab, setTab] = useState<"unifi" | "custom">(initialValues ? "custom" : "unifi");
   const [searchQuery, setSearchQuery] = useState("");
 
   const validPositionXOptions = useMemo(() => getValidPositionXOptions(widthFraction), [widthFraction]);
@@ -539,7 +542,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
           disabled={!label.trim()}
           className={`${btnPrimaryClass} disabled:opacity-40 disabled:cursor-not-allowed`}
         >
-          Add
+          {submitLabel}
         </button>
         <button onClick={onCancel} className={btnClass}>Cancel</button>
       </div>
@@ -597,6 +600,7 @@ interface RackSlotItemProps {
   item: RackItem;
   onDragStart: (e: React.DragEvent, item: RackItem) => void;
   onDelete: (itemId: number) => void;
+  onEdit?: (item: RackItem) => void;
 }
 
 const PORT_COUNTS: Record<string, number> = { switch: 6, gateway: 3, "patch-panel": 8 };
@@ -613,7 +617,7 @@ function DevicePortIndicators({ type }: { type: string }) {
   );
 }
 
-function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
+function RackSlotItem({ item, onDragStart, onDelete, onEdit }: RackSlotItemProps) {
   const meta = getDeviceTypeMeta(item.device_type);
   const isFractional = item.width_fraction < 1.0;
   const v = meta.faceVar;
@@ -643,9 +647,15 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
         <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
         <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
       </svg>
-      <span className="text-[11px] font-semibold truncate flex-1" style={{ color: "var(--rack-device-text)" }}>
+      <button
+        draggable={false}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onEdit?.(item); }}
+        className="text-[11px] font-semibold truncate flex-1 text-left hover:underline cursor-pointer"
+        style={{ color: "var(--rack-device-text)" }}
+      >
         {item.label}
-      </span>
+      </button>
       <DevicePortIndicators type={item.device_type} />
       {item.power_watts > 0 && (
         <span className="font-mono text-[9px] shrink-0" style={{ color: "var(--rack-device-text-dim)" }}>
@@ -736,9 +746,10 @@ interface BuildRackSlotsArgs {
   handleDragOver: (e: React.DragEvent) => void;
   handleDragStart: (e: React.DragEvent, item: RackItem) => void;
   handleDeleteItem: (itemId: number) => void;
+  handleEditItem: (item: RackItem) => void;
 }
 
-function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handleDragStart, handleDeleteItem }: BuildRackSlotsArgs): React.ReactNode[] {
+function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handleDragStart, handleDeleteItem, handleEditItem }: BuildRackSlotsArgs): React.ReactNode[] {
   const slots: React.ReactNode[] = [];
   const renderedItemIds = new Set<number>();
   let skip = 0;
@@ -763,10 +774,10 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
         slots.unshift(
           <div key={`slot-${currentU}`} className={hasFractional ? "relative" : ""} style={{ gridRow: `span ${gridSpan}`, ...slotBorder }} onDrop={(e) => handleDrop(e, currentU)} onDragOver={handleDragOver}>
             {topItems.length === 1 && !hasFractional ? (
-              <RackSlotItem item={topItems[0]} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+              <RackSlotItem item={topItems[0]} onDragStart={handleDragStart} onDelete={handleDeleteItem} onEdit={handleEditItem} />
             ) : (
               topItems.map((item) => (
-                <RackSlotItem key={item.id} item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+                <RackSlotItem key={item.id} item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} onEdit={handleEditItem} />
               ))
             )}
           </div>,
@@ -798,6 +809,52 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
   return slots;
 }
 
+// --- RackSidePanel ---
+
+function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editingItem, addError, onAddItem, onAddFromTopology, onCloseAdd, onCloseBom, onCloseEdit, onSaveEdit }: {
+  rack: Rack; rackId: number;
+  showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; editingItem: RackItem | null; addError: string | null;
+  onAddItem: (data: RackItemInput) => void; onAddFromTopology: (device: { mac: string; name: string; model: string; type: string }) => void;
+  onCloseAdd: () => void; onCloseBom: () => void; onCloseEdit: () => void; onSaveEdit: (data: RackItemInput) => void;
+}) {
+  if (!showAddForm && !showDevicePicker && !bom && !editingItem) return null;
+  return (
+    <div className="flex-1 min-w-0 lg:max-w-md">
+      {addError && (
+        <div className="mb-3 rounded-lg bg-status-danger-dim border border-status-danger/20 p-3 text-sm text-status-danger">
+          {addError}
+        </div>
+      )}
+      {showAddForm && (
+        <AddItemForm onSubmit={onAddItem} onCancel={onCloseAdd} maxPositionU={rack.height_u} />
+      )}
+      {showDevicePicker && (
+        <DevicePicker rackId={rackId} onAdd={onAddFromTopology} />
+      )}
+      {bom && (
+        <BomView bom={bom} onClose={onCloseBom} />
+      )}
+      {editingItem && (
+        <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4" data-testid="edit-item-form">
+          <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text mb-3">Edit: {editingItem.label}</h3>
+          <AddItemForm
+            onSubmit={onSaveEdit}
+            onCancel={onCloseEdit}
+            maxPositionU={rack.height_u}
+            initialValues={{
+              label: editingItem.label, deviceType: editingItem.device_type,
+              heightU: editingItem.height_u, positionU: editingItem.position_u,
+              powerWatts: editingItem.power_watts, notes: editingItem.notes,
+              widthFraction: editingItem.width_fraction, positionX: editingItem.position_x,
+            }}
+            submitLabel="Save"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- RackEditor ---
 
 interface RackEditorProps {
@@ -811,12 +868,13 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   const deleteItem = useDeleteRackItem();
   const moveItem = useMoveRackItem();
   const deleteRack = useDeleteRack();
+  const updateRackItem = useUpdateRackItem();
   const [editorState, setEditorState] = useReducer(
-    (s: { showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; dragItemId: number | null; addError: string | null },
-     u: Partial<{ showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; dragItemId: number | null; addError: string | null }>) => ({ ...s, ...u }),
-    { showAddForm: false, showDevicePicker: false, bom: null, dragItemId: null, addError: null },
+    (s: { showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; dragItemId: number | null; addError: string | null; editingItem: RackItem | null },
+     u: Partial<{ showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; dragItemId: number | null; addError: string | null; editingItem: RackItem | null }>) => ({ ...s, ...u }),
+    { showAddForm: false, showDevicePicker: false, bom: null, dragItemId: null, addError: null, editingItem: null },
   );
-  const { showAddForm, showDevicePicker, bom, dragItemId, addError } = editorState;
+  const { showAddForm, showDevicePicker, bom, dragItemId, addError, editingItem } = editorState;
 
   const rack: Rack | undefined = rackQuery.data;
 
@@ -895,6 +953,10 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
     [rack, deleteItem],
   );
 
+  const handleEditItem = useCallback((item: RackItem) => {
+    setEditorState({ editingItem: item, showAddForm: false, showDevicePicker: false, bom: null });
+  }, []);
+
   const handleDeleteRack = useCallback(() => {
     deleteRack.mutate(rackId, { onSuccess: onBack });
   }, [rackId, deleteRack, onBack]);
@@ -930,7 +992,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   }
 
   const slots = buildRackSlots({
-    rack, occupiedSlots, handleDrop, handleDragOver, handleDragStart, handleDeleteItem,
+    rack, occupiedSlots, handleDrop, handleDragOver, handleDragStart, handleDeleteItem, handleEditItem,
   });
 
   return (
@@ -1018,7 +1080,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
                       0U
                     </span>
                     <div className="flex-1 min-w-0">
-                      <RackSlotItem item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+                      <RackSlotItem item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} onEdit={handleEditItem} />
                     </div>
                   </div>
                 ))}
@@ -1028,28 +1090,27 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
         </div>
 
           {/* Side panel (right side on desktop, below on mobile) */}
-          {(showAddForm || showDevicePicker || bom) && (
-            <div className="flex-1 min-w-0 lg:max-w-md">
-              {addError && (
-                <div className="mb-3 rounded-lg bg-status-danger-dim border border-status-danger/20 p-3 text-sm text-status-danger">
-                  {addError}
-                </div>
-              )}
-              {showAddForm && (
-                <AddItemForm
-                    onSubmit={handleAddItem}
-                    onCancel={() => { setEditorState({ showAddForm: false }); setEditorState({ addError: null }); }}
-                    maxPositionU={rack.height_u}
-                  />
-              )}
-              {showDevicePicker && (
-                <DevicePicker rackId={rackId} onAdd={handleAddFromTopology} />
-              )}
-              {bom && (
-                <BomView bom={bom} onClose={() => setEditorState({ bom: null })} />
-              )}
-            </div>
-          )}
+          <RackSidePanel
+            rack={rack}
+            rackId={rackId}
+            showAddForm={showAddForm}
+            showDevicePicker={showDevicePicker}
+            bom={bom}
+            editingItem={editingItem}
+            addError={addError}
+            onAddItem={handleAddItem}
+            onAddFromTopology={handleAddFromTopology}
+            onCloseAdd={() => { setEditorState({ showAddForm: false, addError: null }); }}
+            onCloseBom={() => setEditorState({ bom: null })}
+            onCloseEdit={() => setEditorState({ editingItem: null })}
+            onSaveEdit={(data) => {
+              if (!editingItem) return;
+              updateRackItem.mutate(
+                { rackId: rack.id, itemId: editingItem.id, data },
+                { onSuccess: () => setEditorState({ editingItem: null }) },
+              );
+            }}
+          />
         </div>
       </div>
     </div>

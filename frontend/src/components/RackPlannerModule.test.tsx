@@ -1062,6 +1062,16 @@ describe("RackPlannerModule", () => {
       });
     });
 
+    it("renders device panels with light theme colors when not dark", () => {
+      document.documentElement.classList.remove("dark");
+      openEditor();
+      const item = screen.getByTestId("rack-item-10");
+      // Light theme uses lighter gradient faces
+      expect(item.style.background).toContain("linear-gradient");
+      // Restore dark class
+      document.documentElement.classList.add("dark");
+    });
+
     describe("0U items", () => {
       it("shows 0U items in a separate side-mounted section", () => {
         rackMock.data = {

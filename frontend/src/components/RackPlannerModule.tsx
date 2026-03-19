@@ -16,45 +16,55 @@ import {
 
 interface DeviceTypeMeta {
   label: string;
-  bgClass: string;
-  borderClass: string;
+  faceTop: string;
+  faceBottom: string;
+  faceTopLight: string;
+  faceBottomLight: string;
+  accent: string;
 }
 
 const DEVICE_TYPE_META: Record<string, DeviceTypeMeta> = {
   gateway: {
     label: "Gateway",
-    bgClass: "bg-ub-blue/10",
-    borderClass: "border-ub-blue/30",
+    faceTop: "#1a3a5c", faceBottom: "#0f2640",
+    faceTopLight: "#dbeafe", faceBottomLight: "#bfdbfe",
+    accent: "#006fff",
   },
   switch: {
     label: "Switch",
-    bgClass: "bg-teal-500/10 dark:bg-teal-400/10",
-    borderClass: "border-teal-500/30 dark:border-teal-400/30",
+    faceTop: "#1a3d3d", faceBottom: "#0f2828",
+    faceTopLight: "#ccfbf1", faceBottomLight: "#99f6e4",
+    accent: "#14b8a6",
   },
   "patch-panel": {
     label: "Patch Panel",
-    bgClass: "bg-ui-raised dark:bg-noc-raised",
-    borderClass: "border-ui-border dark:border-noc-border",
+    faceTop: "#2a2d35", faceBottom: "#1e2028",
+    faceTopLight: "#e5e7eb", faceBottomLight: "#d1d5db",
+    accent: "#6b7280",
   },
   ups: {
     label: "UPS",
-    bgClass: "bg-status-warning/10",
-    borderClass: "border-status-warning/30",
+    faceTop: "#3d3520", faceBottom: "#2a2515",
+    faceTopLight: "#fef3c7", faceBottomLight: "#fde68a",
+    accent: "#f59e0b",
   },
   ap: {
     label: "Access Point",
-    bgClass: "bg-ui-raised dark:bg-noc-raised",
-    borderClass: "border-ui-border dark:border-noc-border",
+    faceTop: "#252830", faceBottom: "#1a1c22",
+    faceTopLight: "#ede9fe", faceBottomLight: "#ddd6fe",
+    accent: "#8b5cf6",
   },
   shelf: {
     label: "Shelf",
-    bgClass: "bg-ui-raised dark:bg-noc-raised",
-    borderClass: "border-ui-border dark:border-noc-border",
+    faceTop: "#28292e", faceBottom: "#1e1f23",
+    faceTopLight: "#f3f4f6", faceBottomLight: "#e5e7eb",
+    accent: "#4b5563",
   },
   other: {
     label: "Other",
-    bgClass: "bg-ui-raised dark:bg-noc-raised",
-    borderClass: "border-ui-border dark:border-noc-border",
+    faceTop: "#28292e", faceBottom: "#1e1f23",
+    faceTopLight: "#f3f4f6", faceBottomLight: "#e5e7eb",
+    accent: "#4b5563",
   },
 };
 
@@ -627,31 +637,59 @@ interface RackSlotItemProps {
   onDelete: (itemId: number) => void;
 }
 
+const PORT_COUNTS: Record<string, number> = { switch: 6, gateway: 3, "patch-panel": 8 };
+
+function DevicePortIndicators({ type }: { type: string }) {
+  const count = PORT_COUNTS[type] ?? 0;
+  if (count === 0) return null;
+  return (
+    <div className="flex items-center gap-0.5 shrink-0">
+      {Array.from({ length: count }, (_, n) => (
+        <div key={`p${n}`} className="w-1.5 h-2 rounded-[1px] bg-noc-text-dim/30 dark:bg-noc-text-dim/40" />
+      ))}
+    </div>
+  );
+}
+
 function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
   const meta = getDeviceTypeMeta(item.device_type);
   const isFractional = item.width_fraction < 1.0;
+  const isDark = document.documentElement.classList.contains("dark");
+  const faceTop = isDark ? meta.faceTop : meta.faceTopLight;
+  const faceBottom = isDark ? meta.faceBottom : meta.faceBottomLight;
 
   return (
     <div
-      className={`flex items-center gap-2 px-3 h-full rounded border ${meta.bgClass} ${meta.borderClass} cursor-grab active:cursor-grabbing select-none ${isFractional ? "absolute" : ""}`}
-      style={isFractional ? { width: `${item.width_fraction * 100}%`, left: `${item.position_x * 100}%` } : undefined}
+      className={`rack-device flex items-center gap-2 px-3 h-full rounded-sm cursor-grab active:cursor-grabbing select-none ${isFractional ? "absolute" : ""}`}
+      style={{
+        ...(isFractional ? { width: `${item.width_fraction * 100}%`, left: `${item.position_x * 100}%` } : undefined),
+        background: `linear-gradient(180deg, ${faceTop} 0%, ${faceBottom} 100%)`,
+        borderLeft: `3px solid ${meta.accent}`,
+        borderRight: `1px solid ${isDark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.08)"}`,
+        borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.5)"}`,
+        borderBottom: `1px solid ${isDark ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.1)"}`,
+        boxShadow: isDark
+          ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.15)"
+          : "inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.08)",
+      }}
       draggable
       onDragStart={(e) => onDragStart(e, item)}
       data-testid={`rack-item-${item.id}`}
     >
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0 text-ui-text-dim dark:text-noc-text-dim opacity-40">
+      {/* Status LED */}
+      <div className="w-1.5 h-1.5 rounded-full bg-status-success shrink-0 shadow-[0_0_4px_rgba(0,214,143,0.5)]" />
+      {/* Drag handle */}
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 shrink-0 text-ui-text-dim dark:text-white opacity-30">
         <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
         <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
         <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
       </svg>
-      <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim shrink-0 w-14 truncate">
-        {item.device_type}
-      </span>
-      <span className="text-sm font-sans text-ui-text dark:text-noc-text truncate flex-1">
+      <span className="text-[11px] font-semibold text-ui-text dark:text-white/90 truncate flex-1">
         {item.label}
       </span>
+      <DevicePortIndicators type={item.device_type} />
       {item.power_watts > 0 && (
-        <span className="font-mono text-xs text-ui-text-dim dark:text-noc-text-dim shrink-0">
+        <span className="font-mono text-[9px] text-ui-text-dim dark:text-white/50 shrink-0">
           {item.power_watts.toFixed(1)}W
         </span>
       )}
@@ -664,10 +702,10 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
           e.stopPropagation();
           onDelete(item.id);
         }}
-        className="shrink-0 p-2 -m-1 text-ui-text-dim dark:text-noc-text-dim hover:text-status-danger transition-colors z-10"
+        className="shrink-0 p-1 text-ui-text-dim dark:text-white/30 hover:text-status-danger transition-colors z-10"
         aria-label={`Delete ${item.label}`}
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
@@ -953,20 +991,36 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
           {/* Rack grid (fixed width, represents physical rack) */}
           <div className="shrink-0" style={{ width: rack.size === "10-inch" ? "20rem" : "36rem" }} data-testid="rack-grid">
           <div className="flex">
-            {/* Fixed U labels column */}
-            <div className="shrink-0 w-8 grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+            {/* U labels */}
+            <div className="shrink-0 w-7 grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
               {Array.from({ length: rack.height_u }, (_, i) => {
                 const u = rack.height_u - i;
                 return (
-                  <div key={u} className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim text-right pr-2 select-none flex items-center justify-end" style={{ gridRow: "span 2" }}>
+                  <div key={u} className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim text-right pr-1.5 select-none flex items-center justify-end" style={{ gridRow: "span 2" }}>
                     {u}
                   </div>
                 );
               })}
             </div>
-            {/* Draggable items grid with rack border */}
-            <div className="flex-1 min-w-0 border-t-2 border-b-2 border-ui-text-dim/30 dark:border-noc-text-dim/30 rounded grid auto-rows-[1rem]">
+            {/* Left rack rail */}
+            <div className="shrink-0 w-3 bg-gradient-to-r from-[#c8ccd4] to-[#d5d9e0] dark:from-[#1e2028] dark:to-[#282c34] border-y-2 border-[#b0b5be] dark:border-[#353840] grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+              {Array.from({ length: rack.height_u }, (_, uIdx) => (
+                <div key={`rail-${uIdx}`} className="flex items-center justify-center" style={{ gridRow: "span 2" }}>
+                  <div className="w-1 h-1 rounded-full bg-[#a0a5ae] dark:bg-[#454a52]" />
+                </div>
+              ))}
+            </div>
+            {/* Device area */}
+            <div className="flex-1 min-w-0 border-y-2 border-[#b0b5be] dark:border-[#353840] bg-[#e8eaee] dark:bg-[#0e1015] grid auto-rows-[1rem]">
               {slots}
+            </div>
+            {/* Right rack rail */}
+            <div className="shrink-0 w-3 bg-gradient-to-l from-[#c8ccd4] to-[#d5d9e0] dark:from-[#1e2028] dark:to-[#282c34] border-y-2 border-[#b0b5be] dark:border-[#353840] grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+              {Array.from({ length: rack.height_u }, (_, uIdx) => (
+                <div key={`rail-${uIdx}`} className="flex items-center justify-center" style={{ gridRow: "span 2" }}>
+                  <div className="w-1 h-1 rounded-full bg-[#a0a5ae] dark:bg-[#454a52]" />
+                </div>
+              ))}
             </div>
           </div>
           {/* Width indicator */}

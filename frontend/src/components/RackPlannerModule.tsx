@@ -892,21 +892,33 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             <BomView bom={bom} onClose={() => setBom(null)} />
           </div>
         )}
-        <div className="max-w-2xl flex" data-testid="rack-grid">
-          {/* Fixed U labels column */}
-          <div className="shrink-0 w-8 grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
-            {Array.from({ length: rack.height_u }, (_, i) => {
-              const u = rack.height_u - i;
-              return (
-                <div key={u} className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim text-right pr-2 select-none flex items-center justify-end" style={{ gridRow: "span 2" }}>
-                  {u}
-                </div>
-              );
-            })}
+        <div style={{ maxWidth: rack.size === "10-inch" ? "24rem" : "42rem" }} data-testid="rack-grid">
+          <div className="flex">
+            {/* Fixed U labels column */}
+            <div className="shrink-0 w-8 grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
+              {Array.from({ length: rack.height_u }, (_, i) => {
+                const u = rack.height_u - i;
+                return (
+                  <div key={u} className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim text-right pr-2 select-none flex items-center justify-end" style={{ gridRow: "span 2" }}>
+                    {u}
+                  </div>
+                );
+              })}
+            </div>
+            {/* Draggable items grid with rack border */}
+            <div className="flex-1 min-w-0 border-t-2 border-b-2 border-ui-text-dim/30 dark:border-noc-text-dim/30 rounded grid auto-rows-[1rem]">
+              {slots}
+            </div>
           </div>
-          {/* Draggable items grid with rack border */}
-          <div className="flex-1 min-w-0 border-t-2 border-b-2 border-ui-text-dim/30 dark:border-noc-text-dim/30 rounded grid auto-rows-[1rem]">
-            {slots}
+          {/* Width indicator */}
+          <div className="flex items-center mt-2 ml-8">
+            <svg viewBox="0 0 8 8" className="w-2 h-2 shrink-0 text-ui-text-dim/40 dark:text-noc-text-dim/40" fill="currentColor"><polygon points="0,4 8,0 8,8" /></svg>
+            <div className="flex-1 h-px bg-ui-text-dim/40 dark:bg-noc-text-dim/40" />
+            <span className="px-2 text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim select-none whitespace-nowrap">
+              {rack.size === "10-inch" ? "10\"" : "19\""}
+            </span>
+            <div className="flex-1 h-px bg-ui-text-dim/40 dark:bg-noc-text-dim/40" />
+            <svg viewBox="0 0 8 8" className="w-2 h-2 shrink-0 text-ui-text-dim/40 dark:text-noc-text-dim/40" fill="currentColor"><polygon points="8,4 0,0 0,8" /></svg>
           </div>
         </div>
         {zeroUItems.length > 0 && (

@@ -943,24 +943,9 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 lg:p-6">
-        {showAddForm && (
-          <div className="mb-4 max-w-md">
-            <AddItemForm
-              onSubmit={handleAddItem}
-              onCancel={() => setShowAddForm(false)}
-              maxPositionU={rack.height_u}
-            />
-          </div>
-        )}
-        {showDevicePicker && (
-          <DevicePicker rackId={rackId} onAdd={handleAddFromTopology} />
-        )}
-        {bom && (
-          <div className="mb-4 max-w-2xl">
-            <BomView bom={bom} onClose={() => setBom(null)} />
-          </div>
-        )}
-        <div style={{ maxWidth: rack.size === "10-inch" ? "24rem" : "42rem" }} data-testid="rack-grid">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Rack grid (left side on desktop) */}
+          <div className="shrink-0" style={{ maxWidth: rack.size === "10-inch" ? "24rem" : "42rem" }} data-testid="rack-grid">
           <div className="flex">
             {/* Fixed U labels column */}
             <div className="shrink-0 w-8 grid" style={{ gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
@@ -988,26 +973,46 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             <div className="flex-1 h-px bg-ui-text-dim/40 dark:bg-noc-text-dim/40" />
             <svg viewBox="0 0 8 8" className="w-2 h-2 shrink-0 text-ui-text-dim/40 dark:text-noc-text-dim/40" fill="currentColor"><polygon points="8,4 0,0 0,8" /></svg>
           </div>
-        </div>
-        {zeroUItems.length > 0 && (
-          <div className="max-w-2xl mt-4" data-testid="zero-u-section">
-            <h4 className="text-xs font-semibold text-ui-text-secondary dark:text-noc-text-secondary uppercase tracking-wide mb-2">
-              Side-mounted (0U)
-            </h4>
-            <div className="grid auto-rows-[2rem] gap-px">
-              {zeroUItems.map((item) => (
-                <div key={`zero-u-${item.id}`} className="flex">
-                  <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">
-                    0U
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <RackSlotItem item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+          {zeroUItems.length > 0 && (
+            <div className="mt-4" data-testid="zero-u-section">
+              <h4 className="text-xs font-semibold text-ui-text-secondary dark:text-noc-text-secondary uppercase tracking-wide mb-2">
+                Side-mounted (0U)
+              </h4>
+              <div className="grid auto-rows-[2rem] gap-px">
+                {zeroUItems.map((item) => (
+                  <div key={`zero-u-${item.id}`} className="flex">
+                    <span className="font-mono text-[10px] text-ui-text-dim dark:text-noc-text-dim w-8 text-right pr-2 pt-1 shrink-0 select-none">
+                      0U
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <RackSlotItem item={item} onDragStart={handleDragStart} onDelete={handleDeleteItem} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+          {/* Side panel (right side on desktop, below on mobile) */}
+          {(showAddForm || showDevicePicker || bom) && (
+            <div className="lg:w-96 lg:shrink-0 min-w-0">
+              {showAddForm && (
+                <AddItemForm
+                  onSubmit={handleAddItem}
+                  onCancel={() => setShowAddForm(false)}
+                  maxPositionU={rack.height_u}
+                />
+              )}
+              {showDevicePicker && (
+                <DevicePicker rackId={rackId} onAdd={handleAddFromTopology} />
+              )}
+              {bom && (
+                <BomView bom={bom} onClose={() => setBom(null)} />
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

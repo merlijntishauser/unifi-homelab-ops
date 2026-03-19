@@ -26,43 +26,43 @@ interface DeviceTypeMeta {
 const DEVICE_TYPE_META: Record<string, DeviceTypeMeta> = {
   gateway: {
     label: "Gateway",
-    faceTop: "#1a3a5c", faceBottom: "#0f2640",
+    faceTop: "#1e4a7a", faceBottom: "#153660",
     faceTopLight: "#dbeafe", faceBottomLight: "#bfdbfe",
     accent: "#006fff",
   },
   switch: {
     label: "Switch",
-    faceTop: "#1a3d3d", faceBottom: "#0f2828",
+    faceTop: "#1e4d4d", faceBottom: "#153838",
     faceTopLight: "#ccfbf1", faceBottomLight: "#99f6e4",
     accent: "#14b8a6",
   },
   "patch-panel": {
     label: "Patch Panel",
-    faceTop: "#2a2d35", faceBottom: "#1e2028",
+    faceTop: "#353840", faceBottom: "#2a2d35",
     faceTopLight: "#e5e7eb", faceBottomLight: "#d1d5db",
     accent: "#6b7280",
   },
   ups: {
     label: "UPS",
-    faceTop: "#3d3520", faceBottom: "#2a2515",
+    faceTop: "#4d4228", faceBottom: "#3a321e",
     faceTopLight: "#fef3c7", faceBottomLight: "#fde68a",
     accent: "#f59e0b",
   },
   ap: {
     label: "Access Point",
-    faceTop: "#252830", faceBottom: "#1a1c22",
+    faceTop: "#302840", faceBottom: "#252030",
     faceTopLight: "#ede9fe", faceBottomLight: "#ddd6fe",
     accent: "#8b5cf6",
   },
   shelf: {
     label: "Shelf",
-    faceTop: "#28292e", faceBottom: "#1e1f23",
+    faceTop: "#353840", faceBottom: "#2a2d35",
     faceTopLight: "#f3f4f6", faceBottomLight: "#e5e7eb",
     accent: "#4b5563",
   },
   other: {
     label: "Other",
-    faceTop: "#28292e", faceBottom: "#1e1f23",
+    faceTop: "#353840", faceBottom: "#2a2d35",
     faceTopLight: "#f3f4f6", faceBottomLight: "#e5e7eb",
     accent: "#4b5563",
   },
@@ -1024,7 +1024,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
               ))}
             </div>
             {/* Device area */}
-            <div className="flex-1 min-w-0 border-y-2 border-[#b0b5be] dark:border-[#353840] bg-[#e8eaee] dark:bg-[#0e1015] grid auto-rows-[1rem]">
+            <div className="flex-1 min-w-0 border-y-2 border-[#b0b5be] dark:border-[#454a52] bg-[#e8eaee] dark:bg-[#141820] grid auto-rows-[1rem]">
               {slots}
             </div>
             {/* Right rack rail */}

@@ -152,10 +152,10 @@ export const api = {
     fetchJson<RackItem>(`/racks/${rackId}/items/${itemId}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteRackItem: (rackId: number, itemId: number) =>
     fetchJson<void>(`/racks/${rackId}/items/${itemId}`, { method: "DELETE" }),
-  moveRackItem: (rackId: number, itemId: number, positionU: number) =>
+  moveRackItem: (rackId: number, itemId: number, positionU: number, positionX?: number) =>
     fetchJson<RackItem>(`/racks/${rackId}/items/${itemId}/move`, {
       method: "PATCH",
-      body: JSON.stringify({ position_u: positionU }),
+      body: JSON.stringify({ position_u: positionU, position_x: positionX ?? 0.0 }),
     }),
   getRackBom: (id: number) => fetchJson<BomResponse>(`/racks/${id}/bom`),
   getAvailableDevices: (rackId: number) =>

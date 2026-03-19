@@ -299,8 +299,8 @@ export function useDeleteRackItem() {
 export function useMoveRackItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { rackId: number; itemId: number; positionU: number }) =>
-      api.moveRackItem(vars.rackId, vars.itemId, vars.positionU),
+    mutationFn: (vars: { rackId: number; itemId: number; positionU: number; positionX?: number }) =>
+      api.moveRackItem(vars.rackId, vars.itemId, vars.positionU, vars.positionX),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
   });
 }

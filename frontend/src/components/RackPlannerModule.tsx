@@ -657,13 +657,14 @@ function RackSlotItem({ item, onDragStart, onDelete }: RackSlotItemProps) {
       )}
       <button
         draggable={false}
-        onMouseDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => { e.stopPropagation(); e.stopImmediatePropagation(); }}
+        onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
-          e.preventDefault();
           onDelete(item.id);
         }}
-        className="shrink-0 p-1 -m-1 text-ui-text-dim dark:text-noc-text-dim hover:text-status-danger transition-colors"
+        className="shrink-0 p-2 -m-1 text-ui-text-dim dark:text-noc-text-dim hover:text-status-danger transition-colors z-10"
         aria-label={`Delete ${item.label}`}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
@@ -851,11 +852,16 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
       e.preventDefault();
       if (dragItemId === null || !rack) return;
       const item = rack.items.find((i) => i.id === dragItemId);
-      if (!item || item.position_u === targetU) {
+      if (!item) {
         setDragItemId(null);
         return;
       }
-      moveItem.mutate({ rackId: rack.id, itemId: dragItemId, positionU: targetU });
+      if (item.position_u === targetU) {
+        setDragItemId(null);
+        return;
+      }
+      // Preserve horizontal position when dragging vertically
+      moveItem.mutate({ rackId: rack.id, itemId: dragItemId, positionU: targetU, positionX: item.position_x });
       setDragItemId(null);
     },
     [dragItemId, rack, moveItem],

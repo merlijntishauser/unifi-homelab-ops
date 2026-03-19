@@ -460,6 +460,7 @@ describe("RackPlannerModule", () => {
         rackId: 1,
         itemId: 10,
         positionU: 2,
+        positionX: 0.0,
       });
     });
 
@@ -500,6 +501,7 @@ describe("RackPlannerModule", () => {
         rackId: 1,
         itemId: 20,
         positionU: 4,
+        positionX: 0.0,
       });
     });
 

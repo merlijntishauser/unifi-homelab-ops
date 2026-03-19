@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import type { BomResponse, Rack, RackItem, RackItemInput, RackSummary } from "../api/types";
 import { api } from "../api/client";
+import rackSpecs from "../data/rack-specs.json";
 import {
   useRacks,
   useRack,
@@ -362,12 +363,79 @@ function addItemReducer(state: AddItemState, update: Partial<AddItemState>): Add
 function AddItemForm({ onSubmit, onCancel, maxPositionU }: AddItemFormProps) {
   const [form, dispatch] = useReducer(addItemReducer, initialAddItemState);
   const { label, deviceType, heightU, positionU, powerWatts, notes, widthFraction, positionX } = form;
+  const [tab, setTab] = useState<"unifi" | "custom">("unifi");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const validPositionXOptions = useMemo(() => getValidPositionXOptions(widthFraction), [widthFraction]);
 
+  const filteredDevices = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return rackSpecs.devices;
+    return rackSpecs.devices.filter((d) => d.name.toLowerCase().includes(q) || d.model.toLowerCase().includes(q) || d.type.toLowerCase().includes(q));
+  }, [searchQuery]);
+
+  const handleSelectDevice = (device: typeof rackSpecs.devices[0]) => {
+    dispatch({
+      label: device.name,
+      deviceType: device.type,
+      heightU: device.height_u,
+      widthFraction: device.width_fraction,
+      positionX: 0,
+    });
+    setTab("custom");
+  };
+
   return (
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4" data-testid="add-item-form">
-      <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text mb-3">Add Item</h3>
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text">Add Item</h3>
+        <div className="ml-auto flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
+          <button
+            onClick={() => setTab("unifi")}
+            className={`px-3 py-1 text-xs font-medium transition-colors ${tab === "unifi" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
+          >
+            UniFi Device
+          </button>
+          <button
+            onClick={() => setTab("custom")}
+            className={`px-3 py-1 text-xs font-medium transition-colors border-l border-ui-border dark:border-noc-border ${tab === "custom" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
+          >
+            Custom
+          </button>
+        </div>
+      </div>
+
+      {tab === "unifi" && (
+        <div className="mb-3">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search devices..."
+            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text mb-2"
+          />
+          <div className="max-h-48 overflow-y-auto divide-y divide-ui-border/50 dark:divide-noc-border/50 border border-ui-border dark:border-noc-border rounded">
+            {filteredDevices.map((device) => (
+              <button
+                key={device.model}
+                onClick={() => handleSelectDevice(device)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-ui-raised dark:hover:bg-noc-input transition-colors cursor-pointer"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-ui-text dark:text-noc-text truncate">{device.name}</div>
+                  <div className="text-[10px] text-ui-text-dim dark:text-noc-text-dim">
+                    {device.form_factor} -- {device.height_u}U -- {device.type}
+                  </div>
+                </div>
+                <span className="shrink-0 text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim">{device.model}</span>
+              </button>
+            ))}
+            {filteredDevices.length === 0 && (
+              <p className="text-xs text-ui-text-dim dark:text-noc-text-dim p-3 text-center">No matching devices</p>
+            )}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
           <label htmlFor="add-item-label" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Label</label>

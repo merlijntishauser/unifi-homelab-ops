@@ -586,6 +586,7 @@ describe("RackPlannerModule", () => {
     it("Add Item form allows changing all fields", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
+      fireEvent.click(screen.getByText("Custom"));
       const form = screen.getByTestId("add-item-form");
 
       // Change label
@@ -679,6 +680,38 @@ describe("RackPlannerModule", () => {
       });
       fireEvent.click(screen.getByText("Add"));
       expect(addItemMock.mutate).not.toHaveBeenCalled();
+    });
+
+    it("UniFi Device tab shows searchable device list", () => {
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      // Default tab is UniFi Device
+      expect(screen.getByText("UniFi Device")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Search devices...")).toBeInTheDocument();
+      expect(screen.getByText("Cloud Gateway Fiber")).toBeInTheDocument();
+    });
+
+    it("UniFi Device search filters the list", () => {
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      fireEvent.change(screen.getByPlaceholderText("Search devices..."), { target: { value: "lite 8" } });
+      expect(screen.getByText("Switch Lite 8 PoE")).toBeInTheDocument();
+      expect(screen.queryByText("Cloud Gateway Fiber")).not.toBeInTheDocument();
+    });
+
+    it("UniFi Device search shows empty state", () => {
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      fireEvent.change(screen.getByPlaceholderText("Search devices..."), { target: { value: "zzzznonexistent" } });
+      expect(screen.getByText("No matching devices")).toBeInTheDocument();
+    });
+
+    it("Selecting a UniFi device fills the custom form", () => {
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      fireEvent.click(screen.getByText("Cloud Gateway Fiber"));
+      // Should switch to Custom tab with pre-filled values
+      expect(screen.getByDisplayValue("Cloud Gateway Fiber")).toBeInTheDocument();
     });
 
     it("createRack onSuccess hides the form", () => {

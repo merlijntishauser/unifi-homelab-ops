@@ -33,3 +33,7 @@ class TestZoneFilterService:
         save_hidden_zone_ids(["z1"])
         save_hidden_zone_ids([])
         assert get_hidden_zone_ids() == []
+
+    def test_save_deduplicates_input(self) -> None:
+        save_hidden_zone_ids(["z1", "z2", "z1", "z3", "z2"])
+        assert sorted(get_hidden_zone_ids()) == ["z1", "z2", "z3"]

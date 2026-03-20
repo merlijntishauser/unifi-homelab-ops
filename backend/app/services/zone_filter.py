@@ -23,12 +23,13 @@ def get_hidden_zone_ids() -> list[str]:
 
 
 def save_hidden_zone_ids(zone_ids: list[str]) -> None:
-    """Replace hidden zone IDs with the given list."""
-    log.info("hidden_zones_save", count=len(zone_ids), zone_ids=zone_ids)
+    """Replace hidden zone IDs with the given list (duplicates are ignored)."""
+    unique_ids = list(dict.fromkeys(zone_ids))  # deduplicate, preserve order
+    log.info("hidden_zones_save", count=len(unique_ids), zone_ids=unique_ids)
     session = get_session()
     try:
         session.query(HiddenZoneRow).delete()
-        for zid in zone_ids:
+        for zid in unique_ids:
             session.add(HiddenZoneRow(zone_id=zid))
         session.commit()
     finally:

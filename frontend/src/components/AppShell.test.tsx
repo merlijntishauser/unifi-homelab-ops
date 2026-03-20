@@ -105,9 +105,18 @@ describe("AppShell", () => {
     expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
   });
 
-  it("renders module sidebar", () => {
+  it("renders module sidebar on desktop", () => {
     renderShell();
     expect(screen.getByRole("navigation", { name: "Module navigation" })).toBeInTheDocument();
+  });
+
+  it("renders bottom nav on mobile instead of sidebar", () => {
+    // Mock useIsMobile to return true
+    vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList);
+    renderShell();
+    // BottomNav should be present (it's not mocked so renders the real component)
+    expect(screen.getByRole("navigation", { name: "Bottom navigation" })).toBeInTheDocument();
+    vi.restoreAllMocks();
   });
 
   it("renders outlet content", () => {

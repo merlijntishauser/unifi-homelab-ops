@@ -46,7 +46,11 @@ function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
   const [svgHtml, setSvgHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    renderMermaidSvg(code, isDark).then(setSvgHtml).catch(() => setSvgHtml(null));
+    let cancelled = false;
+    renderMermaidSvg(code, isDark)
+      .then((svg) => { if (!cancelled) setSvgHtml(svg); })
+      .catch(() => { if (!cancelled) setSvgHtml(null); });
+    return () => { cancelled = true; };
   }, [code, isDark]);
 
   useEffect(() => {

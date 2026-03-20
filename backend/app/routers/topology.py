@@ -1,5 +1,7 @@
 """Router for topology endpoints."""
 
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException
 
@@ -28,7 +30,7 @@ async def topology_svg(
     assert credentials is not None
 
     try:
-        svg = get_topology_svg(credentials, color_mode=color_mode, projection=projection)
+        svg = await asyncio.to_thread(get_topology_svg, credentials, color_mode=color_mode, projection=projection)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -44,4 +46,4 @@ async def topology_devices() -> TopologyDevicesResponse:
     credentials = get_unifi_config()
     assert credentials is not None
 
-    return get_topology_devices(credentials)
+    return await asyncio.to_thread(get_topology_devices, credentials)

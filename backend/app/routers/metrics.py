@@ -1,5 +1,7 @@
 """Router for metrics endpoints."""
 
+import asyncio
+
 import structlog
 from fastapi import APIRouter
 
@@ -35,8 +37,8 @@ def _fetch_live_stats() -> list[object]:  # pragma: no cover -- integration with
 
 @router.get("/devices")
 async def metrics_devices() -> MetricsDevicesResponse:
-    live = _fetch_live_stats()
-    snapshots = get_latest_snapshots(current_stats=live or None)  # type: ignore[arg-type]
+    live = await asyncio.to_thread(_fetch_live_stats)
+    snapshots = await asyncio.to_thread(get_latest_snapshots, current_stats=live or None)  # type: ignore[arg-type]
     return MetricsDevicesResponse(devices=snapshots)
 
 

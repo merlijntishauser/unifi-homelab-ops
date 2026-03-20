@@ -1,5 +1,7 @@
 """Settings router for AI configuration management."""
 
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -102,7 +104,8 @@ async def test_connection(body: AiTestInput | None = None) -> dict[str, str]:
     log.info("ai_test_connection", provider=provider_type, model=model)
     try:
         if provider_type == "anthropic":
-            resp = httpx.post(
+            resp = await asyncio.to_thread(
+                httpx.post,
                 f"{base_url}/messages",
                 headers={
                     "x-api-key": str(api_key),
@@ -117,7 +120,8 @@ async def test_connection(body: AiTestInput | None = None) -> dict[str, str]:
                 timeout=15.0,
             )
         else:
-            resp = httpx.post(
+            resp = await asyncio.to_thread(
+                httpx.post,
                 f"{base_url}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {api_key}",

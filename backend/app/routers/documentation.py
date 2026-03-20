@@ -1,5 +1,7 @@
 """Router for documentation generator endpoints."""
 
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
@@ -21,7 +23,7 @@ async def documentation_sections() -> DocumentationResponse:
     credentials = get_unifi_config()
     assert credentials is not None
 
-    sections = get_documentation_sections(credentials)
+    sections = await asyncio.to_thread(get_documentation_sections, credentials)
     log.info("documentation_sections_served", section_count=len(sections))
     return DocumentationResponse(sections=sections)
 
@@ -34,6 +36,6 @@ async def documentation_export() -> Response:
     credentials = get_unifi_config()
     assert credentials is not None
 
-    markdown = get_documentation_export(credentials)
+    markdown = await asyncio.to_thread(get_documentation_export, credentials)
     log.info("documentation_export_served", length=len(markdown))
     return Response(content=markdown, media_type="text/markdown")

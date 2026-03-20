@@ -1,3 +1,5 @@
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException
 
@@ -17,6 +19,6 @@ async def list_zones() -> list[Zone]:
 
     credentials = get_unifi_config()
     assert credentials is not None  # guaranteed by has_credentials()
-    zones = get_zones(credentials)
+    zones = await asyncio.to_thread(get_zones, credentials)
     log.info("zones_fetched", zone_count=len(zones))
     return zones

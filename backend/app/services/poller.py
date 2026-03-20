@@ -90,19 +90,25 @@ def _maybe_prune() -> None:
         _last_prune_time = now
 
 
+def _poll_once() -> None:
+    """Execute a single metrics poll cycle (blocking)."""
+    if not has_credentials():
+        return
+    credentials = get_unifi_config()
+    assert credentials is not None
+    config = to_topology_config(credentials)
+    raw_stats = fetch_device_stats(config, site=credentials.site)
+    stats = normalize_device_stats(raw_stats)  # type: ignore[arg-type]
+    record_snapshot(stats)
+    _check_anomalies(stats)
+    _maybe_prune()
+
+
 async def start_metrics_poller() -> None:
     """Background task that polls device stats every 30 seconds."""
     while True:
         try:
-            if has_credentials():
-                credentials = get_unifi_config()
-                assert credentials is not None
-                config = to_topology_config(credentials)
-                raw_stats = fetch_device_stats(config, site=credentials.site)
-                stats = normalize_device_stats(raw_stats)  # type: ignore[arg-type]
-                record_snapshot(stats)
-                _check_anomalies(stats)
-                _maybe_prune()
+            await asyncio.to_thread(_poll_once)
         except Exception:
             log.exception("metrics_poll_error")
         await asyncio.sleep(_POLL_INTERVAL)

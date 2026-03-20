@@ -1,3 +1,5 @@
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -22,7 +24,7 @@ async def list_rules(
 
     credentials = get_unifi_config()
     assert credentials is not None  # guaranteed by has_credentials()
-    rules = get_rules(credentials)
+    rules = await asyncio.to_thread(get_rules, credentials)
 
     if source_zone is not None:
         rules = [r for r in rules if r.source_zone_id == source_zone]
@@ -39,7 +41,7 @@ async def list_zone_pairs() -> list[ZonePair]:
 
     credentials = get_unifi_config()
     assert credentials is not None  # guaranteed by has_credentials()
-    return get_zone_pairs(credentials)
+    return await asyncio.to_thread(get_zone_pairs, credentials)
 
 
 class ToggleRequest(BaseModel):
@@ -55,7 +57,7 @@ async def toggle_rule(rule_id: str, body: ToggleRequest) -> dict[str, str]:
     assert credentials is not None
     log.info("rule_toggle", rule_id=rule_id, enabled=body.enabled)
     try:
-        toggle_policy(credentials, rule_id, enabled=body.enabled)
+        await asyncio.to_thread(toggle_policy, credentials, rule_id, enabled=body.enabled)
     except WriteError as exc:
         log.warning("rule_toggle_failed", rule_id=rule_id, error=str(exc))
         raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -76,7 +78,7 @@ async def reorder_rules(body: SwapOrderRequest) -> dict[str, str]:
     assert credentials is not None
     log.info("rule_reorder", policy_a=body.policy_id_a, policy_b=body.policy_id_b)
     try:
-        swap_policy_order(credentials, body.policy_id_a, body.policy_id_b)
+        await asyncio.to_thread(swap_policy_order, credentials, body.policy_id_a, body.policy_id_b)
     except WriteError as exc:
         log.warning("rule_reorder_failed", error=str(exc))
         raise HTTPException(status_code=502, detail=str(exc)) from exc

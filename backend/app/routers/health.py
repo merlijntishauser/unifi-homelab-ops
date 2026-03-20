@@ -1,5 +1,7 @@
 """Router for site health endpoints."""
 
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException
 
@@ -20,7 +22,7 @@ async def health_summary() -> HealthSummaryResponse:
     credentials = get_unifi_config()
     assert credentials is not None
 
-    return get_health_summary(credentials)
+    return await asyncio.to_thread(get_health_summary, credentials)
 
 
 @router.post("/analyze")

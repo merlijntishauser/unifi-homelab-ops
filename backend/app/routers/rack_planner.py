@@ -1,5 +1,7 @@
 """Router for rack planner endpoints."""
 
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
@@ -133,7 +135,7 @@ async def rack_available_devices(rack_id: int) -> list[dict[str, str]]:
     assert credentials is not None
 
     try:
-        return get_available_devices(rack_id, credentials)
+        return await asyncio.to_thread(get_available_devices, rack_id, credentials)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -147,6 +149,6 @@ async def rack_import(rack_id: int) -> list[RackItem]:
     assert credentials is not None
 
     try:
-        return import_from_topology(rack_id, credentials)
+        return await asyncio.to_thread(import_from_topology, rack_id, credentials)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

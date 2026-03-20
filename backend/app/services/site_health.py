@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from collections import Counter
@@ -442,7 +443,7 @@ async def analyze_site_health(credentials: UnifiCredentials) -> HealthAnalysisRe
     site_profile = analysis_settings["site_profile"]
     model = config["model"]
 
-    ctx = _gather_health_context(credentials)
+    ctx = await asyncio.to_thread(_gather_health_context, credentials)
     summary = HealthSummaryResponse(
         firewall=_firewall_summary_from_pairs(ctx.zone_pairs),
         topology=_topology_summary_from_data(ctx.topo_response),
@@ -470,12 +471,12 @@ async def analyze_site_health(credentials: UnifiCredentials) -> HealthAnalysisRe
         provider_type = config.get("provider_type", "openai")
         log.debug("health_ai_call", provider=provider_type, model=model)
         if provider_type == "anthropic":
-            response_text = call_anthropic(
-                config["base_url"], config["api_key"], model, system_prompt, user_prompt,
+            response_text = await asyncio.to_thread(
+                call_anthropic, config["base_url"], config["api_key"], model, system_prompt, user_prompt,
             )
         else:
-            response_text = call_openai(
-                config["base_url"], config["api_key"], model, system_prompt, user_prompt,
+            response_text = await asyncio.to_thread(
+                call_openai, config["base_url"], config["api_key"], model, system_prompt, user_prompt,
             )
     except httpx.HTTPStatusError as exc:
         log.warning("health_provider_http_error", status_code=exc.response.status_code)

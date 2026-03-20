@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from datetime import UTC, datetime
@@ -233,12 +234,12 @@ async def analyze_with_ai(
         provider_type = config.get("provider_type", "openai")
         log.debug("ai_api_call", provider=provider_type, model=model)
         if provider_type == "anthropic":
-            response_text = call_anthropic(
-                config["base_url"], config["api_key"], model, system_prompt, user_prompt,
+            response_text = await asyncio.to_thread(
+                call_anthropic, config["base_url"], config["api_key"], model, system_prompt, user_prompt,
             )
         else:
-            response_text = call_openai(
-                config["base_url"], config["api_key"], model, system_prompt, user_prompt,
+            response_text = await asyncio.to_thread(
+                call_openai, config["base_url"], config["api_key"], model, system_prompt, user_prompt,
             )
     except httpx.HTTPStatusError as exc:
         log.warning("ai_provider_http_error", zone_pair=zone_pair_key, status_code=exc.response.status_code)

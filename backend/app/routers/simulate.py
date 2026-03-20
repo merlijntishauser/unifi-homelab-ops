@@ -1,3 +1,5 @@
+import asyncio
+
 import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -33,8 +35,8 @@ async def simulate(request: SimulateRequest) -> SimulationResult:
         protocol=request.protocol, port=request.port, source_port=request.source_port,
     )
 
-    zones = get_zones(credentials)
-    rules = get_rules(credentials)
+    zones = await asyncio.to_thread(get_zones, credentials)
+    rules = await asyncio.to_thread(get_rules, credentials)
 
     src_zone_id = resolve_zone(request.src_ip, zones)
     dst_zone_id = resolve_zone(request.dst_ip, zones)

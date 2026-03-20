@@ -399,7 +399,7 @@ class TestBuildCacheKeyDeterministic:
         key2 = _build_cache_key(other_rules, "LAN", "WAN", "gpt-4o", "homelab", "v1")
         assert key1 != key2
 
-    def test_description_excluded_from_key(self) -> None:
+    def test_description_change_invalidates_key(self) -> None:
         rules_with_desc = [
             Rule(
                 id="rule-1",
@@ -426,7 +426,7 @@ class TestBuildCacheKeyDeterministic:
         ]
         key1 = _build_cache_key(SAMPLE_RULES, "LAN", "WAN", "gpt-4o", "homelab", "v1")
         key2 = _build_cache_key(rules_with_desc, "LAN", "WAN", "gpt-4o", "homelab", "v1")
-        assert key1 == key2
+        assert key1 != key2
 
     def test_different_model_different_key(self) -> None:
         key1 = _build_cache_key(SAMPLE_RULES, "LAN", "WAN", "gpt-4o", "homelab", "v1")

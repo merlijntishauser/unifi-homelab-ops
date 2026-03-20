@@ -72,7 +72,7 @@ def _build_cache_key(
 ) -> str:
     """Build a deterministic cache key from all inputs that affect output."""
     normalized = sorted(
-        [r.model_dump(exclude={"description"}) for r in rules],
+        [r.model_dump() for r in rules],
         key=lambda d: d["id"],
     )
     content = json.dumps({

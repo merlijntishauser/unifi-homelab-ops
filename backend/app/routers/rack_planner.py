@@ -6,7 +6,7 @@ import structlog
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
-from app.config import get_unifi_config, has_credentials
+from app.config import RequireCredentials
 from app.models import BomResponse, DeviceSpec, Rack, RackInput, RackItem, RackItemInput, RackSummary
 from app.services.rack_planner import (
     add_rack_item,
@@ -126,14 +126,8 @@ async def rack_bom(rack_id: int) -> BomResponse:
 
 
 @router.get("/{rack_id}/available-devices")
-async def rack_available_devices(rack_id: int) -> list[dict[str, str]]:
+async def rack_available_devices(rack_id: int, credentials: RequireCredentials) -> list[dict[str, str]]:
     """List topology devices not yet placed in this rack."""
-    if not has_credentials():
-        raise HTTPException(status_code=401, detail="No credentials configured")
-
-    credentials = get_unifi_config()
-    assert credentials is not None
-
     try:
         return await asyncio.to_thread(get_available_devices, rack_id, credentials)
     except ValueError as exc:
@@ -141,13 +135,7 @@ async def rack_available_devices(rack_id: int) -> list[dict[str, str]]:
 
 
 @router.post("/{rack_id}/import")
-async def rack_import(rack_id: int) -> list[RackItem]:
-    if not has_credentials():
-        raise HTTPException(status_code=401, detail="No credentials configured")
-
-    credentials = get_unifi_config()
-    assert credentials is not None
-
+async def rack_import(rack_id: int, credentials: RequireCredentials) -> list[RackItem]:
     try:
         return await asyncio.to_thread(import_from_topology, rack_id, credentials)
     except ValueError as exc:

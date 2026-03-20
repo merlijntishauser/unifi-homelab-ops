@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from threading import Lock
-from typing import Literal
+from typing import Annotated, Literal
 
+from fastapi import Depends, HTTPException
 from pydantic_settings import BaseSettings
 
 
@@ -88,3 +89,14 @@ def get_credential_source() -> Literal["runtime", "env", "none"]:
     if settings.unifi_url and settings.unifi_user and settings.unifi_pass:
         return "env"
     return "none"
+
+
+def _require_credentials() -> UnifiCredentials:
+    """FastAPI dependency that returns validated credentials or raises 401."""
+    credentials = get_unifi_config()
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="No credentials configured")
+    return credentials
+
+
+RequireCredentials = Annotated[UnifiCredentials, Depends(_require_credentials)]

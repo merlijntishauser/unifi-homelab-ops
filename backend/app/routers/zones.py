@@ -1,9 +1,9 @@
 import asyncio
 
 import structlog
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
-from app.config import get_unifi_config, has_credentials
+from app.config import RequireCredentials
 from app.models import Zone
 from app.services.firewall import get_zones
 
@@ -13,12 +13,7 @@ router = APIRouter(tags=["zones"])
 
 
 @router.get("/zones")
-async def list_zones() -> list[Zone]:
-    if not has_credentials():
-        raise HTTPException(status_code=401, detail="No credentials configured")
-
-    credentials = get_unifi_config()
-    assert credentials is not None  # guaranteed by has_credentials()
+async def list_zones(credentials: RequireCredentials) -> list[Zone]:
     zones = await asyncio.to_thread(get_zones, credentials)
     log.info("zones_fetched", zone_count=len(zones))
     return zones

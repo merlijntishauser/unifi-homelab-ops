@@ -5,7 +5,7 @@ import asyncio
 import structlog
 from fastapi import APIRouter, HTTPException
 
-from app.config import get_unifi_config, has_credentials
+from app.config import RequireCredentials
 from app.models import TopologyDevicesResponse, TopologySvgResponse
 from app.services.topology import VALID_PROJECTIONS, get_topology_devices, get_topology_svg
 
@@ -16,18 +16,13 @@ router = APIRouter(tags=["topology"])
 
 @router.get("/svg")
 async def topology_svg(
+    credentials: RequireCredentials,
     color_mode: str = "dark",
     projection: str = "isometric",
 ) -> TopologySvgResponse:
-    if not has_credentials():
-        raise HTTPException(status_code=401, detail="No credentials configured")
-
     if projection not in VALID_PROJECTIONS:
         valid = ", ".join(VALID_PROJECTIONS)
         raise HTTPException(status_code=400, detail=f"Invalid projection: {projection}. Valid: {valid}")
-
-    credentials = get_unifi_config()
-    assert credentials is not None
 
     try:
         svg = await asyncio.to_thread(get_topology_svg, credentials, color_mode=color_mode, projection=projection)
@@ -39,11 +34,5 @@ async def topology_svg(
 
 
 @router.get("/devices")
-async def topology_devices() -> TopologyDevicesResponse:
-    if not has_credentials():
-        raise HTTPException(status_code=401, detail="No credentials configured")
-
-    credentials = get_unifi_config()
-    assert credentials is not None
-
+async def topology_devices(credentials: RequireCredentials) -> TopologyDevicesResponse:
     return await asyncio.to_thread(get_topology_devices, credentials)

@@ -4,7 +4,7 @@ import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.config import get_unifi_config, has_credentials
+from app.config import RequireCredentials
 from app.services.firewall import get_rules, get_zones
 from app.services.simulator import SimulationResult, evaluate_rules, resolve_zone
 
@@ -22,13 +22,7 @@ class SimulateRequest(BaseModel):
 
 
 @router.post("/simulate")
-async def simulate(request: SimulateRequest) -> SimulationResult:
-    if not has_credentials():
-        raise HTTPException(status_code=401, detail="No credentials configured")
-
-    credentials = get_unifi_config()
-    assert credentials is not None  # guaranteed by has_credentials()
-
+async def simulate(request: SimulateRequest, credentials: RequireCredentials) -> SimulationResult:
     log.info(
         "simulate",
         src_ip=request.src_ip, dst_ip=request.dst_ip,

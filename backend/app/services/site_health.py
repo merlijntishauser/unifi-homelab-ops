@@ -344,16 +344,14 @@ def _build_health_prompt(summary: HealthSummaryResponse, ctx: _HealthContext | N
     return "\n".join(sections)
 
 
-def _build_cache_key(summary: HealthSummaryResponse, model: str, site_profile: str) -> str:
-    """Build deterministic cache key from summary data, model, and site profile."""
-    content = json.dumps({
-        "firewall": summary.firewall.model_dump(),
-        "topology": summary.topology.model_dump(),
-        "metrics": summary.metrics.model_dump(),
-        "model": model,
-        "site_profile": site_profile,
-        "prompt_version": HEALTH_PROMPT_VERSION,
-    }, sort_keys=True)
+def _build_cache_key(prompt: str, model: str) -> str:
+    """Build deterministic cache key from the full prompt text and model.
+
+    Hashing the complete prompt ensures that any change in entity-level
+    details (device names, findings, notifications) invalidates the cache,
+    not just aggregate count changes.
+    """
+    content = json.dumps({"prompt": prompt, "model": model}, sort_keys=True)
     return hashlib.sha256(content.encode()).hexdigest()
 
 
@@ -451,7 +449,10 @@ async def analyze_site_health(credentials: UnifiCredentials) -> HealthAnalysisRe
         metrics=_metrics_summary_from_data(ctx.snapshots, ctx.notifications),
     )
 
-    cache_key = _build_cache_key(summary, model, site_profile)
+    system_prompt = _build_health_system_prompt(site_profile)
+    user_prompt = _build_health_prompt(summary, ctx)
+
+    cache_key = _build_cache_key(user_prompt, model)
     log.debug("health_analysis_start", cache_key=cache_key[:12], site_profile=site_profile)
 
     cached = _get_cached(cache_key)
@@ -464,9 +465,6 @@ async def analyze_site_health(credentials: UnifiCredentials) -> HealthAnalysisRe
             cached=True,
             analyzed_at=analyzed_at,
         )
-
-    system_prompt = _build_health_system_prompt(site_profile)
-    user_prompt = _build_health_prompt(summary, ctx)
 
     try:
         provider_type = config.get("provider_type", "openai")

@@ -689,21 +689,19 @@ class TestBuildHealthSystemPrompt:
 
 class TestBuildCacheKey:
     def test_same_input_same_key(self) -> None:
-        key1 = _build_cache_key(MOCK_SUMMARY, "gpt-4o", "homelab")
-        key2 = _build_cache_key(MOCK_SUMMARY, "gpt-4o", "homelab")
+        prompt = _build_health_prompt(MOCK_SUMMARY)
+        key1 = _build_cache_key(prompt, "gpt-4o")
+        key2 = _build_cache_key(prompt, "gpt-4o")
         assert key1 == key2
 
     def test_different_model_different_key(self) -> None:
-        key1 = _build_cache_key(MOCK_SUMMARY, "gpt-4o", "homelab")
-        key2 = _build_cache_key(MOCK_SUMMARY, "claude-sonnet-4-6", "homelab")
+        prompt = _build_health_prompt(MOCK_SUMMARY)
+        key1 = _build_cache_key(prompt, "gpt-4o")
+        key2 = _build_cache_key(prompt, "claude-sonnet-4-6")
         assert key1 != key2
 
-    def test_different_profile_different_key(self) -> None:
-        key1 = _build_cache_key(MOCK_SUMMARY, "gpt-4o", "homelab")
-        key2 = _build_cache_key(MOCK_SUMMARY, "gpt-4o", "enterprise")
-        assert key1 != key2
-
-    def test_different_summary_different_key(self) -> None:
+    def test_different_prompt_different_key(self) -> None:
+        prompt1 = _build_health_prompt(MOCK_SUMMARY)
         other = HealthSummaryResponse(
             firewall=FirewallSummary(
                 zone_pair_count=10, grade_distribution={}, finding_count_by_severity={}, uncovered_pairs=0
@@ -711,8 +709,9 @@ class TestBuildCacheKey:
             topology=MOCK_SUMMARY.topology,
             metrics=MOCK_SUMMARY.metrics,
         )
-        key1 = _build_cache_key(MOCK_SUMMARY, "gpt-4o", "homelab")
-        key2 = _build_cache_key(other, "gpt-4o", "homelab")
+        prompt2 = _build_health_prompt(other)
+        key1 = _build_cache_key(prompt1, "gpt-4o")
+        key2 = _build_cache_key(prompt2, "gpt-4o")
         assert key1 != key2
 
 
@@ -806,7 +805,8 @@ class TestAnalyzeSiteHealthCacheHit:
                 topology=_topology_summary_from_data(ctx.topo_response),
                 metrics=_metrics_summary_from_data(ctx.snapshots, ctx.notifications),
             )
-            cache_key = _build_cache_key(summary, "test-model", "homelab")
+            prompt = _build_health_prompt(summary, ctx)
+            cache_key = _build_cache_key(prompt, "test-model")
             _save_cache(cache_key, SAMPLE_HEALTH_FINDINGS_RAW, "2026-03-15T12:00:00")
 
             with patch("app.services._ai_provider.httpx.post") as mock_post:
@@ -995,7 +995,8 @@ class TestResultsCachedAfterCall:
             topology=_topology_summary_from_data(ctx.topo_response),
             metrics=_metrics_summary_from_data(ctx.snapshots, ctx.notifications),
         )
-        cache_key = _build_cache_key(summary, "test-model", "homelab")
+        prompt = _build_health_prompt(summary, ctx)
+        cache_key = _build_cache_key(prompt, "test-model")
         session = get_session()
         try:
             row = session.get(SiteHealthCacheRow, cache_key)

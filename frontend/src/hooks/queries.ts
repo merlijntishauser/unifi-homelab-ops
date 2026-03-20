@@ -17,6 +17,7 @@ export const queryKeys = {
   notifications: ["notifications"] as const,
   docSections: ["doc-sections"] as const,
   racks: ["racks"] as const,
+  deviceSpecs: ["device-specs"] as const,
 };
 
 // --- Queries ---
@@ -138,6 +139,14 @@ export function useRacks() {
   return useQuery({
     queryKey: queryKeys.racks,
     queryFn: () => api.getRacks(),
+  });
+}
+
+export function useDeviceSpecs() {
+  return useQuery({
+    queryKey: queryKeys.deviceSpecs,
+    queryFn: () => api.getDeviceSpecs(),
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour -- specs rarely change
   });
 }
 

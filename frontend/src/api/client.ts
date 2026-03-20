@@ -3,6 +3,7 @@ import type {
   AiAnalyzeRequest,
   AiAnalyzeResponse,
   AiConfig,
+  DeviceSpec,
   AiConfigInput,
   AiPreset,
   AppAuthStatus,
@@ -163,4 +164,5 @@ export const api = {
     fetchJson<{ mac: string; name: string; model: string; type: string }[]>(`/racks/${rackId}/available-devices`),
   importRackFromTopology: (id: number) =>
     fetchJson<RackItem[]>(`/racks/${id}/import`, { method: "POST" }),
+  getDeviceSpecs: () => fetchJson<DeviceSpec[]>("/racks/device-specs"),
 };

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import type { BomResponse, Rack, RackItem, RackItemInput, RackSummary } from "../api/types";
+import type { BomResponse, DeviceSpec, Rack, RackItem, RackItemInput, RackSummary } from "../api/types";
 import { api } from "../api/client";
-import rackSpecs from "../data/rack-specs.json";
 import {
   useRacks,
   useRack,
@@ -11,6 +10,7 @@ import {
   useUpdateRackItem,
   useDeleteRackItem,
   useMoveRackItem,
+  useDeviceSpecs,
 } from "../hooks/queries";
 
 // --- Device type metadata ---
@@ -291,6 +291,7 @@ interface AddItemFormProps {
   maxPositionU: number;
   initialValues?: Partial<AddItemState>;
   submitLabel?: string;
+  deviceSpecs?: DeviceSpec[];
 }
 
 interface AddItemState {
@@ -315,6 +316,8 @@ const initialAddItemState: AddItemState = {
   positionX: 0.0,
 };
 
+const EMPTY_SPECS: DeviceSpec[] = [];
+
 const WIDTH_OPTIONS: { label: string; value: number }[] = [
   { label: "Full (1U)", value: 1.0 },
   { label: "Half (1/2)", value: 0.5 },
@@ -335,7 +338,7 @@ function addItemReducer(state: AddItemState, update: Partial<AddItemState>): Add
   return { ...state, ...update };
 }
 
-function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add" }: AddItemFormProps) {
+function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add", deviceSpecs = EMPTY_SPECS }: AddItemFormProps) {
   const [form, dispatch] = useReducer(addItemReducer, { ...initialAddItemState, ...initialValues });
   const { label, deviceType, heightU, positionU, powerWatts, notes, widthFraction, positionX } = form;
   const [tab, setTab] = useState<"unifi" | "custom">(initialValues ? "custom" : "unifi");
@@ -345,16 +348,17 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
 
   const filteredDevices = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return rackSpecs.devices;
-    return rackSpecs.devices.filter((d) => d.name.toLowerCase().includes(q) || d.model.toLowerCase().includes(q) || d.type.toLowerCase().includes(q));
-  }, [searchQuery]);
+    if (!q) return deviceSpecs;
+    return deviceSpecs.filter((d) => d.name.toLowerCase().includes(q) || d.model.toLowerCase().includes(q) || d.type.toLowerCase().includes(q));
+  }, [searchQuery, deviceSpecs]);
 
-  const handleSelectDevice = (device: typeof rackSpecs.devices[0]) => {
+  const handleSelectDevice = (device: DeviceSpec) => {
     dispatch({
       label: device.name,
       deviceType: device.type,
       heightU: device.height_u,
       widthFraction: device.width_fraction,
+      powerWatts: device.max_power_w ?? 0,
       positionX: 0,
     });
     setTab("custom");
@@ -664,7 +668,7 @@ function RackSlotItem({ item, onDragStart, onDelete, onEdit }: RackSlotItemProps
       )}
       <button
         draggable={false}
-        onMouseDown={(e) => { e.stopPropagation(); e.stopImmediatePropagation(); }}
+        onMouseDown={(e) => e.stopPropagation()}
         onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
@@ -811,9 +815,10 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
 
 // --- RackSidePanel ---
 
-function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editingItem, addError, onAddItem, onAddFromTopology, onCloseAdd, onCloseBom, onCloseEdit, onSaveEdit }: {
+function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editingItem, addError, deviceSpecs, onAddItem, onAddFromTopology, onCloseAdd, onCloseBom, onCloseEdit, onSaveEdit }: {
   rack: Rack; rackId: number;
   showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; editingItem: RackItem | null; addError: string | null;
+  deviceSpecs: DeviceSpec[];
   onAddItem: (data: RackItemInput) => void; onAddFromTopology: (device: { mac: string; name: string; model: string; type: string }) => void;
   onCloseAdd: () => void; onCloseBom: () => void; onCloseEdit: () => void; onSaveEdit: (data: RackItemInput) => void;
 }) {
@@ -826,7 +831,7 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
         </div>
       )}
       {showAddForm && (
-        <AddItemForm onSubmit={onAddItem} onCancel={onCloseAdd} maxPositionU={rack.height_u} />
+        <AddItemForm onSubmit={onAddItem} onCancel={onCloseAdd} maxPositionU={rack.height_u} deviceSpecs={deviceSpecs} />
       )}
       {showDevicePicker && (
         <DevicePicker rackId={rackId} onAdd={onAddFromTopology} />
@@ -848,6 +853,7 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
               widthFraction: editingItem.width_fraction, positionX: editingItem.position_x,
             }}
             submitLabel="Save"
+            deviceSpecs={deviceSpecs}
           />
         </div>
       )}
@@ -864,6 +870,7 @@ interface RackEditorProps {
 
 function RackEditor({ rackId, onBack }: RackEditorProps) {
   const rackQuery = useRack(rackId);
+  const specsQuery = useDeviceSpecs();
   const addItem = useAddRackItem();
   const deleteItem = useDeleteRackItem();
   const moveItem = useMoveRackItem();
@@ -1098,6 +1105,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             bom={bom}
             editingItem={editingItem}
             addError={addError}
+            deviceSpecs={specsQuery.data ?? []}
             onAddItem={handleAddItem}
             onAddFromTopology={handleAddFromTopology}
             onCloseAdd={() => { setEditorState({ showAddForm: false, addError: null }); }}

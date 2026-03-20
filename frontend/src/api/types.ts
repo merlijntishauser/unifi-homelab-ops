@@ -383,3 +383,15 @@ export interface BomResponse {
   rack_name: string;
   entries: BomEntry[];
 }
+
+export interface DeviceSpec {
+  model: string;
+  name: string;
+  type: string;
+  height_u: number;
+  width_fraction: number;
+  form_factor: string;
+  max_power_w: number | null;
+  weight_kg: number | null;
+  product_url: string;
+}

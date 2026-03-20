@@ -431,3 +431,19 @@ async def test_move_with_position_x(client: AsyncClient) -> None:
     assert resp.status_code == 200
     assert resp.json()["position_u"] == 3
     assert resp.json()["position_x"] == 0.5
+
+
+async def test_device_specs(client: AsyncClient) -> None:
+    resp = await client.get("/api/racks/device-specs")
+    assert resp.status_code == 200
+    specs = resp.json()
+    assert isinstance(specs, list)
+    assert len(specs) > 0
+    # Verify shape of first entry
+    first = specs[0]
+    assert "model" in first
+    assert "name" in first
+    assert "type" in first
+    assert "height_u" in first
+    assert "width_fraction" in first
+    assert "form_factor" in first

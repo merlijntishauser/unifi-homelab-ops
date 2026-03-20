@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 from app.config import get_unifi_config, has_credentials
-from app.models import BomResponse, Rack, RackInput, RackItem, RackItemInput, RackSummary
+from app.models import BomResponse, DeviceSpec, Rack, RackInput, RackItem, RackItemInput, RackSummary
 from app.services.rack_planner import (
     add_rack_item,
     create_rack,
@@ -13,6 +13,7 @@ from app.services.rack_planner import (
     delete_rack_item,
     get_available_devices,
     get_bom,
+    get_device_specs,
     get_rack,
     import_from_topology,
     list_racks,
@@ -34,6 +35,12 @@ class MoveRequest(BaseModel):
 @router.get("")
 async def rack_list() -> list[RackSummary]:
     return list_racks()
+
+
+@router.get("/device-specs")
+async def rack_device_specs() -> list[DeviceSpec]:
+    """Get catalog of device specs for the rack planner device picker."""
+    return get_device_specs()
 
 
 @router.post("", status_code=201)

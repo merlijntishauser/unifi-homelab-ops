@@ -45,6 +45,15 @@ const updateItemMock = vi.hoisted(() => ({
   mutate: vi.fn(),
 }));
 
+const deviceSpecsMock = vi.hoisted(() => ({
+  data: [
+    { model: "UCG-Fiber", name: "Cloud Gateway Fiber", type: "gateway", height_u: 1, width_fraction: 1.0, form_factor: "Rack mount (1U)", max_power_w: 50, weight_kg: 3.2, product_url: "" },
+    { model: "USW-Lite-8-PoE", name: "Switch Lite 8 PoE", type: "switch", height_u: 1, width_fraction: 0.5, form_factor: "Desktop", max_power_w: 52, weight_kg: 0.5, product_url: "" },
+    { model: "Shelf-1U", name: "Rack Shelf 1U", type: "shelf", height_u: 1, width_fraction: 1.0, form_factor: "19\" rackmount", max_power_w: null, weight_kg: null, product_url: "" },
+  ],
+  isLoading: false,
+}));
+
 vi.mock("../hooks/queries", async () => {
   const actual = await vi.importActual("../hooks/queries");
   return {
@@ -58,6 +67,7 @@ vi.mock("../hooks/queries", async () => {
     useMoveRackItem: () => moveItemMock,
     useImportRackFromTopology: () => importMock,
     useUpdateRackItem: () => updateItemMock,
+    useDeviceSpecs: () => deviceSpecsMock,
   };
 });
 
@@ -214,6 +224,13 @@ describe("RackPlannerModule", () => {
       expect(screen.getByText("Create Your First Rack")).toBeInTheDocument();
     });
 
+    it("empty state Create Your First Rack button opens new rack form", () => {
+      racksMock.data = [];
+      renderModule();
+      fireEvent.click(screen.getByText("Create Your First Rack"));
+      expect(screen.getByTestId("new-rack-form")).toBeInTheDocument();
+    });
+
     it("shows loading state when racks are loading", () => {
       racksMock.data = undefined;
       racksMock.isLoading = true;
@@ -292,6 +309,13 @@ describe("RackPlannerModule", () => {
       expect(screen.getByText(/19-inch \/ 12U \/ 45.2W/)).toBeInTheDocument();
     });
 
+    it("shows 10\" width indicator for 10-inch racks", () => {
+      rackMock.data = { ...sampleRack, size: "10-inch" };
+      renderModule();
+      fireEvent.click(screen.getByTestId("rack-card-1"));
+      expect(screen.getByText('10"')).toBeInTheDocument();
+    });
+
     it("shows rack grid with rack items", () => {
       openEditor();
       expect(screen.getByTestId("rack-grid")).toBeInTheDocument();
@@ -352,6 +376,26 @@ describe("RackPlannerModule", () => {
       const deleteBtn = screen.getByLabelText("Delete USW-24-PoE");
       fireEvent.click(deleteBtn);
       expect(deleteItemMock.mutate).toHaveBeenCalledWith({ rackId: 1, itemId: 10 });
+    });
+
+    it("delete button stops event propagation on mouseDown, pointerDown, dragStart", () => {
+      openEditor();
+      const deleteBtn = screen.getByLabelText("Delete USW-24-PoE");
+      // Use fireEvent which provides React synthetic events with all methods
+      fireEvent.mouseDown(deleteBtn);
+      fireEvent.pointerDown(deleteBtn);
+      fireEvent.dragStart(deleteBtn);
+      // If events propagated to the drag handler, it would set dragItemId.
+      // Since we only delete after click, just verify no move was triggered:
+      expect(moveItemMock.mutate).not.toHaveBeenCalled();
+    });
+
+    it("edit label button stops mouseDown propagation", () => {
+      openEditor();
+      const label = screen.getByText("USW-24-PoE");
+      fireEvent.mouseDown(label);
+      // Should not trigger any drag behavior
+      expect(moveItemMock.mutate).not.toHaveBeenCalled();
     });
 
     it("Add Item form submits with valid data", () => {
@@ -773,6 +817,17 @@ describe("RackPlannerModule", () => {
       fireEvent.click(screen.getByText("Cloud Gateway Fiber"));
       // Should switch to Custom tab with pre-filled values
       expect(screen.getByDisplayValue("Cloud Gateway Fiber")).toBeInTheDocument();
+    });
+
+    it("can switch from Custom tab back to UniFi Device tab", () => {
+      openEditor();
+      fireEvent.click(screen.getByTestId("add-item-button"));
+      // Select a device to switch to Custom tab
+      fireEvent.click(screen.getByText("Cloud Gateway Fiber"));
+      expect(screen.getByDisplayValue("Cloud Gateway Fiber")).toBeInTheDocument();
+      // Switch back to UniFi Device tab
+      fireEvent.click(screen.getByText("UniFi Device"));
+      expect(screen.getByPlaceholderText("Search devices...")).toBeInTheDocument();
     });
 
     it("clicking item label opens edit form in side panel", () => {

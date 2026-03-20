@@ -304,6 +304,18 @@ class BomResponse(BaseModel):
     entries: list[BomEntry]
 
 
+class DeviceSpec(BaseModel):
+    model: str
+    name: str
+    type: str
+    height_u: float
+    width_fraction: float
+    form_factor: str
+    max_power_w: float | None = None
+    weight_kg: float | None = None
+    product_url: str = ""
+
+
 class DocumentationSection(BaseModel):
     id: str
     title: str

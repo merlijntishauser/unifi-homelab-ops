@@ -10,11 +10,14 @@ from app.config import UnifiCredentials
 from app.database import init_db_for_tests, reset_engine
 from app.models import RackInput, RackItemInput
 from app.services.rack_planner import (
+    _derive_width_fraction,
+    _infer_device_type,
     add_rack_item,
     create_rack,
     delete_rack,
     delete_rack_item,
     get_bom,
+    get_device_specs,
     get_rack,
     import_from_topology,
     list_racks,
@@ -617,3 +620,96 @@ class TestMoveWithPositionX:
         moved = move_rack_item(rack_id, item.id, 3, new_position_x=0.5)
         assert moved.position_u == 3
         assert moved.position_x == 0.5
+
+
+class TestInferDeviceType:
+    def test_gateway_prefixes(self) -> None:
+        assert _infer_device_type("UCG-Fiber") == "gateway"
+        assert _infer_device_type("UDM-Pro") == "gateway"
+        assert _infer_device_type("UDR") == "gateway"
+        assert _infer_device_type("UXG-Pro") == "gateway"
+        assert _infer_device_type("EFG") == "gateway"
+
+    def test_switch_prefixes(self) -> None:
+        assert _infer_device_type("USW-Pro-24") == "switch"
+        assert _infer_device_type("USL24PB") == "switch"
+        assert _infer_device_type("USP-PDU-Pro") == "switch"
+        assert _infer_device_type("ECS-Aggregation") == "switch"
+
+    def test_other_prefixes(self) -> None:
+        assert _infer_device_type("UNVR-Pro") == "other"
+        assert _infer_device_type("CK-Enterprise") == "other"
+
+    def test_unknown_prefix(self) -> None:
+        assert _infer_device_type("UNKNOWN-123") == "other"
+        assert _infer_device_type("") == "other"
+
+
+class TestDeriveWidthFraction:
+    def test_full_width_19_inch(self) -> None:
+        assert _derive_width_fraction({"width": 442.0, "depth": 285.0}, "Rack mount (1U)") == 1.0
+
+    def test_half_width(self) -> None:
+        assert _derive_width_fraction({"width": 300.0, "depth": 150.0}, "Desktop") == 0.5
+
+    def test_quarter_width(self) -> None:
+        assert _derive_width_fraction({"width": 100.0, "depth": 50.0}, "Desktop") == 0.25
+
+    def test_no_width_circular(self) -> None:
+        assert _derive_width_fraction({"diameter": 171.5, "height": 33.0}, "Ceiling, Wall") == 0.25
+
+    def test_zero_width(self) -> None:
+        assert _derive_width_fraction({"width": 0, "depth": 50.0}, "Desktop") == 0.25
+
+    def test_empty_dims(self) -> None:
+        assert _derive_width_fraction({}, "") == 0.25
+
+
+class TestGetDeviceSpecs:
+    def test_returns_list(self) -> None:
+        specs = get_device_specs()
+        assert isinstance(specs, list)
+        assert len(specs) > 0
+
+    def test_includes_rackmount_devices(self) -> None:
+        specs = get_device_specs()
+        models = {s.model for s in specs}
+        # Well-known rackmount models should be present
+        assert "UDM-Pro" in models or "UDMPRO" in models
+
+    def test_includes_passive_items(self) -> None:
+        specs = get_device_specs()
+        models = {s.model for s in specs}
+        assert "Patch-24" in models
+        assert "Blank-1U" in models
+        assert "Shelf-1U" in models
+
+    def test_spec_fields(self) -> None:
+        specs = get_device_specs()
+        for spec in specs:
+            assert spec.model
+            assert spec.name
+            assert spec.type
+            assert spec.height_u >= 0
+            assert spec.width_fraction in (0.25, 0.5, 1.0)
+            assert spec.form_factor
+
+    def test_power_and_weight_for_library_devices(self) -> None:
+        specs = get_device_specs()
+        # Find a device that should have power data
+        library_specs = [s for s in specs if s.max_power_w is not None]
+        assert len(library_specs) > 0
+
+    def test_passive_items_have_no_power(self) -> None:
+        specs = get_device_specs()
+        passive = [s for s in specs if s.model.startswith(("Patch-", "Blank-", "Shelf-"))]
+        for p in passive:
+            assert p.max_power_w is None
+
+    def test_sorted_by_name(self) -> None:
+        specs = get_device_specs()
+        # Passive infrastructure (shelf, blanking) should sort after active devices
+        names = [s.name for s in specs]
+        shelf_idx = next(i for i, n in enumerate(names) if n == "Rack Shelf 1U")
+        # Active devices should come before shelves
+        assert shelf_idx > 0

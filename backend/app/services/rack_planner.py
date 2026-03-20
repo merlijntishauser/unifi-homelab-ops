@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
 from app.database import get_session
-from app.models import BomEntry, BomResponse, Rack, RackItem, RackSummary
+from app.models import BomEntry, BomResponse, DeviceSpec, Rack, RackItem, RackSummary
 from app.models_db import RackItemRow, RackRow
 
 if TYPE_CHECKING:
@@ -467,7 +467,9 @@ def get_available_devices(rack_id: int, credentials: UnifiCredentials) -> list[d
 
 
 def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[RackItem]:
-    """Auto-populate rack items from topology devices."""
+    """Auto-populate rack items from topology devices, enriched with physical specs."""
+    from unifi_topology import lookup_model_specs
+
     from app.services.topology import get_topology_devices
 
     rack_row = _get_rack_row_or_raise(rack_id)
@@ -495,8 +497,17 @@ def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[Ra
         if device.mac in existing_macs:
             continue
 
+        # Enrich with physical specs from library
+        model_key = device.model or device.model_name or ""
+        specs = lookup_model_specs(model_key) if model_key else {}
+        height_u = specs.get("rack_height_u", 1)
+        power_watts = specs.get("max_power_w", 0.0) or 0.0
+        dims = specs.get("dimensions_mm", {})
+        form_factor = specs.get("form_factor", "")
+        width_fraction = _derive_width_fraction(dims, form_factor) if dims else 1.0
+
         # Find next free position
-        position = _find_next_free_position(used_slots, 1, rack_row.height_u)
+        position = _find_next_free_position(used_slots, height_u, rack_row.height_u)
         if position is None:
             log.warning("rack_import_full", rack_id=rack_id, skipped_device=device.name)
             break
@@ -510,19 +521,21 @@ def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[Ra
             row = RackItemRow(
                 rack_id=rack_id,
                 position_u=position,
-                height_u=1,
+                height_u=height_u,
                 device_type=device_type,
                 label=device.name,
-                power_watts=0.0,
+                power_watts=power_watts,
                 device_mac=device.mac,
                 notes=notes,
+                width_fraction=width_fraction,
             )
             session.add(row)
             session.commit()
             result = _row_to_rack_item(row)
             session.expunge(row)
             imported.append(result)
-            used_slots.add(position)
+            for offset in range(height_u):
+                used_slots.add(position + offset)
         finally:
             session.close()
 
@@ -536,3 +549,107 @@ def _find_next_free_position(used_slots: set[int], height_u: int, rack_height: i
         if all((pos + offset) not in used_slots for offset in range(height_u)):
             return pos
     return None
+
+
+# ── Device spec catalog ──
+
+_MODEL_PREFIX_TYPE_MAP: dict[str, str] = {
+    "UCG": "gateway", "UDM": "gateway", "UDR": "gateway", "UXG": "gateway", "EFG": "gateway",
+    "USW": "switch", "USL": "switch", "USP": "switch", "US6": "switch", "US1": "switch",
+    "US2": "switch", "US4": "switch", "USA": "switch", "USF": "switch", "USX": "switch",
+    "USM": "switch", "ECS": "switch",
+    "UNV": "other", "UNA": "other", "CK": "other",
+}
+
+# Standard 19" rack devices are ~442mm wide, 10" rack devices are ~254mm
+_WIDTH_19_INCH_MM = 400.0
+_WIDTH_10_INCH_MM = 220.0
+
+def _passive(
+    model: str, name: str, dtype: str, height: float, width: float, form: str,
+) -> dict[str, Any]:
+    return {
+        "model": model, "name": name, "type": dtype,
+        "height_u": height, "width_fraction": width, "form_factor": form,
+    }
+
+
+_PASSIVE_ITEMS: list[dict[str, Any]] = [
+    _passive("Patch-24", "Patch Panel 24-Port", "patch-panel", 1, 1.0, '19" rackmount'),
+    _passive("Patch-48", "Patch Panel 48-Port", "patch-panel", 2, 1.0, '19" rackmount'),
+    _passive("Patch-12-10", 'Patch Panel 12-Port 10"', "patch-panel", 0.5, 1.0, '10" rackmount'),
+    _passive("Brush-Panel", "Brush Cable Management", "other", 1, 1.0, '19" rackmount'),
+    _passive("Blank-1U", "Blanking Panel 1U", "other", 1, 1.0, '19" rackmount'),
+    _passive("Blank-0.5U", "Blanking Panel 0.5U", "other", 0.5, 1.0, '10"/19" rackmount'),
+    _passive("Shelf-1U", "Rack Shelf 1U", "shelf", 1, 1.0, '19" rackmount'),
+]
+
+
+def _infer_device_type(model: str) -> str:
+    """Infer device type from model prefix."""
+    for prefix, dtype in _MODEL_PREFIX_TYPE_MAP.items():
+        if model.upper().startswith(prefix):
+            return dtype
+    return "other"
+
+
+def _derive_width_fraction(dims: dict[str, float], form_factor: str) -> float:
+    """Derive rack width fraction from physical dimensions."""
+    width = dims.get("width", 0.0)
+    if width <= 0:
+        # Circular devices (APs) or no width data
+        return 0.25
+    if width >= _WIDTH_19_INCH_MM:
+        return 1.0
+    if width >= _WIDTH_10_INCH_MM:
+        return 0.5
+    return 0.25
+
+
+def get_device_specs() -> list[DeviceSpec]:
+    """Get device specs catalog from unifi-topology library plus passive infrastructure."""
+    from unifi_topology import lookup_model_specs, lookup_model_url
+    from unifi_topology.model.model_lookup import _load_models
+
+    models = _load_models()
+    specs: list[DeviceSpec] = []
+
+    for model_code, entry in models.items():
+        model_specs = lookup_model_specs(model_code)
+        if not model_specs:
+            continue
+        rack_height = model_specs.get("rack_height_u")
+        if rack_height is None:
+            continue
+
+        dims = model_specs.get("dimensions_mm", {})
+        form_factor = model_specs.get("form_factor", "")
+        device_type = _infer_device_type(model_code)
+
+        specs.append(DeviceSpec(
+            model=model_code,
+            name=entry.get("name", model_code),
+            type=device_type,
+            height_u=float(rack_height),
+            width_fraction=_derive_width_fraction(dims, form_factor),
+            form_factor=form_factor,
+            max_power_w=model_specs.get("max_power_w"),
+            weight_kg=model_specs.get("weight_kg"),
+            product_url=lookup_model_url(model_code),
+        ))
+
+    # Add passive infrastructure items
+    for item in _PASSIVE_ITEMS:
+        specs.append(DeviceSpec(
+            model=item["model"],
+            name=item["name"],
+            type=item["type"],
+            height_u=item["height_u"],
+            width_fraction=item["width_fraction"],
+            form_factor=item["form_factor"],
+        ))
+
+    # Sort: rackmount devices first, then by name
+    specs.sort(key=lambda s: (s.type == "shelf", s.type == "other" and s.model.startswith(("Blank", "Brush")), s.name))
+    log.debug("device_specs_loaded", count=len(specs))
+    return specs

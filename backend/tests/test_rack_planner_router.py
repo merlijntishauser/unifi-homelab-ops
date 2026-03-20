@@ -447,3 +447,43 @@ async def test_device_specs(client: AsyncClient) -> None:
     assert "height_u" in first
     assert "width_fraction" in first
     assert "form_factor" in first
+
+
+async def test_available_devices_no_credentials(client: AsyncClient) -> None:
+    # Create a rack first
+    resp = await client.post("/api/racks", json={"name": "R", "height_u": 6})
+    rack_id = resp.json()["id"]
+    # Without credentials, should get 401
+    resp = await client.get(f"/api/racks/{rack_id}/available-devices")
+    assert resp.status_code == 401
+
+
+async def test_available_devices_with_credentials(client: AsyncClient) -> None:
+    from unittest.mock import patch
+
+    from app.models import TopologyDevice, TopologyDevicesResponse
+
+    _login()
+    resp = await client.post("/api/racks", json={"name": "R", "height_u": 6})
+    rack_id = resp.json()["id"]
+
+    topo = TopologyDevicesResponse(
+        devices=[
+            TopologyDevice(
+                mac="aa:bb:cc:00:00:01", name="GW", model="UDM-Pro",
+                model_name="Dream Machine Pro", type="gateway", ip="10.0.0.1", version="4.0",
+            ),
+        ],
+        edges=[],
+    )
+    with patch("app.services.topology.get_topology_devices", return_value=topo):
+        resp = await client.get(f"/api/racks/{rack_id}/available-devices")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+    assert resp.json()[0]["mac"] == "aa:bb:cc:00:00:01"
+
+
+async def test_available_devices_rack_not_found(client: AsyncClient) -> None:
+    _login()
+    resp = await client.get("/api/racks/9999/available-devices")
+    assert resp.status_code == 404

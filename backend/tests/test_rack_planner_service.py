@@ -8,7 +8,7 @@ import pytest
 
 from app.config import UnifiCredentials
 from app.database import init_db_for_tests, reset_engine
-from app.models import RackInput, RackItemInput
+from app.models import RackInput, RackItemInput, TopologyDevice, TopologyDevicesResponse
 from app.services.rack_planner import (
     _derive_width_fraction,
     _infer_device_type,
@@ -16,6 +16,7 @@ from app.services.rack_planner import (
     create_rack,
     delete_rack,
     delete_rack_item,
+    get_available_devices,
     get_bom,
     get_device_specs,
     get_rack,
@@ -713,3 +714,77 @@ class TestGetDeviceSpecs:
         shelf_idx = next(i for i, n in enumerate(names) if n == "Rack Shelf 1U")
         # Active devices should come before shelves
         assert shelf_idx > 0
+
+
+class TestGetAvailableDevices:
+    @staticmethod
+    def _mock_topology() -> TopologyDevicesResponse:
+        devices = [
+            TopologyDevice(
+                mac="aa:bb:cc:dd:ee:01", name="Gateway", model="UDM-Pro",
+                model_name="Dream Machine Pro", type="gateway", ip="192.168.1.1", version="4.0.6",
+            ),
+            TopologyDevice(
+                mac="aa:bb:cc:dd:ee:02", name="Switch-24", model="USW-24",
+                model_name="UniFi Switch 24", type="switch", ip="192.168.1.2", version="7.1.0",
+            ),
+        ]
+        return TopologyDevicesResponse(devices=devices, edges=[])
+
+    def test_returns_all_devices_for_empty_rack(self) -> None:
+        rack_id = _create_test_rack()
+        with patch("app.services.topology.get_topology_devices", return_value=self._mock_topology()):
+            result = get_available_devices(rack_id, MOCK_CREDENTIALS)
+        assert len(result) == 2
+        macs = {d["mac"] for d in result}
+        assert macs == {"aa:bb:cc:dd:ee:01", "aa:bb:cc:dd:ee:02"}
+
+    def test_excludes_devices_already_in_rack(self) -> None:
+        rack_id = _create_test_rack()
+        add_rack_item(rack_id, RackItemInput(position_u=1, label="Gateway", device_mac="aa:bb:cc:dd:ee:01"))
+        with patch("app.services.topology.get_topology_devices", return_value=self._mock_topology()):
+            result = get_available_devices(rack_id, MOCK_CREDENTIALS)
+        assert len(result) == 1
+        assert result[0]["mac"] == "aa:bb:cc:dd:ee:02"
+
+    def test_maps_device_type(self) -> None:
+        rack_id = _create_test_rack()
+        with patch("app.services.topology.get_topology_devices", return_value=self._mock_topology()):
+            result = get_available_devices(rack_id, MOCK_CREDENTIALS)
+        types = {d["mac"]: d["type"] for d in result}
+        assert types["aa:bb:cc:dd:ee:01"] == "gateway"
+        assert types["aa:bb:cc:dd:ee:02"] == "switch"
+
+    def test_uses_model_name_over_model(self) -> None:
+        rack_id = _create_test_rack()
+        with patch("app.services.topology.get_topology_devices", return_value=self._mock_topology()):
+            result = get_available_devices(rack_id, MOCK_CREDENTIALS)
+        models = {d["mac"]: d["model"] for d in result}
+        assert models["aa:bb:cc:dd:ee:01"] == "Dream Machine Pro"
+
+    def test_rack_not_found_raises(self) -> None:
+        with (
+            patch("app.services.topology.get_topology_devices", return_value=self._mock_topology()),
+            pytest.raises(ValueError, match="not found"),
+        ):
+            get_available_devices(9999, MOCK_CREDENTIALS)
+
+
+class TestCheckOverlapZeroU:
+    def test_zero_u_item_skips_overlap_check(self) -> None:
+        """0U items (side-rail mounted) should not trigger overlap validation."""
+        rack_id = _create_test_rack()
+        # Add a normal 1U item at position 1
+        add_rack_item(rack_id, RackItemInput(position_u=1, label="Switch"))
+        # Add a 0U item -- should succeed even though position 1 is occupied
+        item = add_rack_item(rack_id, RackItemInput(position_u=1, label="PDU", height_u=0))
+        assert item.height_u == 0
+
+    def test_update_zero_u_item_skips_overlap(self) -> None:
+        """Updating a 0U item should skip overlap validation via _check_overlap."""
+        rack_id = _create_test_rack()
+        item = add_rack_item(rack_id, RackItemInput(position_u=1, label="PDU", height_u=0))
+        updated = update_rack_item(rack_id, item.id, RackItemInput(
+            position_u=1, label="PDU Renamed", height_u=0,
+        ))
+        assert updated.label == "PDU Renamed"

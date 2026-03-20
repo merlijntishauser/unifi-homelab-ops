@@ -480,15 +480,6 @@ def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[Ra
     # Build set of MACs already in the rack
     existing_macs = {item.device_mac for item in existing_items if item.device_mac}
 
-    # Find next available position (stack from bottom)
-    # Track integer U slots as occupied if any part is used
-    used_slots: set[int] = set()
-    for item in existing_items:
-        s = float(item.position_u)
-        while s < item.position_u + item.height_u:
-            used_slots.add(int(s))
-            s += 0.5
-
     imported: list[RackItem] = []
     for device in topology.devices:
         device_type = _DEVICE_TYPE_MAP.get(device.type, "other")
@@ -500,15 +491,18 @@ def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[Ra
         # Enrich with physical specs from library
         model_key = device.model or device.model_name or ""
         specs = lookup_model_specs(model_key) if model_key else {}
-        height_u = specs.get("rack_height_u", 1)
+        height_u = float(specs.get("rack_height_u", 1))
         power_watts = specs.get("max_power_w", 0.0) or 0.0
         dims = specs.get("dimensions_mm", {})
         form_factor = specs.get("form_factor", "")
         width_fraction = _derive_width_fraction(dims, form_factor) if dims else 1.0
 
-        # Find next free position
-        position = _find_next_free_position(used_slots, height_u, rack_row.height_u)
-        if position is None:
+        # Find next free position using the same logic as add_rack_item
+        try:
+            position = _find_free_position(
+                rack_id, height_u, rack_row.height_u, width_fraction, 0.0, 1.0,
+            )
+        except ValueError:
             log.warning("rack_import_full", rack_id=rack_id, skipped_device=device.name)
             break
 
@@ -534,21 +528,12 @@ def import_from_topology(rack_id: int, credentials: UnifiCredentials) -> list[Ra
             result = _row_to_rack_item(row)
             session.expunge(row)
             imported.append(result)
-            for offset in range(height_u):
-                used_slots.add(position + offset)
         finally:
             session.close()
 
     log.info("rack_import_complete", rack_id=rack_id, imported_count=len(imported))
     return imported
 
-
-def _find_next_free_position(used_slots: set[int], height_u: int, rack_height: int) -> int | None:
-    """Find the lowest available position for an item of given height."""
-    for pos in range(1, rack_height - height_u + 2):
-        if all((pos + offset) not in used_slots for offset in range(height_u)):
-            return pos
-    return None
 
 
 # ── Device spec catalog ──

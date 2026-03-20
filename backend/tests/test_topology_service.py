@@ -201,6 +201,57 @@ class TestGetTopologyDevices:
             result = get_topology_devices(MOCK_CONFIG)
         assert len(result.edges) == 0
 
+    def test_duplicate_name_edge_skipped(self) -> None:
+        """When two devices share a name, edges referencing that name are skipped."""
+        dup_devices = [
+            type("Device", (), {
+                "mac": "aa:bb:cc:dd:ee:01", "name": "Switch",
+                "model": "USW-24", "model_name": "UniFi Switch 24",
+                "type": "switch", "ip": "192.168.1.1", "version": "7.1.0",
+                "port_table": [], "poe_ports": {}, "lldp_info": [],
+                "uplink": None, "last_uplink": None,
+                "in_gateway_mode": None, "network_table": [],
+            })(),
+            type("Device", (), {
+                "mac": "aa:bb:cc:dd:ee:02", "name": "Switch",
+                "model": "USW-16", "model_name": "UniFi Switch 16",
+                "type": "switch", "ip": "192.168.1.2", "version": "7.1.0",
+                "port_table": [], "poe_ports": {}, "lldp_info": [],
+                "uplink": None, "last_uplink": None,
+                "in_gateway_mode": None, "network_table": [],
+            })(),
+            type("Device", (), {
+                "mac": "aa:bb:cc:dd:ee:03", "name": "Gateway",
+                "model": "UDM-Pro", "model_name": "Dream Machine Pro",
+                "type": "gateway", "ip": "192.168.1.254", "version": "4.0.6",
+                "port_table": [], "poe_ports": {}, "lldp_info": [],
+                "uplink": None, "last_uplink": None,
+                "in_gateway_mode": None, "network_table": [],
+            })(),
+        ]
+        raw = [
+            {"mac": "aa:bb:cc:dd:ee:01", "state": 1, "uptime": 100, "num_sta": 0},
+            {"mac": "aa:bb:cc:dd:ee:02", "state": 1, "uptime": 100, "num_sta": 0},
+            {"mac": "aa:bb:cc:dd:ee:03", "state": 1, "uptime": 100, "num_sta": 0},
+        ]
+        ambiguous_edge = type("Edge", (), {
+            "left": "Gateway", "right": "Switch",
+            "speed": 1000, "poe": False, "wireless": False,
+            "label": None, "channel": None, "vlans": (), "active_vlans": (),
+            "is_trunk": False, "connection": None,
+        })()
+        mock_topo = type("TopologyResult", (), {"tree_edges": [ambiguous_edge], "raw_edges": []})()
+        with (
+            patch("app.services.topology.fetch_devices", return_value=raw),
+            patch("app.services.topology.normalize_devices", return_value=dup_devices),
+            patch("app.services.topology.build_topology", return_value=mock_topo),
+        ):
+            result = get_topology_devices(MOCK_CONFIG)
+        # All 3 devices should be present
+        assert len(result.devices) == 3
+        # The ambiguous edge should be skipped (not silently resolved to wrong device)
+        assert len(result.edges) == 0
+
     def test_returns_edges(self) -> None:
         mock_edge = type("Edge", (), {
             "left": "Gateway", "right": "Switch",

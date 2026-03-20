@@ -105,7 +105,14 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
     topo_edges = topology.tree_edges if topology.tree_edges else topology.raw_edges
 
     lldp_connected = {d.mac.lower(): d.name for d in devices}
-    name_to_mac = {d.name: d.mac for d in devices}
+
+    # Build name -> mac mapping, detecting duplicate names
+    name_to_macs: dict[str, list[str]] = {}
+    for d in devices:
+        name_to_macs.setdefault(d.name, []).append(d.mac)
+    duplicates = {name for name, macs in name_to_macs.items() if len(macs) > 1}
+    if duplicates:
+        log.warning("topology_duplicate_names", names=sorted(duplicates))
 
     device_models = []
     for device in devices:
@@ -114,13 +121,17 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
 
     edge_models = []
     for edge in topo_edges:
-        from_mac = name_to_mac.get(edge.left)
-        to_mac = name_to_mac.get(edge.right)
-        if from_mac is None or to_mac is None:
+        from_macs = name_to_macs.get(edge.left)
+        to_macs = name_to_macs.get(edge.right)
+        if from_macs is None or to_macs is None:
+            continue
+        # Skip ambiguous edges where the name maps to multiple devices
+        if len(from_macs) > 1 or len(to_macs) > 1:
+            log.warning("topology_ambiguous_edge", left=edge.left, right=edge.right)
             continue
         edge_models.append(TopologyEdge(
-            from_mac=from_mac,
-            to_mac=to_mac,
+            from_mac=from_macs[0],
+            to_mac=to_macs[0],
             speed=edge.speed,
             poe=edge.poe,
             wireless=edge.wireless,

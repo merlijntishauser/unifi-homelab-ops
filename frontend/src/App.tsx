@@ -109,6 +109,7 @@ function App() {
   const saveZoneFilterMutation = useSaveZoneFilter();
 
   const handleLogout = useCallback(async () => {
+    clearTimeout(saveTimerRef.current);
     await logoutMutation.mutateAsync();
   }, [logoutMutation]);
 
@@ -138,6 +139,11 @@ function App() {
   const hasHiddenZones = hiddenZoneIds.size > 0;
 
   const saveTimerRef = useRef<number | undefined>(undefined);
+
+  // Clean up debounced save on unmount
+  useEffect(() => {
+    return () => clearTimeout(saveTimerRef.current);
+  }, []);
 
   const handleToggleZone = useCallback((zoneId: string) => {
     dispatch((prev) => {

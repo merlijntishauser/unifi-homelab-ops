@@ -608,10 +608,9 @@ def _derive_width_fraction(dims: dict[str, float], form_factor: str) -> float:
 
 def get_device_specs() -> list[DeviceSpec]:
     """Get device specs catalog from unifi-topology library plus passive infrastructure."""
-    from unifi_topology import lookup_model_specs, lookup_model_url
-    from unifi_topology.model.model_lookup import _load_models
+    from unifi_topology import list_all_models, lookup_model_specs, lookup_model_url
 
-    models = _load_models()
+    models = list_all_models()
     specs: list[DeviceSpec] = []
 
     for model_code, entry in models.items():

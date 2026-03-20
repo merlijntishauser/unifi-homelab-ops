@@ -1,3 +1,4 @@
+import asyncio
 import hmac
 from typing import Literal
 
@@ -5,6 +6,8 @@ import structlog
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from unifi_topology import fetch_firewall_zones
+from unifi_topology.adapters.unifi_api import UnifiAuthError
 
 from app.config import (
     clear_runtime_credentials,
@@ -15,6 +18,7 @@ from app.config import (
 )
 from app.middleware import COOKIE_NAME, create_session_cookie, verify_session_cookie
 from app.models import AppAuthStatus, AppLoginInput
+from app.services.firewall import to_topology_config
 
 log = structlog.get_logger()
 
@@ -86,6 +90,27 @@ async def app_status(request: Request) -> AppAuthStatus:
 @router.post("/login")
 async def login(request: LoginRequest) -> LoginResponse:
     log.info("controller_login", url=request.url, user=request.username, site=request.site)
+
+    # Validate credentials by making a lightweight call to the controller
+    from app.config import UnifiCredentials
+
+    creds = UnifiCredentials(
+        url=request.url,
+        username=request.username,
+        password=request.password,
+        site=request.site,
+        verify_ssl=request.verify_ssl,
+    )
+    config = to_topology_config(creds)
+    try:
+        await asyncio.to_thread(fetch_firewall_zones, config, site=creds.site, use_cache=False)
+    except UnifiAuthError as exc:
+        log.warning("controller_login_failed", url=request.url, user=request.username, error=str(exc))
+        return JSONResponse(status_code=401, content={"detail": "Invalid controller credentials"})  # type: ignore[return-value]
+    except Exception as exc:
+        log.warning("controller_login_error", url=request.url, error=str(exc))
+        return JSONResponse(status_code=502, content={"detail": "Could not reach controller"})  # type: ignore[return-value]
+
     set_runtime_credentials(
         url=request.url,
         username=request.username,
@@ -93,7 +118,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         site=request.site,
         verify_ssl=request.verify_ssl,
     )
-    return LoginResponse(status="ok", message="Credentials stored")
+    return LoginResponse(status="ok", message="Credentials verified")
 
 
 @router.post("/logout")

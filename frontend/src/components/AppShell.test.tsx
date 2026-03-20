@@ -94,6 +94,7 @@ function renderShell(ctx?: Partial<AppContextValue>) {
           <Routes>
             <Route element={<AppShell />}>
               <Route path="firewall" element={<div data-testid="outlet-content">Firewall</div>} />
+              <Route path="metrics" element={<div data-testid="metrics-outlet">Metrics</div>} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -154,11 +155,13 @@ describe("AppShell", () => {
     expect(mutateFn).toHaveBeenCalledWith(1);
   });
 
-  it("calls onCloseNotifications when navigating to device", () => {
+  it("navigates to metrics with device param and closes drawer", () => {
     const onCloseNotifications = vi.fn();
     renderShell({ notificationsOpen: true, onCloseNotifications });
     fireEvent.click(screen.getByTestId("navigate"));
     expect(onCloseNotifications).toHaveBeenCalled();
+    // Should navigate to /metrics route
+    expect(screen.getByTestId("metrics-outlet")).toBeInTheDocument();
   });
 
   it("passes notification count to sidebar", () => {

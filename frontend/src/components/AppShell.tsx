@@ -1,4 +1,5 @@
-import { Outlet } from "react-router-dom";
+import { useCallback } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import Toolbar from "./Toolbar";
 import SettingsModal from "./SettingsModal";
 import ModuleSidebar from "./ModuleSidebar";
@@ -10,6 +11,7 @@ import { useIsMobile } from "../hooks/useIsMobile";
 
 export default function AppShell() {
   const ctx = useAppContext();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const authed = ctx.connectionInfo !== null;
   const notificationsQuery = useNotifications(authed);
@@ -25,6 +27,11 @@ export default function AppShell() {
       dismissMutation.mutate(n.id);
     }
   };
+
+  const handleNavigateToDevice = useCallback((mac: string) => {
+    ctx.onCloseNotifications();
+    navigate(`/metrics?device=${encodeURIComponent(mac)}`);
+  }, [ctx, navigate]);
 
   return (
     <div className="h-dvh flex flex-col">
@@ -45,7 +52,7 @@ export default function AppShell() {
         onClose={ctx.onCloseNotifications}
         onDismiss={handleDismiss}
         onDismissAll={handleDismissAll}
-        onNavigateToDevice={() => ctx.onCloseNotifications()}
+        onNavigateToDevice={handleNavigateToDevice}
       />
       <div className="flex-1 flex overflow-hidden">
         {!isMobile && (

@@ -47,7 +47,7 @@ class AuthStatusResponse(BaseModel):
 
 
 @router.post("/app-login")
-async def app_login(body: AppLoginInput) -> JSONResponse:
+async def app_login(body: AppLoginInput, request: Request) -> JSONResponse:
     secret = settings.app_password
     if not secret:
         return JSONResponse(status_code=400, content={"detail": "App auth is not enabled"})
@@ -56,6 +56,7 @@ async def app_login(body: AppLoginInput) -> JSONResponse:
         log.info("app_login_failed", reason="wrong_password")
         return JSONResponse(status_code=401, content={"detail": "Invalid password"})
 
+    is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
     cookie_value, max_age = create_session_cookie(secret, settings.app_session_ttl)
     log.info("app_login_success")
     response = JSONResponse(content={"status": "ok"})
@@ -63,6 +64,7 @@ async def app_login(body: AppLoginInput) -> JSONResponse:
         COOKIE_NAME,
         cookie_value,
         httponly=True,
+        secure=is_https,
         samesite="strict",
         max_age=max_age,
         path="/",

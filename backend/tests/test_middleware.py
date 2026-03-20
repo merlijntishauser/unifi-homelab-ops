@@ -159,6 +159,29 @@ class TestAppLogin:
         assert COOKIE_NAME in resp.cookies
 
     @pytest.mark.anyio
+    async def test_cookie_not_secure_over_http(self, client: AsyncClient) -> None:
+        with patch("app.config.settings.app_password", "secret123"):
+            resp = await client.post("/api/auth/app-login", json={"password": "secret123"})
+        assert resp.status_code == 200
+        cookie_header = resp.headers.get("set-cookie", "")
+        assert "secure" not in cookie_header.lower().split("secure")[:1]
+        # Verify httponly and samesite are present
+        assert "httponly" in cookie_header.lower()
+        assert "samesite=strict" in cookie_header.lower()
+
+    @pytest.mark.anyio
+    async def test_cookie_secure_over_https(self, client: AsyncClient) -> None:
+        with patch("app.config.settings.app_password", "secret123"):
+            resp = await client.post(
+                "/api/auth/app-login",
+                json={"password": "secret123"},
+                headers={"x-forwarded-proto": "https"},
+            )
+        assert resp.status_code == 200
+        cookie_header = resp.headers.get("set-cookie", "")
+        assert "; secure;" in cookie_header.lower() or cookie_header.lower().endswith("; secure")
+
+    @pytest.mark.anyio
     async def test_wrong_password_returns_401(self, client: AsyncClient) -> None:
         with patch("app.config.settings.app_password", "secret123"):
             resp = await client.post("/api/auth/app-login", json={"password": "wrong"})

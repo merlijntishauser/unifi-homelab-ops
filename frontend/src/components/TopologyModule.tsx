@@ -9,9 +9,11 @@ import DevicePanel from "./DevicePanel";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ColorMode } from "@xyflow/react";
 
-function readStorage(key: string, fallback: string): string {
+function readStorage<T extends string>(key: string, fallback: T, valid: readonly T[]): T {
   try {
-    return localStorage.getItem(key) ?? fallback;
+    const value = localStorage.getItem(key);
+    if (value !== null && (valid as readonly string[]).includes(value)) return value as T;
+    return fallback;
   } catch {
     return fallback;
   }
@@ -80,10 +82,10 @@ export default function TopologyModule() {
   const authed = connectionInfo !== null;
 
   const [subView, setSubView] = useState<"map" | "diagram">(() =>
-    readStorage("topologySubView", "map") as "map" | "diagram",
+    readStorage("topologySubView", "map", ["map", "diagram"] as const),
   );
   const [projection, setProjection] = useState<"orthogonal" | "isometric">(() =>
-    readStorage("topologyProjection", "isometric") as "orthogonal" | "isometric",
+    readStorage("topologyProjection", "isometric", ["orthogonal", "isometric"] as const),
   );
   const deepLinkDevice = useRef(new URLSearchParams(window.location.search).get("device"));
   const [selectedDevice, setSelectedDevice] = useState<TopologyDevice | null>(null);

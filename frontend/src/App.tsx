@@ -94,7 +94,7 @@ function App() {
 
   const zoneFilterQuery = useZoneFilter(authed);
   const notificationsQuery = useNotifications(authed);
-  const notificationCount = notificationsQuery.data?.filter((n) => !n.dismissed).length ?? 0;
+  const notificationCount = notificationsQuery.data?.filter((n) => !n.dismissed && !n.resolved_at).length ?? 0;
 
   // Sync hiddenZoneIds from server when filter data arrives
   const lastFilterRef = useRef<string[] | undefined>(undefined);

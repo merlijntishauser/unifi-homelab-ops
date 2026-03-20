@@ -829,4 +829,20 @@ describe("App", () => {
     expect(screen.getByText("Metrics")).toBeInTheDocument();
     expect(screen.getByText("Health")).toBeInTheDocument();
   });
+
+  it("notification badge excludes resolved and dismissed notifications", async () => {
+    mockGetNotifications.mockResolvedValue([
+      { id: 1, device_mac: "aa", check_id: "c", severity: "high", title: "Active", message: "", created_at: new Date().toISOString(), resolved_at: null, dismissed: false },
+      { id: 2, device_mac: "bb", check_id: "c", severity: "low", title: "Resolved", message: "", created_at: new Date().toISOString(), resolved_at: new Date().toISOString(), dismissed: false },
+      { id: 3, device_mac: "cc", check_id: "c", severity: "low", title: "Dismissed", message: "", created_at: new Date().toISOString(), resolved_at: null, dismissed: true },
+    ]);
+    renderApp();
+    await waitFor(() => expect(screen.getByText("Firewall")).toBeInTheDocument());
+    // Only the active (non-resolved, non-dismissed) notification should be counted
+    // Badge renders as a small span with the count
+    await waitFor(() => {
+      const badges = screen.getAllByText("1");
+      expect(badges.length).toBeGreaterThan(0);
+    });
+  });
 });

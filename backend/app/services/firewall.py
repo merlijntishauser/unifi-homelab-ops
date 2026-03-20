@@ -155,19 +155,26 @@ def get_rules(credentials: UnifiCredentials) -> list[Rule]:
 
 
 def get_zone_pairs(credentials: UnifiCredentials) -> list[ZonePair]:
-    """Build zone pairs with their associated rules."""
+    """Build zone pairs for all zone combinations, including those with no rules."""
     rules = get_rules(credentials)
 
-    pairs: dict[tuple[str, str], list[Rule]] = {}
+    rules_by_pair: dict[tuple[str, str], list[Rule]] = {}
     for rule in rules:
         key = (rule.source_zone_id, rule.destination_zone_id)
-        pairs.setdefault(key, []).append(rule)
+        rules_by_pair.setdefault(key, []).append(rule)
 
     zones = get_zones(credentials)
     zone_name_lookup: dict[str, str] = {z.id: z.name for z in zones}
+    zone_ids = list(zone_name_lookup.keys())
+
+    # Generate all directional zone pair combinations (including intra-zone)
+    all_pairs = {(src, dst) for src in zone_ids for dst in zone_ids}
+    # Also include any pairs from rules that reference zone IDs not in the zone list
+    all_pairs.update(rules_by_pair.keys())
 
     result: list[ZonePair] = []
-    for (src, dst), pair_rules in pairs.items():
+    for src, dst in sorted(all_pairs):
+        pair_rules = rules_by_pair.get((src, dst), [])
         sorted_rules = sorted(pair_rules, key=lambda r: r.index)
         analysis_result = run_analysis(
             sorted_rules,

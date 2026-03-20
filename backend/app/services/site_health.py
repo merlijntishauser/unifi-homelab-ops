@@ -129,33 +129,17 @@ def _metrics_summary_from_data(
     )
 
 
-def _compute_firewall_summary(credentials: UnifiCredentials) -> FirewallSummary:
-    """Compute firewall summary from zone pairs."""
-    zone_pairs = get_zone_pairs(credentials)
-    return _firewall_summary_from_pairs(zone_pairs)
-
-
-def _compute_topology_summary(credentials: UnifiCredentials) -> TopologySummary:
-    """Compute topology summary from devices."""
-    topo = get_topology_devices(credentials)
-    return _topology_summary_from_data(topo)
-
-
-def _compute_metrics_summary() -> MetricsSummary:
-    """Compute metrics summary from DB data."""
-    snapshots = get_latest_snapshots()
-    notifications = get_notifications(include_resolved=False)
-    return _metrics_summary_from_data(snapshots, notifications)
-
 
 def get_health_summary(credentials: UnifiCredentials) -> HealthSummaryResponse:
-    """Gather health summary data from all modules."""
-    firewall = _compute_firewall_summary(credentials)
-    topology = _compute_topology_summary(credentials)
-    metrics = _compute_metrics_summary()
-
+    """Gather health summary data from all modules (single fetch pass)."""
+    ctx = _gather_health_context(credentials)
+    summary = HealthSummaryResponse(
+        firewall=_firewall_summary_from_pairs(ctx.zone_pairs),
+        topology=_topology_summary_from_data(ctx.topo_response),
+        metrics=_metrics_summary_from_data(ctx.snapshots, ctx.notifications),
+    )
     log.info("health_summary_computed")
-    return HealthSummaryResponse(firewall=firewall, topology=topology, metrics=metrics)
+    return summary
 
 
 def _gather_health_context(credentials: UnifiCredentials) -> _HealthContext:

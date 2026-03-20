@@ -147,10 +147,10 @@ def _build_lldp_section(devices: list[Any]) -> DocumentationSection:
     )
 
 
-def _build_firewall_section(credentials: UnifiCredentials) -> DocumentationSection:
-    """Build the firewall summary section from zone pairs."""
-    zones = get_zones(credentials)
-    zone_pairs = get_zone_pairs(credentials)
+def _build_firewall_section(
+    zones: list[Any], zone_pairs: list[Any],
+) -> DocumentationSection:
+    """Build the firewall summary section from pre-fetched zone pairs."""
     zone_name_lookup = {z.id: z.name for z in zones}
 
     lines: list[str] = []
@@ -218,15 +218,8 @@ def _build_firewall_section(credentials: UnifiCredentials) -> DocumentationSecti
     )
 
 
-def _build_metrics_section(credentials: UnifiCredentials) -> DocumentationSection:
-    """Build the metrics snapshot section from the metrics database."""
-    try:
-        config = to_topology_config(credentials)
-        raw_stats: list[dict[str, Any]] = list(fetch_device_stats(config, site=credentials.site))  # type: ignore[arg-type]
-        stats = normalize_device_stats(raw_stats)
-    except Exception:  # noqa: BLE001
-        stats = None
-    snapshots = get_latest_snapshots(stats)
+def _build_metrics_section(snapshots: list[Any]) -> DocumentationSection:
+    """Build the metrics snapshot section from pre-fetched snapshots."""
 
     if not snapshots:
         return DocumentationSection(
@@ -266,16 +259,27 @@ def _build_metrics_section(credentials: UnifiCredentials) -> DocumentationSectio
 
 
 def get_documentation_sections(credentials: UnifiCredentials) -> list[DocumentationSection]:
-    """Generate all documentation sections from controller data."""
+    """Generate all documentation sections from controller data (single fetch pass)."""
     _raw_devices, devices = _fetch_controller_data(credentials)
+
+    # Fetch firewall and metrics data once instead of per-section
+    zones = get_zones(credentials)
+    zone_pairs = get_zone_pairs(credentials)
+    try:
+        config = to_topology_config(credentials)
+        raw_stats: list[dict[str, Any]] = list(fetch_device_stats(config, site=credentials.site))  # type: ignore[arg-type]
+        stats = normalize_device_stats(raw_stats)
+    except Exception:  # noqa: BLE001
+        stats = None
+    snapshots = get_latest_snapshots(stats)
 
     sections = [
         _build_mermaid_section(devices),
         _build_inventory_section(devices, credentials),
         _build_port_overview_section(devices),
         _build_lldp_section(devices),
-        _build_firewall_section(credentials),
-        _build_metrics_section(credentials),
+        _build_firewall_section(zones, zone_pairs),
+        _build_metrics_section(snapshots),
     ]
 
     log.info("documentation_sections_generated", section_count=len(sections))

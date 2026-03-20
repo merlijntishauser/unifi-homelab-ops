@@ -198,11 +198,7 @@ class TestBuildFirewallSection:
             ),
         )
 
-        with (
-            patch("app.services.documentation.get_zones", return_value=zones),
-            patch("app.services.documentation.get_zone_pairs", return_value=[pair]),
-        ):
-            section = _build_firewall_section(CREDENTIALS)
+        section = _build_firewall_section(zones, [pair])
 
         assert section.id == "firewall-summary"
         assert section.title == "Firewall Summary"
@@ -212,11 +208,7 @@ class TestBuildFirewallSection:
         assert section.item_count == 1
 
     def test_empty_zone_pairs(self) -> None:
-        with (
-            patch("app.services.documentation.get_zones", return_value=[]),
-            patch("app.services.documentation.get_zone_pairs", return_value=[]),
-        ):
-            section = _build_firewall_section(CREDENTIALS)
+        section = _build_firewall_section([], [])
 
         assert section.item_count == 0
         assert "Total zone pairs: 0" in section.content
@@ -232,11 +224,7 @@ class TestBuildFirewallSection:
             analysis=None,
         )
 
-        with (
-            patch("app.services.documentation.get_zones", return_value=zones),
-            patch("app.services.documentation.get_zone_pairs", return_value=[pair]),
-        ):
-            section = _build_firewall_section(CREDENTIALS)
+        section = _build_firewall_section(zones, [pair])
 
         assert "- |" in section.content
 
@@ -259,11 +247,7 @@ class TestBuildFirewallSection:
             ),
         )
 
-        with (
-            patch("app.services.documentation.get_zones", return_value=zones),
-            patch("app.services.documentation.get_zone_pairs", return_value=[pair]),
-        ):
-            section = _build_firewall_section(CREDENTIALS)
+        section = _build_firewall_section(zones, [pair])
 
         assert "critical" in section.content
         assert "low" in section.content
@@ -289,12 +273,7 @@ class TestBuildMetricsSection:
             ),
         ]
 
-        with (
-            patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
-            patch("app.services.documentation.fetch_device_stats", return_value=[]),
-            patch("app.services.documentation.normalize_device_stats", return_value=[]),
-        ):
-            section = _build_metrics_section(CREDENTIALS)
+        section = _build_metrics_section(snapshots)
 
         assert section.id == "metrics-snapshot"
         assert section.title == "Metrics Snapshot"
@@ -304,12 +283,7 @@ class TestBuildMetricsSection:
         assert section.item_count == 1
 
     def test_empty_metrics(self) -> None:
-        with (
-            patch("app.services.documentation.get_latest_snapshots", return_value=[]),
-            patch("app.services.documentation.fetch_device_stats", return_value=[]),
-            patch("app.services.documentation.normalize_device_stats", return_value=[]),
-        ):
-            section = _build_metrics_section(CREDENTIALS)
+        section = _build_metrics_section([])
 
         assert section.item_count == 0
         assert "No metrics data available" in section.content
@@ -328,12 +302,7 @@ class TestBuildMetricsSection:
             ),
         ]
 
-        with (
-            patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
-            patch("app.services.documentation.fetch_device_stats", return_value=[]),
-            patch("app.services.documentation.normalize_device_stats", return_value=[]),
-        ):
-            section = _build_metrics_section(CREDENTIALS)
+        section = _build_metrics_section(snapshots)
 
         assert "| 2 |" in section.content
 
@@ -351,12 +320,7 @@ class TestBuildMetricsSection:
             ),
         ]
 
-        with (
-            patch("app.services.documentation.get_latest_snapshots", return_value=snapshots),
-            patch("app.services.documentation.fetch_device_stats", return_value=[]),
-            patch("app.services.documentation.normalize_device_stats", return_value=[]),
-        ):
-            section = _build_metrics_section(CREDENTIALS)
+        section = _build_metrics_section(snapshots)
 
         assert "| 0 |" in section.content
 
@@ -381,6 +345,8 @@ class TestGetDocumentationSections:
             patch("app.services.documentation.render_lldp_md", return_value=""),
             patch("app.services.documentation.get_zones", return_value=[]),
             patch("app.services.documentation.get_zone_pairs", return_value=[]),
+            patch("app.services.documentation.fetch_device_stats", return_value=[]),
+            patch("app.services.documentation.normalize_device_stats", return_value=[]),
             patch("app.services.documentation.get_latest_snapshots", return_value=[]),
         ):
             sections = get_documentation_sections(CREDENTIALS)

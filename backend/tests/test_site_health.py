@@ -32,9 +32,6 @@ from app.services.site_health import (
     _build_health_system_prompt,
     _build_metrics_detail,
     _build_topology_detail,
-    _compute_firewall_summary,
-    _compute_metrics_summary,
-    _compute_topology_summary,
     _firewall_summary_from_pairs,
     _gather_health_context,
     _get_cached,
@@ -412,105 +409,22 @@ class TestMetricsSummaryFromData:
         assert result.recent_reboots == 1
 
 
-class TestComputeFirewallSummary:
-    def test_delegates_to_pure_function(self) -> None:
-        from app.config import UnifiCredentials
-        from app.models import FindingModel, Rule, ZonePair, ZonePairAnalysis
-
-        pairs = [
-            ZonePair(
-                source_zone_id="z1",
-                destination_zone_id="z2",
-                rules=[
-                    Rule(
-                        id="r1",
-                        name="Allow",
-                        enabled=True,
-                        action="ALLOW",
-                        source_zone_id="z1",
-                        destination_zone_id="z2",
-                        index=1,
-                    )
-                ],
-                allow_count=1,
-                block_count=0,
-                analysis=ZonePairAnalysis(
-                    score=95,
-                    grade="A",
-                    findings=[FindingModel(id="f1", severity="low", title="Minor", description="d")],
-                ),
-            ),
-        ]
-        creds = UnifiCredentials(url="https://x", username="u", password="p")
-        with patch("app.services.site_health.get_zone_pairs", return_value=pairs):
-            result = _compute_firewall_summary(creds)
-
-        assert result.zone_pair_count == 1
-        assert result.grade_distribution == {"A": 1}
-
-
-class TestComputeTopologySummary:
-    def test_delegates_to_pure_function(self) -> None:
-        from app.config import UnifiCredentials
-
-        devices = [
-            TopologyDevice(
-                mac="a1",
-                name="GW",
-                model="UDM-Pro",
-                model_name="",
-                type="gateway",
-                ip="1.1.1.1",
-                version="4.0.6",
-                status="online",
-            ),
-        ]
-        topo = TopologyDevicesResponse(devices=devices, edges=[])
-        creds = UnifiCredentials(url="https://x", username="u", password="p")
-        with patch("app.services.site_health.get_topology_devices", return_value=topo):
-            result = _compute_topology_summary(creds)
-
-        assert result.device_count_by_type == {"gateway": 1}
-        assert result.offline_count == 0
-
-
-class TestComputeMetricsSummary:
-    def test_delegates_to_pure_function(self) -> None:
-        snapshots = [
-            MetricsSnapshot(mac="a1", name="GW", model="UDM", type="gateway", cpu=85, mem=60, uptime=86400),
-        ]
-        notifications: list[Notification] = []
-        with (
-            patch("app.services.site_health.get_latest_snapshots", return_value=snapshots),
-            patch("app.services.site_health.get_notifications", return_value=notifications),
-        ):
-            result = _compute_metrics_summary()
-
-        assert result.high_resource_devices == 1
-        assert result.recent_reboots == 0
-
-
 class TestGetHealthSummary:
     def test_returns_combined_summary(self) -> None:
         from app.config import UnifiCredentials
 
         creds = UnifiCredentials(url="https://x", username="u", password="p")
-        fw = FirewallSummary(
-            zone_pair_count=3, grade_distribution={"A": 3}, finding_count_by_severity={}, uncovered_pairs=0
+        ctx = _HealthContext(
+            zone_pairs=[], zone_name_lookup={},
+            topo_response=TopologyDevicesResponse(devices=[], edges=[]),
+            snapshots=[], notifications=[],
         )
-        topo = TopologySummary(device_count_by_type={"gateway": 1}, offline_count=0, firmware_mismatches=0)
-        met = MetricsSummary(active_notifications_by_severity={}, high_resource_devices=0, recent_reboots=0)
-
-        with (
-            patch("app.services.site_health._compute_firewall_summary", return_value=fw),
-            patch("app.services.site_health._compute_topology_summary", return_value=topo),
-            patch("app.services.site_health._compute_metrics_summary", return_value=met),
-        ):
+        with patch("app.services.site_health._gather_health_context", return_value=ctx):
             result = get_health_summary(creds)
 
-        assert result.firewall == fw
-        assert result.topology == topo
-        assert result.metrics == met
+        assert result.firewall.zone_pair_count == 0
+        assert result.topology.offline_count == 0
+        assert result.metrics.high_resource_devices == 0
 
 
 class TestGatherHealthContext:

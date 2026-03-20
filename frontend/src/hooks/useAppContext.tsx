@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type { ColorMode } from "@xyflow/react";
 import type { Zone, ZonePair } from "../api/types";
+import type { NotificationState } from "./useNotifications";
 
 interface ConnectionInfo {
   url: string;
@@ -44,6 +45,7 @@ export interface AppContextValue {
   onOpenNotifications: () => void;
   onCloseNotifications: () => void;
   notificationCount: number;
+  notificationState: NotificationState;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

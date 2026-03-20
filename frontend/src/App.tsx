@@ -7,12 +7,12 @@ import {
   useZoneFilter,
   useLogout,
   useSaveZoneFilter,
-  useNotifications,
 } from "./hooks/queries";
 import { useAuthFlow } from "./hooks/useAuth";
 import { useFirewallQueries } from "./hooks/useFirewallQueries";
 import { useAiInfo } from "./hooks/useAiInfo";
 import { AppContext } from "./hooks/useAppContext";
+import { useNotificationState } from "./hooks/useNotifications";
 import type { ThemePreference } from "./hooks/useAppContext";
 import { createAppRouter } from "./router";
 import LoginScreen from "./components/LoginScreen";
@@ -93,8 +93,7 @@ function App() {
   const { aiConfigured, aiInfo } = useAiInfo(authed);
 
   const zoneFilterQuery = useZoneFilter(authed);
-  const notificationsQuery = useNotifications(authed);
-  const notificationCount = notificationsQuery.data?.filter((n) => !n.dismissed && !n.resolved_at).length ?? 0;
+  const notificationState = useNotificationState(authed);
 
   // Sync hiddenZoneIds from server when filter data arrives
   const lastFilterRef = useRef<string[] | undefined>(undefined);
@@ -212,7 +211,8 @@ function App() {
     notificationsOpen,
     onOpenNotifications: () => dispatch({ notificationsOpen: true }),
     onCloseNotifications: () => dispatch({ notificationsOpen: false }),
-    notificationCount,
+    notificationCount: notificationState.activeCount,
+    notificationState,
   };
 
   return (

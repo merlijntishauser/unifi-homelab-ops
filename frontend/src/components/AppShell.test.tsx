@@ -37,20 +37,8 @@ vi.mock("./NotificationDrawer", () => ({
     ) : null,
 }));
 
-const mutateFn = vi.hoisted(() => vi.fn());
-
-vi.mock("../hooks/queries", async () => {
-  const actual = await vi.importActual("../hooks/queries");
-  return {
-    ...actual,
-    useNotifications: () => ({
-      data: [{ id: 1, device_mac: "aa:01", check_id: "cpu", severity: "warning", title: "High CPU", message: "msg", created_at: "", resolved_at: null, dismissed: false }],
-      isLoading: false,
-      error: null,
-    }),
-    useDismissNotification: () => ({ mutate: mutateFn }),
-  };
-});
+const dismissFn = vi.hoisted(() => vi.fn());
+const dismissAllFn = vi.hoisted(() => vi.fn());
 
 function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
   return {
@@ -81,6 +69,14 @@ function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
     onOpenNotifications: vi.fn(),
     onCloseNotifications: vi.fn(),
     notificationCount: 0,
+    notificationState: {
+      notifications: [
+        { id: 1, device_mac: "aa:01", check_id: "cpu", severity: "warning", title: "High CPU", message: "msg", created_at: "", resolved_at: null, dismissed: false },
+      ],
+      activeCount: 1,
+      dismiss: dismissFn,
+      dismissAll: dismissAllFn,
+    },
     ...overrides,
   };
 }
@@ -141,18 +137,18 @@ describe("AppShell", () => {
     // onClose prop is wired to ctx.onCloseNotifications -- verified
   });
 
-  it("calls dismiss mutation when dismiss is triggered", () => {
-    mutateFn.mockClear();
+  it("calls dismiss from notification state when dismiss is triggered", () => {
+    dismissFn.mockClear();
     renderShell({ notificationsOpen: true });
     fireEvent.click(screen.getByTestId("dismiss-one"));
-    expect(mutateFn).toHaveBeenCalledWith(1);
+    expect(dismissFn).toHaveBeenCalledWith(1);
   });
 
-  it("calls dismiss mutation for all notifications when dismiss all is triggered", () => {
-    mutateFn.mockClear();
+  it("calls dismissAll from notification state when dismiss all is triggered", () => {
+    dismissAllFn.mockClear();
     renderShell({ notificationsOpen: true });
     fireEvent.click(screen.getByTestId("dismiss-all"));
-    expect(mutateFn).toHaveBeenCalledWith(1);
+    expect(dismissAllFn).toHaveBeenCalled();
   });
 
   it("navigates to metrics with device param and closes drawer", () => {

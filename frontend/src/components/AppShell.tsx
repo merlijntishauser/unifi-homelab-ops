@@ -6,27 +6,13 @@ import ModuleSidebar from "./ModuleSidebar";
 import BottomNav from "./BottomNav";
 import NotificationDrawer from "./NotificationDrawer";
 import { useAppContext } from "../hooks/useAppContext";
-import { useNotifications, useDismissNotification } from "../hooks/queries";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 export default function AppShell() {
   const ctx = useAppContext();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const authed = ctx.connectionInfo !== null;
-  const notificationsQuery = useNotifications(authed);
-  const dismissMutation = useDismissNotification();
-  const notifications = notificationsQuery.data ?? [];
-
-  const handleDismiss = (id: number) => {
-    dismissMutation.mutate(id);
-  };
-
-  const handleDismissAll = () => {
-    for (const n of notifications) {
-      dismissMutation.mutate(n.id);
-    }
-  };
+  const { notifications, dismiss, dismissAll } = ctx.notificationState;
 
   const handleNavigateToDevice = useCallback((mac: string) => {
     ctx.onCloseNotifications();
@@ -50,8 +36,8 @@ export default function AppShell() {
         notifications={notifications}
         open={ctx.notificationsOpen}
         onClose={ctx.onCloseNotifications}
-        onDismiss={handleDismiss}
-        onDismissAll={handleDismissAll}
+        onDismiss={dismiss}
+        onDismissAll={dismissAll}
         onNavigateToDevice={handleNavigateToDevice}
       />
       <div className="flex-1 flex overflow-hidden">

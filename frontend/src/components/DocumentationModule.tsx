@@ -6,6 +6,7 @@ import DOMPurify from "dompurify";
 import { useAppContext } from "../hooks/useAppContext";
 import { useDocSections } from "../hooks/queries";
 import { api } from "../api/client";
+import { downloadPng, downloadSvg } from "../utils/export";
 import type { DocumentationSection } from "../api/types";
 
 let mermaidIdCounter = 0;
@@ -109,35 +110,6 @@ function copyToClipboard(text: string): void {
   navigator.clipboard.writeText(text).catch(() => {});
 }
 
-function downloadSvgAsPng(containerRef: React.RefObject<HTMLDivElement | null>, filename: string): void {
-  const svg = containerRef.current?.querySelector("svg");
-  if (!svg) return;
-  const svgData = new XMLSerializer().serializeToString(svg);
-  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(svgBlob);
-  const img = new Image();
-  img.onload = () => {
-    const scale = 2;
-    const canvas = document.createElement("canvas");
-    canvas.width = img.width * scale;
-    canvas.height = img.height * scale;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.scale(scale, scale);
-    ctx.drawImage(img, 0, 0);
-    URL.revokeObjectURL(url);
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const pngUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = pngUrl;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(pngUrl);
-    }, "image/png");
-  };
-  img.src = url;
-}
 
 const copyIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
@@ -199,10 +171,13 @@ function SectionActions({ section, diagramRef }: { section: DocumentationSection
           <button className={ACTION_BTN} aria-label="Download SVG" onClick={() => {
             const svg = diagramRef.current?.querySelector("svg");
             if (!svg) return;
-            const svgData = new XMLSerializer().serializeToString(svg);
-            downloadFile(svgData, "network-topology.svg", "image/svg+xml");
+            downloadSvg(new XMLSerializer().serializeToString(svg), "network-topology.svg");
           }}>{downloadIcon} SVG</button>
-          <button className={ACTION_BTN} aria-label="Download PNG" onClick={() => downloadSvgAsPng(diagramRef, "network-topology.png")}>{downloadIcon} PNG</button>
+          <button className={ACTION_BTN} aria-label="Download PNG" onClick={() => {
+            const svg = diagramRef.current?.querySelector("svg");
+            if (!svg) return;
+            downloadPng(new XMLSerializer().serializeToString(svg), "network-topology.png").catch(() => {});
+          }}>{downloadIcon} PNG</button>
         </>
       )}
     </div>

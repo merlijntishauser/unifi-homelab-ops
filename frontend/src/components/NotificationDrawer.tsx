@@ -71,7 +71,7 @@ export default function NotificationDrawer({
           {notifications.length > 0 && (
             <button
               onClick={onDismissAll}
-              className="min-h-[44px] text-xs text-ui-text-secondary dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary transition-colors"
+              className="min-h-[44px] text-xs text-ui-text-secondary dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text cursor-pointer transition-colors"
             >
               Dismiss all
             </button>
@@ -118,7 +118,7 @@ export default function NotificationDrawer({
                         e.stopPropagation();
                         onDismiss(n.id);
                       }}
-                      className="min-h-[44px] text-xs text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary"
+                      className="min-h-[44px] text-xs text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text cursor-pointer transition-colors"
                       aria-label={`Dismiss ${n.title}`}
                     >
                       Dismiss

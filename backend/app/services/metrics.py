@@ -118,18 +118,13 @@ def get_device_history(mac: str, hours: int = 24) -> list[MetricsHistoryPoint]:
 
 
 def get_notifications(include_resolved: bool = True) -> list[Notification]:
-    """Get notifications, optionally including resolved ones."""
+    """Get non-dismissed notifications, optionally including resolved ones."""
     session = get_session()
     try:
-        if include_resolved:
-            rows = session.query(NotificationRow).order_by(NotificationRow.created_at.desc()).all()
-        else:
-            rows = (
-                session.query(NotificationRow)
-                .filter(NotificationRow.resolved_at.is_(None), NotificationRow.dismissed == 0)
-                .order_by(NotificationRow.created_at.desc())
-                .all()
-            )
+        query = session.query(NotificationRow).filter(NotificationRow.dismissed == 0)
+        if not include_resolved:
+            query = query.filter(NotificationRow.resolved_at.is_(None))
+        rows = query.order_by(NotificationRow.created_at.desc()).all()
     finally:
         session.close()
 

@@ -140,9 +140,10 @@ class TestNotifications:
     def test_dismiss_notification(self) -> None:
         create_notification("aa:01", "high_cpu", "warning", "High CPU", "CPU is high")
         notifications = get_notifications()
+        assert len(notifications) == 1
         dismiss_notification(notifications[0].id)
         updated = get_notifications()
-        assert updated[0].dismissed is True
+        assert len(updated) == 0
 
     def test_dismiss_nonexistent_does_not_raise(self) -> None:
         dismiss_notification(9999)  # Should not raise

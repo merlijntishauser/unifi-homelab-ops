@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useVersionCheck } from "../hooks/useVersionCheck";
 
 interface ModuleSidebarProps {
   onOpenSettings: () => void;
@@ -121,6 +122,7 @@ function formatBadgeCount(count: number): string {
 
 export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, onOpenNotifications }: ModuleSidebarProps) {
   const [expanded, setExpanded] = useState(readExpanded);
+  const { build, updateAvailable } = useVersionCheck();
 
   const toggle = () => {
     const next = !expanded;
@@ -171,6 +173,26 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
               </span>
             )}
           </button>
+        )}
+        {expanded && (
+          <div className="px-2.5 py-1">
+            <p className="text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim truncate" title={build.label}>
+              {build.label}
+            </p>
+            {updateAvailable && (
+              <a
+                href="https://hub.docker.com/r/merlijntishauser/unifi-homelab-ops/tags"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 mt-0.5 text-[10px] font-semibold text-status-warning hover:text-status-warning/80 transition-colors"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 shrink-0">
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {updateAvailable} available
+              </a>
+            )}
+          </div>
         )}
         <button
           onClick={toggle}

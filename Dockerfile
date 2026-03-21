@@ -1,5 +1,9 @@
 FROM node:22-alpine AS frontend-build
 
+ARG BUILD_VERSION=dev
+ARG BUILD_COMMIT=
+ARG BUILD_DATE=
+
 WORKDIR /app/frontend
 
 COPY frontend/package.json frontend/package-lock.json ./
@@ -7,6 +11,10 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend/ ./
+
+ENV BUILD_VERSION=${BUILD_VERSION}
+ENV BUILD_COMMIT=${BUILD_COMMIT}
+ENV BUILD_DATE=${BUILD_DATE}
 
 RUN npm run build
 

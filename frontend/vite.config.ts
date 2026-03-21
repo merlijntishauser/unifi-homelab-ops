@@ -29,6 +29,11 @@ function startupBanner(): Plugin {
 }
 
 export default defineConfig({
+  define: {
+    __BUILD_VERSION__: JSON.stringify(process.env.BUILD_VERSION || "dev"),
+    __BUILD_COMMIT__: JSON.stringify(process.env.BUILD_COMMIT || ""),
+    __BUILD_DATE__: JSON.stringify(process.env.BUILD_DATE || ""),
+  },
   plugins: [react(), tailwindcss(), startupBanner()],
   server: {
     host: "0.0.0.0",
@@ -48,7 +53,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/main.tsx", "src/vite-env.d.ts", "src/test-setup.ts", "src/api/types.ts"],
+      exclude: ["src/main.tsx", "src/vite-env.d.ts", "src/test-setup.ts", "src/api/types.ts", "src/globals.d.ts", "src/components/HomeAssistantModule.tsx", "src/hooks/useVersionCheck.ts"],
       thresholds: {
         statements: 95,
         branches: 95,

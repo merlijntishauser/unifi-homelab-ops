@@ -3,6 +3,15 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ModuleSidebar from "./ModuleSidebar";
 
+const mockVersionCheck = vi.hoisted(() => ({
+  build: { version: "dev", commit: "", date: "", isDev: true, label: "dev" },
+  updateAvailable: null as string | null,
+}));
+
+vi.mock("../hooks/useVersionCheck", () => ({
+  useVersionCheck: () => mockVersionCheck,
+}));
+
 function renderSidebar(
   currentPath = "/firewall",
   onOpenSettings = vi.fn(),
@@ -143,5 +152,19 @@ describe("ModuleSidebar", () => {
   it("does not show badge when count is 0", () => {
     renderSidebar("/firewall", vi.fn(), { notificationCount: 0, onOpenNotifications: vi.fn() });
     expect(screen.queryByText("0")).not.toBeInTheDocument();
+  });
+
+  it("shows version label in expanded state", () => {
+    mockVersionCheck.build = { version: "1.1.0", commit: "abc1234", date: "2026-03-21", isDev: false, label: "v1.1.0 (abc1234, Mar 21, 2026)" };
+    mockVersionCheck.updateAvailable = null;
+    renderSidebar();
+    expect(screen.getByText("v1.1.0 (abc1234, Mar 21, 2026)")).toBeInTheDocument();
+  });
+
+  it("shows update available alert when newer version exists", () => {
+    mockVersionCheck.build = { version: "1.0.0", commit: "abc", date: "", isDev: false, label: "v1.0.0" };
+    mockVersionCheck.updateAvailable = "v1.1.0";
+    renderSidebar();
+    expect(screen.getByText("v1.1.0 available")).toBeInTheDocument();
   });
 });

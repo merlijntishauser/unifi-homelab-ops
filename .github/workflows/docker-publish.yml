@@ -50,6 +50,10 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           platforms: ${{ matrix.platform }}
+          build-args: |
+            BUILD_VERSION=${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+            BUILD_COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
           outputs: type=image,name=merlijntishauser/unifi-homelab-ops,push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
           cache-from: type=gha,scope=${{ matrix.variant }}-${{ steps.platform_pair.outputs.pair }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}-${{ steps.platform_pair.outputs.pair }}

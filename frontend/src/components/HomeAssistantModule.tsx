@@ -65,26 +65,22 @@ export default function HomeAssistantModule() {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
       {/* Hero */}
-      <div className="relative overflow-hidden">
+      <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-ub-blue/5 via-transparent to-[#51bff7]/5 dark:from-ub-blue/10 dark:to-[#51bff7]/10" />
-        <div className="relative max-w-3xl mx-auto px-6 pt-5 pb-3 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-ub-blue/10 dark:bg-ub-blue/20 px-4 py-1.5 mb-3">
+        <div className="relative max-w-3xl mx-auto px-6 py-8 lg:py-10 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-ub-blue/10 dark:bg-ub-blue/20 px-4 py-1.5 mb-4">
             <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-ub-blue" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
             </svg>
             <span className="text-xs font-semibold text-ub-blue uppercase tracking-wide">Home Assistant Integration</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-ui-text dark:text-noc-text mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-ui-text dark:text-noc-text mb-3">
             UniFi Network Map
           </h1>
-          <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary mb-2 max-w-xl mx-auto">
+          <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary mb-6 max-w-xl mx-auto">
             Bring your UniFi network topology into Home Assistant. Interactive, real-time, and built for your dashboard.
           </p>
-        </div>
-      </div>
-
-      {/* CTA buttons -- outside hero to stay above the fold */}
-      <div className="flex flex-wrap items-center justify-center gap-3 px-6 pb-6">
+          <div className="flex flex-wrap items-center justify-center gap-3">
         <a href={HACS_INSTALL_URL} target="_blank" rel="noopener noreferrer" className={btnPrimary}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
@@ -97,6 +93,8 @@ export default function HomeAssistantModule() {
           </svg>
           View on GitHub
         </a>
+          </div>
+        </div>
       </div>
 
       {/* Features grid */}

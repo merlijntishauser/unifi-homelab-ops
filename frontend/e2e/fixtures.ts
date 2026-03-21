@@ -262,4 +262,74 @@ export async function mockApi(page: Page, options: { authenticated?: boolean } =
   await page.route("**/api/settings/ai-analysis", (route) =>
     route.fulfill({ json: { site_profile: "homelab" } }),
   );
+
+  // Documentation module
+  await page.route("**/api/docs/sections", (route) =>
+    route.fulfill({
+      json: {
+        sections: [
+          { id: "mermaid-topology", title: "Network Topology", content: "```mermaid\ngraph LR\n  GW-->SW\n```", item_count: 1 },
+          { id: "device-inventory", title: "Device Inventory", content: "| Name | Type |\n|------|------|\n| Gateway | gateway |", item_count: 1, data: [{ name: "Gateway", type: "gateway" }] },
+          { id: "firewall-summary", title: "Firewall Summary", content: "Total zone pairs: 4", item_count: 4 },
+        ],
+      },
+    }),
+  );
+
+  await page.route("**/api/docs/export", (route) =>
+    route.fulfill({ body: "# Network Documentation\n\n## Topology\n\ngraph LR", contentType: "text/markdown" }),
+  );
+
+  // Rack planner module
+  await page.route("**/api/racks/device-specs", (route) =>
+    route.fulfill({
+      json: [
+        { model: "USW-Pro-24-PoE", name: "Switch Pro 24 PoE", type: "switch", height_u: 1, width_fraction: 1.0, form_factor: "Rack mount (1U)", max_power_w: 450, weight_kg: 4.3, product_url: "" },
+        { model: "UDM-Pro", name: "Dream Machine Pro", type: "gateway", height_u: 1, width_fraction: 1.0, form_factor: "Rack mount (1U)", max_power_w: 50, weight_kg: 3.2, product_url: "" },
+      ],
+    }),
+  );
+
+  await page.route("**/api/racks", (route) => {
+    if (route.request().method() === "POST") {
+      return route.fulfill({
+        status: 201,
+        json: { id: 1, name: "Test Rack", size: "19-inch", height_u: 12, location: "", items: [], total_power: 0, used_u: 0 },
+      });
+    }
+    return route.fulfill({
+      json: [
+        { id: 1, name: "Main Rack", size: "19-inch", height_u: 12, location: "Office", item_count: 2, used_u: 3, total_power: 45.0 },
+      ],
+    });
+  });
+
+  await page.route("**/api/racks/1", (route) =>
+    route.fulfill({
+      json: {
+        id: 1, name: "Main Rack", size: "19-inch", height_u: 12, location: "Office", total_power: 45.0, used_u: 3,
+        items: [
+          { id: 10, position_u: 1, height_u: 1, device_type: "switch", label: "USW-Pro-24", power_watts: 30, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+          { id: 11, position_u: 3, height_u: 2, device_type: "gateway", label: "UDM-Pro", power_watts: 15, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+        ],
+      },
+    }),
+  );
+
+  await page.route("**/api/racks/1/bom", (route) =>
+    route.fulfill({
+      json: { rack_name: "Main Rack", entries: [{ item_type: "device", label: "USW-Pro-24", quantity: 1, notes: "1U, 30W" }] },
+    }),
+  );
+
+  await page.route("**/api/racks/1/items", (route) =>
+    route.fulfill({
+      status: 201,
+      json: { id: 20, position_u: 5, height_u: 1, device_type: "switch", label: "New Item", power_watts: 0, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 },
+    }),
+  );
+
+  await page.route("**/api/racks/1/items/*/move", (route) =>
+    route.fulfill({ json: { id: 10, position_u: 2, height_u: 1, device_type: "switch", label: "USW-Pro-24", power_watts: 30, device_mac: null, notes: "", device_name: null, device_model: null, device_status: null, width_fraction: 1.0, position_x: 0.0 } }),
+  );
 }

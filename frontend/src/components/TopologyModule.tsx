@@ -128,7 +128,7 @@ export default function TopologyModule() {
   const savePositionsMutation = useSaveTopologyPositions();
   const resetPositionsMutation = useResetTopologyPositions();
   const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     return () => clearTimeout(debounceTimer.current);

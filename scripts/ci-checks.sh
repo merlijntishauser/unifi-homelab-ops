@@ -13,7 +13,7 @@ echo "=== Backend: tests ==="
 cd "$ROOT/backend" && uv run pytest -q
 
 echo "=== Frontend: tsc ==="
-cd "$ROOT/frontend" && npx tsc --noEmit
+cd "$ROOT/frontend" && npx tsc -b
 
 echo "=== Frontend: build ==="
 cd "$ROOT/frontend" && npx vite build

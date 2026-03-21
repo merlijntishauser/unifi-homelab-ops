@@ -69,6 +69,7 @@ function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
     onOpenNotifications: vi.fn(),
     onCloseNotifications: vi.fn(),
     notificationCount: 0,
+    onAppLogout: null,
     notificationState: {
       notifications: [
         { id: 1, device_mac: "aa:01", check_id: "cpu", severity: "warning", title: "High CPU", message: "msg", created_at: "", resolved_at: null, dismissed: false },

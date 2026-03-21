@@ -76,6 +76,14 @@ async def app_login(body: AppLoginInput, request: Request) -> JSONResponse:
     return response
 
 
+@router.post("/app-logout")
+async def app_logout() -> JSONResponse:
+    log.info("app_logout")
+    response = JSONResponse(content={"status": "ok"})
+    response.delete_cookie(COOKIE_NAME, path="/")
+    return response
+
+
 @router.get("/app-status")
 async def app_status(request: Request) -> AppAuthStatus:
     secret = settings.app_password

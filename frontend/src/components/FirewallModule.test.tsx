@@ -103,6 +103,7 @@ function makeContext(overrides?: Partial<AppContextValue>): AppContextValue {
     onOpenNotifications: vi.fn(),
     onCloseNotifications: vi.fn(),
     notificationCount: 0,
+    onAppLogout: null,
     notificationState: { notifications: [], activeCount: 0, dismiss: vi.fn(), dismissAll: vi.fn() },
     ...overrides,
   };

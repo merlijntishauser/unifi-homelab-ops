@@ -52,6 +52,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ password }),
     }),
+  appLogout: () => fetchJson("/auth/app-logout", { method: "POST" }),
   getAuthStatus: () => fetchJson<AuthStatus>("/auth/status"),
   login: (
     url: string,

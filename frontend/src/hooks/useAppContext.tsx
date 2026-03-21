@@ -46,6 +46,7 @@ export interface AppContextValue {
   onCloseNotifications: () => void;
   notificationCount: number;
   notificationState: NotificationState;
+  onAppLogout: (() => void) | null;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

@@ -19,6 +19,7 @@ interface ToolbarProps {
   aiInfo: AiInfo;
   notificationCount?: number;
   onOpenNotifications?: () => void;
+  onAppLogout?: () => void;
 }
 
 function StatusBadge({ active, label, tooltip }: { active: boolean; label: string; tooltip: string }) {
@@ -90,6 +91,7 @@ export default function Toolbar({
   aiInfo,
   notificationCount = 0,
   onOpenNotifications,
+  onAppLogout,
 }: ToolbarProps) {
   const connectionTooltip = connectionInfo
     ? `Connected to: ${connectionInfo.url}\nAs: ${connectionInfo.username}\nConfig from: ${connectionInfo.source}`
@@ -143,6 +145,25 @@ export default function Toolbar({
           {`Theme: ${THEME_LABELS[themePreference]}`}
         </div>
       </div>
+
+      {onAppLogout && (
+        <div className="relative group">
+          <button
+            onClick={onAppLogout}
+            className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-status-danger-dim hover:text-status-danger hover:border-status-danger/20 cursor-pointer transition-all"
+            aria-label="Log out"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+          <div className="absolute top-full right-0 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
+            Log out
+          </div>
+        </div>
+      )}
     </div>
   );
 }

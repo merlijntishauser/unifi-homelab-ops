@@ -28,6 +28,7 @@ export default function AppShell() {
         aiInfo={ctx.aiInfo}
         notificationCount={ctx.notificationCount}
         onOpenNotifications={ctx.onOpenNotifications}
+        onAppLogout={ctx.onAppLogout ?? undefined}
       />
       {ctx.settingsOpen && (
         <SettingsModal onClose={ctx.onCloseSettings} />

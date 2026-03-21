@@ -8,6 +8,7 @@ import {
   useLogout,
   useSaveZoneFilter,
 } from "./hooks/queries";
+import { api } from "./api/client";
 import { useAuthFlow } from "./hooks/useAuth";
 import { useFirewallQueries } from "./hooks/useFirewallQueries";
 import { useAiInfo } from "./hooks/useAiInfo";
@@ -111,6 +112,11 @@ function App() {
     clearTimeout(saveTimerRef.current);
     await logoutMutation.mutateAsync();
   }, [logoutMutation]);
+
+  const handleAppLogout = useCallback(async () => {
+    await api.appLogout();
+    refetchAppAuth();
+  }, [refetchAppAuth]);
 
   const handleRefresh = useCallback(() => {
     qc.invalidateQueries({ queryKey: queryKeys.zones });
@@ -218,6 +224,7 @@ function App() {
     onCloseNotifications: () => dispatch({ notificationsOpen: false }),
     notificationCount: notificationState.activeCount,
     notificationState,
+    onAppLogout: appAuthRequired && appAuthenticated ? handleAppLogout : null,
   };
 
   return (

@@ -125,4 +125,18 @@ describe("Toolbar", () => {
     const button = screen.getByRole("button", { name: "Notifications" });
     expect(button.querySelector(".bg-status-danger")).not.toBeInTheDocument();
   });
+
+  it("shows logout button when onAppLogout is provided", () => {
+    const onAppLogout = vi.fn();
+    renderToolbar({ onAppLogout });
+    const btn = screen.getByRole("button", { name: "Log out" });
+    expect(btn).toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(onAppLogout).toHaveBeenCalled();
+  });
+
+  it("does not show logout button when onAppLogout is not provided", () => {
+    renderToolbar();
+    expect(screen.queryByRole("button", { name: "Log out" })).not.toBeInTheDocument();
+  });
 });

@@ -9,6 +9,7 @@ vi.mock("./api/client", () => ({
   api: {
     getAppAuthStatus: vi.fn(),
     appLogin: vi.fn(),
+    appLogout: vi.fn(),
     getAuthStatus: vi.fn(),
     logout: vi.fn(),
     login: vi.fn(),
@@ -862,5 +863,14 @@ describe("App", () => {
     window.history.pushState({}, "", "/");
     renderApp();
     await waitFor(() => expect(screen.getByText("Auto-refreshes every 60s")).toBeInTheDocument());
+  });
+
+  it("shows logout button when app auth is active", async () => {
+    mockGetAppAuthStatus.mockResolvedValue({ required: true, authenticated: true });
+    mockGetAuthStatus.mockResolvedValue({ configured: true, source: "env", url: "https://unifi.local", username: "admin" });
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+    renderApp();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument());
   });
 });

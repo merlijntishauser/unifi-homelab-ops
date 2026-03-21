@@ -7,6 +7,7 @@ import MetricsModule from "./components/MetricsModule";
 import HealthModule from "./components/HealthModule";
 import DocumentationModule from "./components/DocumentationModule";
 import RackPlannerModule from "./components/RackPlannerModule";
+import HomeAssistantModule from "./components/HomeAssistantModule";
 
 const routes: RouteObject[] = [
   {
@@ -19,6 +20,7 @@ const routes: RouteObject[] = [
       { path: "health", element: <HealthModule /> },
       { path: "docs", element: <DocumentationModule /> },
       { path: "rack-planner", element: <RackPlannerModule /> },
+      { path: "home-assistant", element: <HomeAssistantModule /> },
     ],
   },
 ];

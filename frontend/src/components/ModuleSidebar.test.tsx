@@ -107,7 +107,7 @@ describe("ModuleSidebar", () => {
     renderSidebar();
     fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(6);
+    expect(links.length).toBe(7);
     for (const link of links) {
       expect(link).toHaveAttribute("href");
     }

@@ -64,6 +64,12 @@ const rackIcon = (
   </svg>
 );
 
+const haIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
+    <path d="M12 3L2 12h3v8h5v-5h4v5h5v-8h3L12 3z" />
+  </svg>
+);
+
 const settingsIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
     <circle cx="12" cy="12" r="3" />
@@ -84,6 +90,7 @@ const navItems: NavItem[] = [
   { to: "/firewall", label: "Firewall", icon: shieldIcon },
   { to: "/docs", label: "Docs", icon: docIcon },
   { to: "/rack-planner", label: "Rack", icon: rackIcon },
+  { to: "/home-assistant", label: "Home Assistant", icon: haIcon },
 ];
 
 const navLinkClass = (isActive: boolean) =>

@@ -14,16 +14,16 @@ async function waitForMatrix(page: Page) {
   await expect(page.getByTestId("row-header-zone-internal")).toBeVisible({ timeout: 15000 });
 }
 
-/** Authenticate through the app passphrase gate, then wait for the matrix. */
-async function appLoginAndWaitForMatrix(page: Page) {
+/** Authenticate through the app passphrase gate. */
+async function appLogin(page: Page) {
   await page.goto("/");
 
   const passphrase = page.locator("#passphrase");
-  const matrixRow = page.getByTestId("row-header-zone-internal");
+  const nav = page.getByRole("navigation", { name: "Module navigation" });
 
   const visible = await Promise.race([
     passphrase.waitFor({ state: "visible", timeout: 10000 }).then(() => "passphrase" as const),
-    matrixRow.waitFor({ state: "visible", timeout: 10000 }).then(() => "matrix" as const),
+    nav.waitFor({ state: "visible", timeout: 10000 }).then(() => "nav" as const),
   ]);
 
   if (visible === "passphrase") {
@@ -31,6 +31,13 @@ async function appLoginAndWaitForMatrix(page: Page) {
     await page.getByRole("button", { name: "Unlock" }).click();
   }
 
+  await expect(nav).toBeVisible({ timeout: 10000 });
+}
+
+/** Authenticate and navigate to the firewall matrix. */
+async function appLoginAndWaitForMatrix(page: Page) {
+  await appLogin(page);
+  await page.getByRole("link", { name: "Firewall" }).click();
   await waitForMatrix(page);
 }
 
@@ -62,7 +69,8 @@ test.describe("authentication", () => {
     await page.locator("#passphrase").fill(APP_PASSWORD);
     await page.getByRole("button", { name: "Unlock" }).click();
 
-    await waitForMatrix(page);
+    // After login, the app should load (default route is Health)
+    await expect(page.getByRole("navigation", { name: "Module navigation" })).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -131,7 +139,7 @@ test.describe("firewall module", () => {
 
 test.describe("topology module", () => {
   test.beforeEach(async ({ page }) => {
-    await appLoginAndWaitForMatrix(page);
+    await appLogin(page);
     await page.getByRole("link", { name: "Topology" }).click();
   });
 
@@ -153,7 +161,7 @@ test.describe("topology module", () => {
 
 test.describe("metrics module", () => {
   test.beforeEach(async ({ page }) => {
-    await appLoginAndWaitForMatrix(page);
+    await appLogin(page);
     await page.getByRole("link", { name: "Metrics" }).click();
   });
 
@@ -170,8 +178,8 @@ test.describe("metrics module", () => {
 
 test.describe("health module", () => {
   test.beforeEach(async ({ page }) => {
-    await appLoginAndWaitForMatrix(page);
-    await page.getByRole("link", { name: "Health" }).click();
+    await appLogin(page);
+    // Health is the default route, no navigation needed
     await expect(page.getByRole("button", { name: "Firewall" })).toBeVisible({ timeout: 15000 });
   });
 
@@ -197,7 +205,7 @@ test.describe("health module", () => {
 
 test.describe("settings", () => {
   test("AI settings modal opens and shows configuration", async ({ page }) => {
-    await appLoginAndWaitForMatrix(page);
+    await appLogin(page);
 
     await page.getByRole("button", { name: "Settings" }).click();
     await expect(page.getByRole("button", { name: "Connection" })).toBeVisible();

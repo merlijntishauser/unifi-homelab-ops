@@ -53,7 +53,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/main.tsx", "src/vite-env.d.ts", "src/test-setup.ts", "src/api/types.ts", "src/globals.d.ts", "src/components/HomeAssistantModule.tsx", "src/hooks/useVersionCheck.ts"],
+      exclude: ["src/main.tsx", "src/vite-env.d.ts", "src/test-setup.ts", "src/api/types.ts", "src/components/HomeAssistantModule.tsx", "src/hooks/useVersionCheck.ts"],
       thresholds: {
         statements: 95,
         branches: 95,

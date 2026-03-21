@@ -15,11 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Hub update checker: hourly check for newer semver releases with amber alert in sidebar
 - Confirmation dialog before deleting a rack
 - Build metadata injection via Vite define (BUILD_VERSION, BUILD_COMMIT, BUILD_DATE)
+- App logout button in toolbar (visible only when authenticated via app password)
+- CSS grid pattern background on login screen with blue glow, dots, and frosted glass card (works in both themes)
 
 ### Fixed
 - Notification dismiss not removing items from drawer (dismissed notifications were still returned by the API)
 - Missing cursor-pointer and hover states on Dismiss and Dismiss All buttons in notification drawer
 - Docker multi-arch merge job failing due to incorrect artifact path
+- Topology nodes showing platform codes (e.g. "UDMA6A8") instead of friendly model names (e.g. "Dream Machine Pro Max") -- now resolved via unifi-topology library lookup
 
 ### Changed
 - Navigation reordered: Health, Metrics, Topology, Firewall, Docs, Rack (Health is now the default landing page)

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Confirmation dialog before deleting a rack
+- Navigation reordered: Health, Metrics, Topology, Firewall, Docs, Rack (Health is now the default landing page)
+
+### Changed
+- Docker builds use native arm64 runners instead of QEMU emulation (~30 min -> ~5 min)
+
 ## [1.1.0] - 2026-03-21
 
 ### Added

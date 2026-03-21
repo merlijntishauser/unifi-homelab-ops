@@ -965,8 +965,9 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   }, []);
 
   const handleDeleteRack = useCallback(() => {
+    if (!window.confirm(`Delete "${rack?.name ?? "this rack"}" and all its items?`)) return;
     deleteRack.mutate(rackId, { onSuccess: onBack });
-  }, [rackId, deleteRack, onBack]);
+  }, [rackId, rack, deleteRack, onBack]);
 
   const handleAddFromTopology = useCallback((device: { mac: string; name: string; model: string; type: string }) => {
     const freeSlots: number[] = [];

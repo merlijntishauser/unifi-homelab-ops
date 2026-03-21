@@ -363,10 +363,16 @@ describe("RackPlannerModule", () => {
       expect(screen.getByText("Bill of Materials: Main Rack")).toBeInTheDocument();
     });
 
-    it("has Delete Rack button", () => {
+    it("has Delete Rack button with confirmation", () => {
       openEditor();
       const btn = screen.getByTestId("delete-rack-button");
       expect(btn).toBeInTheDocument();
+      // Cancel confirmation -- should not delete
+      vi.spyOn(window, "confirm").mockReturnValueOnce(false);
+      fireEvent.click(btn);
+      expect(deleteRackMock.mutate).not.toHaveBeenCalled();
+      // Accept confirmation -- should delete
+      vi.spyOn(window, "confirm").mockReturnValueOnce(true);
       fireEvent.click(btn);
       expect(deleteRackMock.mutate).toHaveBeenCalledWith(1, expect.objectContaining({ onSuccess: expect.any(Function) }));
     });
@@ -899,6 +905,7 @@ describe("RackPlannerModule", () => {
 
     it("deleteRack onSuccess navigates back", () => {
       openEditor();
+      vi.spyOn(window, "confirm").mockReturnValueOnce(true);
       fireEvent.click(screen.getByTestId("delete-rack-button"));
       const call = deleteRackMock.mutate.mock.calls[0];
       const onSuccess = call[1].onSuccess;

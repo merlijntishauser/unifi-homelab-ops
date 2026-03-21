@@ -853,4 +853,14 @@ describe("App", () => {
       expect(badges.length).toBeGreaterThan(0);
     });
   });
+
+  it("renders health module at default route", async () => {
+    mockGetAuthStatus.mockResolvedValue({ configured: true, source: "env", url: "https://unifi.local", username: "admin" });
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+    // Navigate to default route (health)
+    window.history.pushState({}, "", "/");
+    renderApp();
+    await waitFor(() => expect(screen.getByText("Auto-refreshes every 60s")).toBeInTheDocument());
+  });
 });

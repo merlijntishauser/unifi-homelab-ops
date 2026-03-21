@@ -160,7 +160,7 @@ export default function TopologyModule() {
         </div>
         {subView === "map" && (
           <button
-            onClick={() => resetPositionsMutation.mutate()}
+            onClick={() => resetPositionsMutation.mutate(undefined)}
             disabled={resetPositionsMutation.isPending}
             className={BTN}
           >

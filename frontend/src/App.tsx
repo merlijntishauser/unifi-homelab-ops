@@ -64,9 +64,8 @@ function LoadingOverlay({ message }: { message: string | null }) {
   );
 }
 
-const router = createAppRouter();
-
 function App() {
+  const [router] = useState(() => createAppRouter());
   const [state, dispatch] = useReducer(appReducer, initialAppState, initAppState);
   const { themePreference, showHidden, settingsOpen, hiddenZoneIds, notificationsOpen } = state;
   const qc = useQueryClient();

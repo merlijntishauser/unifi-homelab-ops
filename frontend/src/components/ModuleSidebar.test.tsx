@@ -100,7 +100,7 @@ describe("ModuleSidebar", () => {
     renderSidebar();
     fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
     const links = screen.getAllByRole("link");
-    expect(links[0]).toHaveAttribute("title", "Firewall");
+    expect(links[0]).toHaveAttribute("title", "Health");
   });
 
   it("links remain clickable when collapsed", () => {

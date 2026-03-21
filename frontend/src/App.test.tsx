@@ -29,6 +29,7 @@ vi.mock("./api/client", () => ({
     dismissNotification: vi.fn(),
     getMetricsDevices: vi.fn(),
     getMetricsHistory: vi.fn(),
+    getHealthSummary: vi.fn(),
   },
 }));
 
@@ -184,6 +185,8 @@ describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // Most tests were written for the firewall route
+    window.history.pushState({}, "", "/firewall");
     mockGetAppAuthStatus.mockResolvedValue({ required: false, authenticated: false });
     mockGetAiConfig.mockResolvedValue({
       base_url: "",
@@ -198,6 +201,11 @@ describe("App", () => {
     mockGetNotifications.mockResolvedValue([]);
     vi.mocked(api.getMetricsDevices).mockResolvedValue({ devices: [] });
     vi.mocked(api.getMetricsHistory).mockResolvedValue({ mac: "", history: [] });
+    vi.mocked(api.getHealthSummary).mockResolvedValue({
+      firewall: { zone_pair_count: 0, grade_distribution: {}, finding_count_by_severity: {}, uncovered_pairs: 0 },
+      topology: { device_count_by_type: {}, offline_count: 0, firmware_mismatches: 0 },
+      metrics: { active_notifications_by_severity: {}, high_resource_devices: 0, recent_reboots: 0 },
+    });
   });
 
   it("shows loading spinner with status while authenticating", () => {

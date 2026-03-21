@@ -78,10 +78,10 @@ const chevronIcon = (expanded: boolean) => (
 );
 
 const navItems: NavItem[] = [
-  { to: "/firewall", label: "Firewall", icon: shieldIcon },
-  { to: "/topology", label: "Topology", icon: networkIcon },
-  { to: "/metrics", label: "Metrics", icon: activityIcon },
   { to: "/health", label: "Health", icon: heartPulseIcon },
+  { to: "/metrics", label: "Metrics", icon: activityIcon },
+  { to: "/topology", label: "Topology", icon: networkIcon },
+  { to: "/firewall", label: "Firewall", icon: shieldIcon },
   { to: "/docs", label: "Docs", icon: docIcon },
   { to: "/rack-planner", label: "Rack", icon: rackIcon },
 ];

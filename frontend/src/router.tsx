@@ -12,7 +12,7 @@ const routes: RouteObject[] = [
   {
     element: <AppShell />,
     children: [
-      { index: true, element: <Navigate to="/firewall" replace /> },
+      { index: true, element: <Navigate to="/health" replace /> },
       { path: "firewall", element: <FirewallModule /> },
       { path: "topology", element: <TopologyModule /> },
       { path: "metrics", element: <MetricsModule /> },

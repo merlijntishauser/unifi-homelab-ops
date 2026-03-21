@@ -93,6 +93,14 @@ class RackItemRow(Base):
     position_x: Mapped[float] = mapped_column(sa.Float, nullable=False, default=0.0)
 
 
+class TopologyNodePositionRow(Base):
+    __tablename__ = "topology_node_positions"
+
+    mac: Mapped[str] = mapped_column(Text, primary_key=True)
+    x: Mapped[float] = mapped_column(sa.Float, nullable=False)
+    y: Mapped[float] = mapped_column(sa.Float, nullable=False)
+
+
 class NotificationRow(Base):
     __tablename__ = "notifications"
 

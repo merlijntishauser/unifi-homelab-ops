@@ -4,6 +4,7 @@ import type {
   AiAnalyzeResponse,
   AiConfig,
   DeviceSpec,
+  NodePosition,
   AiConfigInput,
   AiPreset,
   AppAuthStatus,
@@ -126,6 +127,11 @@ export const api = {
       `/topology/svg?color_mode=${encodeURIComponent(colorMode)}&projection=${encodeURIComponent(projection)}`,
     ),
   getTopologyDevices: () => fetchJson<TopologyDevicesResponse>("/topology/devices"),
+  getTopologyPositions: () => fetchJson<NodePosition[]>("/topology/positions"),
+  saveTopologyPositions: (positions: NodePosition[]) =>
+    fetchJson("/topology/positions", { method: "PUT", body: JSON.stringify({ positions }) }),
+  deleteTopologyPositions: () =>
+    fetchJson<void>("/topology/positions", { method: "DELETE" }),
   getMetricsDevices: () => fetchJson<MetricsDevicesResponse>("/metrics/devices"),
   getMetricsHistory: (mac: string) =>
     fetchJson<MetricsHistoryResponse>(`/metrics/devices/${encodeURIComponent(mac)}/history`),

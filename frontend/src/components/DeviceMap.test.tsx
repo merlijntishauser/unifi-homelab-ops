@@ -79,4 +79,16 @@ describe("DeviceMap", () => {
     render(<DeviceMap devices={[...testDevices, apDevice]} edges={testEdges} colorMode="light" onDeviceSelect={vi.fn()} />);
     expect(screen.getByTestId("nodes-count").textContent).toBe("3");
   });
+
+  it("applies saved positions when provided", () => {
+    const saved = [{ mac: "aa:01", x: 500, y: 300 }];
+    render(<DeviceMap devices={testDevices} edges={testEdges} colorMode="dark" onDeviceSelect={vi.fn()} savedPositions={saved} />);
+    expect(screen.getByTestId("nodes-count").textContent).toBe("2");
+  });
+
+  it("passes onNodeDragEnd through to ReactFlow", () => {
+    const onDrag = vi.fn();
+    render(<DeviceMap devices={testDevices} edges={testEdges} colorMode="dark" onDeviceSelect={vi.fn()} onNodeDragEnd={onDrag} />);
+    expect(screen.getByTestId("nodes-count").textContent).toBe("2");
+  });
 });

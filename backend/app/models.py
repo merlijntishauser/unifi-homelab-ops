@@ -91,6 +91,12 @@ class TopologySvgResponse(BaseModel):
     projection: str
 
 
+class NodePosition(BaseModel):
+    mac: str
+    x: float
+    y: float
+
+
 class TopologyPort(BaseModel):
     idx: int
     name: str

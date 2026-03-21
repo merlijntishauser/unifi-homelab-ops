@@ -59,6 +59,9 @@ vi.mock("../hooks/queries", async () => {
     ...actual,
     useTopologySvg: () => svgMock,
     useTopologyDevices: () => devicesMock,
+    useTopologyPositions: () => ({ data: [], isLoading: false }),
+    useSaveTopologyPositions: () => ({ mutate: vi.fn() }),
+    useResetTopologyPositions: () => ({ mutate: vi.fn(), isPending: false }),
   };
 });
 
@@ -290,5 +293,16 @@ describe("TopologyModule", () => {
     fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
     expect(screen.queryByTestId("svg-viewer")).not.toBeInTheDocument();
     expect(screen.queryByText("Rendering topology...")).not.toBeInTheDocument();
+  });
+
+  it("shows Reset Layout button in map view", () => {
+    renderModule();
+    expect(screen.getByRole("button", { name: "Reset Layout" })).toBeInTheDocument();
+  });
+
+  it("hides Reset Layout button in diagram view", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.queryByRole("button", { name: "Reset Layout" })).not.toBeInTheDocument();
   });
 });

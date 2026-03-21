@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TopologyDevice, TopologyDevicesResponse, TopologySvgResponse } from "../api/types";
 import { useAppContext } from "../hooks/useAppContext";
-import { useTopologySvg, useTopologyDevices } from "../hooks/queries";
+import { useTopologySvg, useTopologyDevices, useTopologyPositions, useSaveTopologyPositions, useResetTopologyPositions } from "../hooks/queries";
 import { downloadSvg, downloadPng } from "../utils/export";
 import SvgViewer from "./SvgViewer";
 import DeviceMap from "./DeviceMap";
@@ -44,21 +44,31 @@ function MapContent({
   selectedDevice,
   onDeviceSelect,
   onClosePanel,
+  onNodeDragEnd,
 }: {
   query: UseQueryResult<TopologyDevicesResponse>;
   colorMode: ColorMode;
   selectedDevice: TopologyDevice | null;
   onDeviceSelect: (d: TopologyDevice) => void;
   onClosePanel: () => void;
+  onNodeDragEnd: (mac: string, x: number, y: number) => void;
 }) {
-  if (query.isLoading) return <LoadingSpinner message="Loading devices..." />;
+  const positionsQuery = useTopologyPositions();
+  if (query.isLoading || positionsQuery.isLoading) return <LoadingSpinner message="Loading devices..." />;
   if (query.error) return <ErrorMessage error={query.error as Error} fallback="Failed to load devices" />;
   const devices = query.data?.devices ?? [];
   const edges = query.data?.edges ?? [];
   return (
     <>
       <div className="flex-1">
-        <DeviceMap devices={devices} edges={edges} colorMode={colorMode} onDeviceSelect={onDeviceSelect} />
+        <DeviceMap
+          devices={devices}
+          edges={edges}
+          colorMode={colorMode}
+          onDeviceSelect={onDeviceSelect}
+          savedPositions={positionsQuery.data}
+          onNodeDragEnd={onNodeDragEnd}
+        />
       </div>
       {selectedDevice && (
         <DevicePanel key={selectedDevice.mac} device={selectedDevice} onClose={onClosePanel} />
@@ -115,6 +125,27 @@ export default function TopologyModule() {
     try { localStorage.setItem("topologyProjection", next); } catch { /* noop */ }
   }, [projection]);
 
+  const savePositionsMutation = useSaveTopologyPositions();
+  const resetPositionsMutation = useResetTopologyPositions();
+  const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => clearTimeout(debounceTimer.current);
+  }, []);
+
+  const handleNodeDragEnd = useCallback((mac: string, x: number, y: number) => {
+    pendingPositions.current.set(mac, { x, y });
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      const positions = Array.from(pendingPositions.current.entries()).map(
+        ([m, pos]) => ({ mac: m, x: pos.x, y: pos.y }),
+      );
+      pendingPositions.current.clear();
+      savePositionsMutation.mutate(positions);
+    }, 500);
+  }, [savePositionsMutation]);
+
   const segmentClass = (active: boolean, isFirst: boolean) =>
     `px-3 py-1.5 text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
       active ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue font-medium" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised"
@@ -127,6 +158,15 @@ export default function TopologyModule() {
           <button onClick={() => handleSubViewChange("map")} className={segmentClass(subView === "map", true)}>Map</button>
           <button onClick={() => handleSubViewChange("diagram")} className={segmentClass(subView === "diagram", false)}>Diagram</button>
         </div>
+        {subView === "map" && (
+          <button
+            onClick={() => resetPositionsMutation.mutate()}
+            disabled={resetPositionsMutation.isPending}
+            className={BTN}
+          >
+            Reset Layout
+          </button>
+        )}
         {subView === "diagram" && (
           <>
             <button onClick={handleProjectionChange} className={projection === "isometric" ? BTN_ACTIVE : BTN}>Isometric</button>
@@ -147,6 +187,7 @@ export default function TopologyModule() {
             selectedDevice={selectedDevice}
             onDeviceSelect={setSelectedDevice}
             onClosePanel={() => setSelectedDevice(null)}
+            onNodeDragEnd={handleNodeDragEnd}
           />
         ) : (
           <DiagramContent query={svgQuery} />

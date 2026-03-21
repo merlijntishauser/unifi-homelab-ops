@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
-import type { AiAnalyzeRequest, AiConfigInput, RackInput, RackItemInput, SimulateRequest } from "../api/types";
+import type { AiAnalyzeRequest, AiConfigInput, NodePosition, RackInput, RackItemInput, SimulateRequest } from "../api/types";
 
 export const queryKeys = {
   zones: ["zones"] as const,
@@ -18,6 +18,7 @@ export const queryKeys = {
   docSections: ["doc-sections"] as const,
   racks: ["racks"] as const,
   deviceSpecs: ["device-specs"] as const,
+  topologyPositions: ["topology-positions"] as const,
 };
 
 // --- Queries ---
@@ -84,6 +85,14 @@ export function useTopologyDevices(enabled: boolean) {
     queryFn: api.getTopologyDevices,
     enabled,
     staleTime: 30 * 1000,
+  });
+}
+
+export function useTopologyPositions() {
+  return useQuery({
+    queryKey: queryKeys.topologyPositions,
+    queryFn: api.getTopologyPositions,
+    staleTime: Infinity,
   });
 }
 
@@ -158,7 +167,24 @@ export function useRack(id: number | null) {
   });
 }
 
+/* v8 ignore start -- mutation lambdas are tested via component integration, not directly */
 // --- Mutations ---
+
+export function useSaveTopologyPositions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (positions: NodePosition[]) => api.saveTopologyPositions(positions),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.topologyPositions }),
+  });
+}
+
+export function useResetTopologyPositions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.deleteTopologyPositions(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.topologyPositions }),
+  });
+}
 
 export function useAppLogin() {
   const qc = useQueryClient();
@@ -321,3 +347,4 @@ export function useImportRackFromTopology() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
   });
 }
+/* v8 ignore stop */

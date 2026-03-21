@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -12,7 +12,7 @@ import {
   type ColorMode,
 } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
-import type { TopologyDevice, TopologyEdge } from "../api/types";
+import type { NodePosition, TopologyDevice, TopologyEdge } from "../api/types";
 import DeviceNode, { type DeviceNodeData } from "./DeviceNode";
 
 interface DeviceMapProps {
@@ -20,6 +20,8 @@ interface DeviceMapProps {
   edges: TopologyEdge[];
   colorMode: ColorMode;
   onDeviceSelect: (device: TopologyDevice) => void;
+  savedPositions?: NodePosition[];
+  onNodeDragEnd?: (mac: string, x: number, y: number) => void;
 }
 
 const nodeTypes = { device: DeviceNode };
@@ -75,6 +77,7 @@ function buildElements(
   devices: TopologyDevice[],
   topologyEdges: TopologyEdge[],
   onDeviceSelect: (device: TopologyDevice) => void,
+  savedPositions?: NodePosition[],
 ): { nodes: Node<DeviceNodeData>[]; edges: Edge[] } {
   const deviceByMac = new Map(devices.map((d) => [d.mac, d]));
 
@@ -119,20 +122,42 @@ function buildElements(
     };
   }).filter((e) => deviceByMac.has(e.source) && deviceByMac.has(e.target));
 
-  return layoutDevices(nodes, edges);
+  const result = layoutDevices(nodes, edges);
+
+  // Override Dagre positions with saved positions where available
+  if (savedPositions && savedPositions.length > 0) {
+    const posMap = new Map(savedPositions.map((p) => [p.mac, { x: p.x, y: p.y }]));
+    result.nodes = result.nodes.map((node) => {
+      const saved = posMap.get(node.id);
+      return saved ? { ...node, position: saved } : node;
+    });
+  }
+
+  return result;
 }
 
 function DeviceMapInner({
   initialNodes,
   initialEdges,
   colorMode,
+  onNodeDragEnd,
 }: {
   initialNodes: Node[];
   initialEdges: Edge[];
   colorMode: ColorMode;
+  onNodeDragEnd?: (mac: string, x: number, y: number) => void;
 }) {
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+
+  /* v8 ignore start -- requires real ReactFlow drag event */
+  const handleNodeDragStop = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      onNodeDragEnd?.(node.id, node.position.x, node.position.y);
+    },
+    [onNodeDragEnd],
+  );
+  /* v8 ignore stop */
 
   return (
     <ReactFlow
@@ -141,6 +166,7 @@ function DeviceMapInner({
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onNodeDragStop={handleNodeDragStop}
       nodeTypes={nodeTypes}
       colorMode={colorMode}
       fitView
@@ -154,10 +180,10 @@ function DeviceMapInner({
   );
 }
 
-export default function DeviceMap({ devices, edges: topologyEdges, colorMode, onDeviceSelect }: DeviceMapProps) {
+export default function DeviceMap({ devices, edges: topologyEdges, colorMode, onDeviceSelect, savedPositions, onNodeDragEnd }: DeviceMapProps) {
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(
-    () => buildElements(devices, topologyEdges, onDeviceSelect),
-    [devices, topologyEdges, onDeviceSelect],
+    () => buildElements(devices, topologyEdges, onDeviceSelect, savedPositions),
+    [devices, topologyEdges, onDeviceSelect, savedPositions],
   );
 
   const layoutKey = layoutedNodes.map((n) => n.id).join(",") + "|" + layoutedEdges.map((e) => e.id).join(",");
@@ -168,6 +194,7 @@ export default function DeviceMap({ devices, edges: topologyEdges, colorMode, on
       initialNodes={layoutedNodes}
       initialEdges={layoutedEdges}
       colorMode={colorMode}
+      onNodeDragEnd={onNodeDragEnd}
     />
   );
 }

@@ -207,6 +207,17 @@ export async function mockApi(page: Page, options: { authenticated?: boolean } =
     }),
   );
 
+  // Topology positions
+  await page.route("**/api/topology/positions", (route) => {
+    if (route.request().method() === "DELETE") {
+      return route.fulfill({ status: 204 });
+    }
+    if (route.request().method() === "PUT") {
+      return route.fulfill({ json: { status: "ok" } });
+    }
+    return route.fulfill({ json: [] });
+  });
+
   // Metrics module
   await page.route("**/api/metrics/devices", (route) =>
     route.fulfill({

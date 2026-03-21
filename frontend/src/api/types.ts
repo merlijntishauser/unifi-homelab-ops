@@ -195,6 +195,12 @@ export interface TopologyDevice {
   ports: TopologyPort[];
 }
 
+export interface NodePosition {
+  mac: string;
+  x: number;
+  y: number;
+}
+
 export interface TopologyEdge {
   from_mac: string;
   to_mac: string;

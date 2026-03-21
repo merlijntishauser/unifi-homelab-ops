@@ -7,15 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-03-21
+
 ### Added
+- Home Assistant integration promotion page with HACS install link and feature overview
+- Version display in sidebar showing build version, commit hash, and date (e.g. "v1.1.0 (abc1234, Mar 21, 2026)")
+- Docker Hub update checker: hourly check for newer semver releases with amber alert in sidebar
 - Confirmation dialog before deleting a rack
-- Navigation reordered: Health, Metrics, Topology, Firewall, Docs, Rack (Health is now the default landing page)
+- Build metadata injection via Vite define (BUILD_VERSION, BUILD_COMMIT, BUILD_DATE)
 
 ### Fixed
 - Notification dismiss not removing items from drawer (dismissed notifications were still returned by the API)
 - Missing cursor-pointer and hover states on Dismiss and Dismiss All buttons in notification drawer
+- Docker multi-arch merge job failing due to incorrect artifact path
 
 ### Changed
+- Navigation reordered: Health, Metrics, Topology, Firewall, Docs, Rack (Health is now the default landing page)
 - Docker builds use native arm64 runners instead of QEMU emulation (~30 min -> ~5 min)
 
 ## [1.1.0] - 2026-03-21
@@ -134,7 +141,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/merlijntishauser/unifi-homelab-ops/releases/tag/v1.0.0

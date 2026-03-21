@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export interface BuildInfo {
+interface BuildInfo {
   version: string;
   commit: string;
   date: string;

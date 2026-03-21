@@ -10,17 +10,70 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
+  build:
     strategy:
       fail-fast: false
       matrix:
         include:
           - variant: standard
             dockerfile: ./Dockerfile
-            cache_scope: docker-standard
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - variant: standard
+            dockerfile: ./Dockerfile
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+          - variant: alpine
+            dockerfile: ./Dockerfile.alpine
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - variant: alpine
+            dockerfile: ./Dockerfile.alpine
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - id: platform_pair
+        run: echo "pair=$(echo '${{ matrix.platform }}' | tr '/' '-')" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v7
+        id: build
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=merlijntishauser/unifi-homelab-ops,push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha,scope=${{ matrix.variant }}-${{ steps.platform_pair.outputs.pair }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}-${{ steps.platform_pair.outputs.pair }}
+      - if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/digests/${{ matrix.variant }}
+          echo "${{ steps.build.outputs.digest }}" > "/tmp/digests/${{ matrix.variant }}/${{ steps.platform_pair.outputs.pair }}"
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.variant }}-${{ steps.platform_pair.outputs.pair }}
+          path: /tmp/digests/${{ matrix.variant }}
+          retention-days: 1
+
+  merge:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - variant: standard
             tags: |
               type=semver,pattern={{version}}
               type=semver,pattern={{major}}.{{minor}}
@@ -29,8 +82,6 @@ jobs:
               type=sha,prefix=sha-
               type=raw,value=latest,enable={{is_default_branch}}
           - variant: alpine
-            dockerfile: ./Dockerfile.alpine
-            cache_scope: docker-alpine
             tags: |
               type=semver,pattern={{version}},suffix=-alpine
               type=semver,pattern={{major}}.{{minor}},suffix=-alpine
@@ -39,26 +90,23 @@ jobs:
               type=sha,prefix=sha-,suffix=-alpine
               type=raw,value=alpine,enable={{is_default_branch}}
     steps:
-      - uses: actions/checkout@v6
-      - uses: docker/setup-qemu-action@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digest-${{ matrix.variant }}-*
+          path: /tmp/digests
+          merge-multiple: true
       - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - id: meta
         uses: docker/metadata-action@v6
         with:
           images: merlijntishauser/unifi-homelab-ops
           tags: ${{ matrix.tags }}
-      - uses: docker/login-action@v4
-        if: github.event_name != 'pull_request'
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.cache_scope }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.cache_scope }}
+      - run: |
+          cd /tmp/digests/${{ matrix.variant }}
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(for f in *; do echo "merlijntishauser/unifi-homelab-ops@$(cat "$f")"; done)

@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: digest-${{ matrix.variant }}-${{ steps.platform_pair.outputs.pair }}
-          path: /tmp/digests/${{ matrix.variant }}
+          path: /tmp/digests
           retention-days: 1
 
   merge:

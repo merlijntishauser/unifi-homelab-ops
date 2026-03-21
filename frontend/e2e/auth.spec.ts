@@ -13,7 +13,7 @@ test.describe("authentication", () => {
     await expect(page.getByRole("button", { name: "Connect" })).toBeVisible();
   });
 
-  test("login flow navigates to matrix", async ({ page }) => {
+  test("login flow navigates to app", async ({ page }) => {
     await mockApi(page, { authenticated: false });
     await page.goto("/");
 
@@ -22,7 +22,7 @@ test.describe("authentication", () => {
     await page.getByLabel("Password").fill("password");
     await page.getByRole("button", { name: "Connect" }).click();
 
-    await expect(page.getByTestId("row-header-zone-external")).toBeVisible();
-    await expect(page.getByTestId("row-header-zone-internal")).toBeVisible();
+    // After login, the app loads with the default route (Health)
+    await expect(page.getByRole("navigation", { name: "Module navigation" })).toBeVisible();
   });
 });

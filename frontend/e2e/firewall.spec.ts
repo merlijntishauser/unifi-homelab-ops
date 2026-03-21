@@ -38,7 +38,7 @@ async function clickMultiRuleCell(page: import("@playwright/test").Page) {
 test.describe("firewall module", () => {
   test.beforeEach(async ({ page }) => {
     await mockApi(page);
-    await page.goto("/");
+    await page.goto("/firewall");
     await waitForMatrix(page);
   });
 

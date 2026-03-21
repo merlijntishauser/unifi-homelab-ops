@@ -24,15 +24,40 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
     "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2.5 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-noc-bg">
-      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat brightness-110" style={{ backgroundImage: "url('/images/login-bg.jpg')" }} />
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-[#f0f2f5] dark:bg-[#080b12]">
+      {/* Grid pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.08] dark:opacity-[0.12]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0,111,255,0.4) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,111,255,0.4) 1px, transparent 1px)
+          `,
+          backgroundSize: "60px 60px",
+        }}
+      />
+      {/* Radial glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.12)_0%,_transparent_60%)] dark:bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.15)_0%,_transparent_60%)]" />
+      {/* Corner accents */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-[radial-gradient(circle_at_0%_0%,_rgba(0,111,255,0.08)_0%,_transparent_70%)]" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-[radial-gradient(circle_at_100%_100%,_rgba(0,111,255,0.06)_0%,_transparent_70%)]" />
+      {/* Floating dots */}
+      <div
+        className="absolute inset-0 opacity-[0.15] dark:opacity-[0.25]"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(0,111,255,0.6) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+          backgroundPosition: "30px 30px",
+        }}
+      />
+
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-sm bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-lg p-8 space-y-5 animate-fade-in"
+        className="relative w-full max-w-sm bg-white/80 dark:bg-noc-surface/90 backdrop-blur-xl border border-ui-border dark:border-noc-border rounded-xl shadow-xl dark:shadow-2xl p-8 space-y-5 animate-fade-in"
       >
         <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-ub-blue/50 to-transparent" />
 
-        <h2 className="text-2xl font-sans font-semibold text-ui-text dark:text-noc-text text-center tracking-tight">
+        <h2 className="text-2xl font-sans font-semibold bg-gradient-to-r from-[#3b82f6] to-ub-blue bg-clip-text text-transparent text-center tracking-tight">
           UniFi Homelab Ops
         </h2>
         <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary text-center">
@@ -72,14 +97,6 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
           {loading ? "Authenticating..." : "Unlock"}
         </button>
       </form>
-      <a
-        href="https://unsplash.com/@kevinache"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute bottom-3 right-4 text-[10px] text-white/20 hover:text-white/40 transition-colors"
-      >
-        Photo by Kevin Ache on Unsplash
-      </a>
     </div>
   );
 }

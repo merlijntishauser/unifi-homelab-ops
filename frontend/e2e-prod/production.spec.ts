@@ -200,6 +200,87 @@ test.describe("health module", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Documentation module
+// ---------------------------------------------------------------------------
+
+test.describe("documentation module", () => {
+  test.beforeEach(async ({ page }) => {
+    await appLogin(page);
+    await page.getByRole("link", { name: "Docs" }).click();
+  });
+
+  test("sections load from backend", async ({ page }) => {
+    await expect(page.getByText("Network Topology")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Device Inventory")).toBeVisible();
+    await expect(page.getByText("Firewall Summary")).toBeVisible();
+  });
+
+  test("expanding a section shows content and action buttons", async ({ page }) => {
+    await expect(page.getByText("Firewall Summary")).toBeVisible({ timeout: 15000 });
+    await page.getByText("Firewall Summary").click();
+    await expect(page.getByRole("button", { name: "Copy MD" }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Download MD" }).first()).toBeVisible();
+  });
+
+  test("export markdown button is present", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Export Markdown" })).toBeVisible({ timeout: 15000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rack planner module
+// ---------------------------------------------------------------------------
+
+test.describe("rack planner module", () => {
+  test.beforeEach(async ({ page }) => {
+    await appLogin(page);
+    await page.getByRole("link", { name: "Rack" }).click();
+  });
+
+  test("rack overview loads", async ({ page }) => {
+    await expect(page.getByText("Rack Planner")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("new-rack-button")).toBeVisible();
+  });
+
+  test("create rack and open editor", async ({ page }) => {
+    await page.getByTestId("new-rack-button").click();
+    await expect(page.getByTestId("new-rack-form")).toBeVisible();
+
+    await page.getByPlaceholder("e.g. Main Rack").fill("E2E Test Rack");
+    await page.getByRole("button", { name: "Create" }).click();
+
+    // Editor should open with the new rack
+    await expect(page.getByText("E2E Test Rack")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("rack-grid")).toBeVisible();
+    await expect(page.getByTestId("add-item-button")).toBeVisible();
+  });
+
+  test("add item form shows UniFi and Custom tabs", async ({ page }) => {
+    // Create a rack first
+    await page.getByTestId("new-rack-button").click();
+    await page.getByPlaceholder("e.g. Main Rack").fill("Form Test Rack");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByTestId("add-item-button")).toBeVisible({ timeout: 10000 });
+
+    await page.getByTestId("add-item-button").click();
+    await expect(page.getByTestId("add-item-form")).toBeVisible();
+    await expect(page.getByText("UniFi Device")).toBeVisible();
+    await expect(page.getByText("Custom")).toBeVisible();
+  });
+
+  test("back button returns to overview", async ({ page }) => {
+    await page.getByTestId("new-rack-button").click();
+    await page.getByPlaceholder("e.g. Main Rack").fill("Back Test Rack");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByTestId("back-button")).toBeVisible({ timeout: 10000 });
+
+    await page.getByTestId("back-button").click();
+    await expect(page.getByText("Rack Planner")).toBeVisible();
+    await expect(page.getByTestId("new-rack-button")).toBeVisible();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
 
@@ -214,5 +295,22 @@ test.describe("settings", () => {
 
     await page.getByRole("button", { name: "AI Provider" }).click();
     await expect(page.getByRole("button", { name: "Save" })).toBeVisible();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// App logout
+// ---------------------------------------------------------------------------
+
+test.describe("app logout", () => {
+  test("logout button returns to passphrase screen", async ({ page }) => {
+    await appLogin(page);
+
+    const logoutBtn = page.getByRole("button", { name: "Log out" });
+    await expect(logoutBtn).toBeVisible();
+    await logoutBtn.click();
+
+    await expect(page.getByText("Enter the application password to continue.")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("#passphrase")).toBeVisible();
   });
 });

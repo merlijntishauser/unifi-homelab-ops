@@ -77,7 +77,7 @@ def _build_device_model(
         mac=device.mac,
         name=device.name,
         model=device.model,
-        model_name=device.model_name or lookup_model_name(device.model) or device.model,
+        model_name=lookup_model_name(device.model) or device.model_name or device.model,
         type=device.type,
         ip=device.ip,
         version=device.version,

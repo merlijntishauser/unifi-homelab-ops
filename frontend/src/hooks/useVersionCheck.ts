@@ -8,7 +8,7 @@ interface BuildInfo {
   label: string;
 }
 
-export interface VersionState {
+interface VersionState {
   build: BuildInfo;
   updateAvailable: string | null;
 }

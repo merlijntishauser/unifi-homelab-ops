@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Confirmation dialog before deleting a rack
 - Navigation reordered: Health, Metrics, Topology, Firewall, Docs, Rack (Health is now the default landing page)
 
+### Fixed
+- Notification dismiss not removing items from drawer (dismissed notifications were still returned by the API)
+- Missing cursor-pointer and hover states on Dismiss and Dismiss All buttons in notification drawer
+
 ### Changed
 - Docker builds use native arm64 runners instead of QEMU emulation (~30 min -> ~5 min)
 

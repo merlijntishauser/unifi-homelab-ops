@@ -7,27 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- Redesigned UI to match Ubiquiti/UniFi aesthetic with custom dual-theme token system
-- Replaced generic Tailwind gray palette with purpose-built light (`ui-*`) and dark (`noc-*`) tokens
-- Consolidated typography from three fonts (Lexend, Outfit, IBM Plex Mono) to two (Inter, IBM Plex Mono)
-- Custom layered ambient shadows replacing Tailwind defaults, auto-switching between themes
-- Toolbar uses glassmorphism (backdrop-blur with semi-transparent background)
-- Borders are now nearly invisible, relying on elevation and background contrast
-- Dropped purple accent color in favor of single UniFi blue (#006fff) throughout
-- Replaced default Vite favicon with branded "U" icon
+## [1.1.0] - 2026-03-21
 
 ### Added
-- Responsive mobile layout for iPad (768px+) and iPhone (375px+)
-- Bottom navigation bar on mobile replacing the sidebar
-- Notification bell in toolbar on mobile screens
+- **Documentation Generator module**: browsable network documentation with Mermaid topology diagrams, device inventory, port overview, LLDP neighbors, firewall summary, and metrics snapshot sections
+- **Rack Planner module**: visual rack editor with drag-and-drop, 10"/19" rack support, fractional U heights (0.5U), fractional widths (quarter/half/full), power budget tracking, bill of materials, and auto-populate from topology
+- UniFi device picker with live specs from unifi-topology library (replaces static JSON catalog)
+- Inline editing for rack items via side panel form
+- Responsive mobile layout for iPad (768px+) and iPhone (375px+) with bottom navigation bar
 - Full-screen overlays for RulePanel, DevicePanel, and SettingsModal on mobile
 - Safe area support for iOS notch and gesture bar
-- Touch-target compliance (44px minimum) on all interactive elements
 - `useIsMobile` and `useIsPhone` viewport hooks
-- Documentation Generator module: browsable network documentation with Mermaid topology, infrastructure inventory, device port overview, LLDP neighbors, firewall summary, and metrics snapshot sections
-- Markdown export for generated documentation
-- Rack Planner module: visual rack editor with drag-and-drop, device placement, power budget tracking, bill of materials generation, and auto-populate from topology
+- Notification deep-linking: clicking a notification navigates to `/metrics?device={mac}`
+- `RequireCredentials` FastAPI dependency replacing repeated credential boilerplate across 8 routers
+- `useNotificationState` hook consolidating notification query, badge count, dismiss, and dismissAll
+- Controller credential validation on login (returns 401 for bad credentials instead of storing them)
+- Per-section copy/download buttons (Markdown, JSON, SVG, PNG) in Documentation module
+- Device hostname resolution via DNS in documentation inventory
+- Markdown table rendering with remark-gfm
+- Docker Compose example in README
+- Live screenshots of all modules in README
+- CONTRIBUTING.md with development setup, architecture, and code conventions
+
+### Fixed
+- AI cache key now includes rule descriptions (previously a description-only change returned stale cached findings)
+- Site-health cache key now hashes the full prompt instead of just aggregate counts (two sites with same counts but different details no longer collide)
+- Zone pairs now include all zone combinations, not just those with existing rules (the "no-explicit-rules" finding was previously unreachable)
+- Topology edge resolution handles duplicate device names safely (skips ambiguous edges with warning instead of silently misresolving)
+- Session cookie now sets `Secure` flag when served over HTTPS (was missing, leaving cookie eligible for plain HTTP)
+- Notification badge excludes resolved notifications (was overstating active alerts by counting resolved-but-not-dismissed)
+- Debounced zone filter save timer cleaned up on unmount and logout (pending save could fire against stale session)
+- MermaidDiagram async effect has cancellation guard (unmount or rapid prop change no longer triggers stale state updates)
+- Rack item delete button no longer intercepted by drag handler
+- Rack delete not updating UI until page refresh (204 No Content response was silently failing JSON parse)
+- Rack item colors in dark/light mode now use CSS custom properties for theme reactivity
+- Duplicate zone IDs in hidden zone filter are deduplicated instead of causing database integrity error
+- Topology persisted enum values validated instead of unsafe `as` casting
+- ESLint config ignores coverage directory
+
+### Changed
+- All blocking controller and AI HTTP calls moved off the event loop with `asyncio.to_thread()`
+- Background metrics poller extracted to `_poll_once()` for clean shutdown cancellation at await boundaries
+- Duplicate controller fetches consolidated in health summary and documentation (single fetch pass)
+- Export/download logic deduplicated: DocumentationModule uses shared `downloadPng`/`downloadSvg` helpers
+- Rack import uses `_find_free_position` (fractional-aware) instead of integer-only `_find_next_free_position`
+- Redesigned UI to match Ubiquiti/UniFi aesthetic with custom dual-theme token system (`ui-*` light, `noc-*` dark)
+- Consolidated typography to Inter + IBM Plex Mono
+- Toolbar uses glassmorphism with backdrop-blur
+- README rewritten for homelab enthusiasts with badges, screenshots, and Docker Compose example
+- Upgraded unifi-topology from 1.3.0 to 1.3.2
 
 ## [1.0.1] - 2026-03-16
 
@@ -95,6 +123,7 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/merlijntishauser/unifi-homelab-ops/releases/tag/v1.0.0

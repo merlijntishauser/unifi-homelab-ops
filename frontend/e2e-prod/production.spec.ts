@@ -249,17 +249,20 @@ test.describe("rack planner module", () => {
     await page.getByPlaceholder("e.g. Main Rack").fill("E2E Test Rack");
     await page.getByRole("button", { name: "Create" }).click();
 
-    // Editor should open with the new rack
+    // Form closes, rack appears in overview -- click it to open editor
     await expect(page.getByText("E2E Test Rack")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId("rack-grid")).toBeVisible();
+    await page.getByText("E2E Test Rack").click();
+    await expect(page.getByTestId("rack-grid")).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId("add-item-button")).toBeVisible();
   });
 
   test("add item form shows UniFi and Custom tabs", async ({ page }) => {
-    // Create a rack first
+    // Create a rack first, then click it to open editor
     await page.getByTestId("new-rack-button").click();
     await page.getByPlaceholder("e.g. Main Rack").fill("Form Test Rack");
     await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByText("Form Test Rack")).toBeVisible({ timeout: 10000 });
+    await page.getByText("Form Test Rack").click();
     await expect(page.getByTestId("add-item-button")).toBeVisible({ timeout: 10000 });
 
     await page.getByTestId("add-item-button").click();
@@ -272,6 +275,8 @@ test.describe("rack planner module", () => {
     await page.getByTestId("new-rack-button").click();
     await page.getByPlaceholder("e.g. Main Rack").fill("Back Test Rack");
     await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByText("Back Test Rack")).toBeVisible({ timeout: 10000 });
+    await page.getByText("Back Test Rack").click();
     await expect(page.getByTestId("back-button")).toBeVisible({ timeout: 10000 });
 
     await page.getByTestId("back-button").click();

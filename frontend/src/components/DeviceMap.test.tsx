@@ -38,8 +38,8 @@ vi.mock("@dagrejs/dagre", () => {
 });
 
 const testDevices: TopologyDevice[] = [
-  { mac: "aa:01", name: "Gateway", model: "UDM", model_name: "UDM", type: "gateway", ip: "10.0.0.1", version: "4.0", uptime: 0, status: "online", client_count: 5, ports: [] },
-  { mac: "aa:02", name: "Switch", model: "USW", model_name: "USW", type: "switch", ip: "10.0.0.2", version: "7.0", uptime: 0, status: "online", client_count: 10, ports: [] },
+  { mac: "aa:01", name: "Gateway", model: "UDM", model_name: "Dream Machine", type: "gateway", ip: "10.0.0.1", version: "4.0", uptime: 0, status: "online", client_count: 5, ports: [] },
+  { mac: "aa:02", name: "Switch", model: "USW", model_name: "", type: "switch", ip: "10.0.0.2", version: "7.0", uptime: 0, status: "online", client_count: 10, ports: [] },
 ];
 
 const testEdges: TopologyEdge[] = [

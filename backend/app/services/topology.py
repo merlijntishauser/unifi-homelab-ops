@@ -13,6 +13,7 @@ import structlog
 from unifi_topology import (
     fetch_clients,
     fetch_devices,
+    lookup_model_name,
     normalize_devices,
 )
 from unifi_topology.model import (
@@ -76,7 +77,7 @@ def _build_device_model(
         mac=device.mac,
         name=device.name,
         model=device.model,
-        model_name=device.model_name,
+        model_name=device.model_name or lookup_model_name(device.model) or device.model,
         type=device.type,
         ip=device.ip,
         version=device.version,

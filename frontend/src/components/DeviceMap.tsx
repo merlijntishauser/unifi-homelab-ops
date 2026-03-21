@@ -93,7 +93,7 @@ function buildElements(
         : device.type === "usw" ? "switch"
         : device.type === "uap" ? "ap"
         : "other",
-      model: device.model_name,
+      model: device.model_name || device.model,
       ip: device.ip,
       status: device.status,
       clientCount: device.client_count,

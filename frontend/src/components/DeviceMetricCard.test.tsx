@@ -18,6 +18,7 @@ function makeDevice(overrides?: Partial<MetricsSnapshot>): MetricsSnapshot {
     num_sta: 5,
     version: "4.0.6",
     poe_consumption: null,
+    poe_budget: null,
     status: "online",
     ...overrides,
   };
@@ -66,7 +67,7 @@ describe("DeviceMetricCard", () => {
 
   it("formats uptime correctly", () => {
     render(<DeviceMetricCard device={makeDevice({ uptime: 90061 })} onClick={vi.fn()} />);
-    expect(screen.getByText("1d 1h 1m")).toBeInTheDocument();
+    expect(screen.getByText("Uptime: 1d 1h 1m")).toBeInTheDocument();
   });
 
   it("calls onClick when clicked", () => {
@@ -113,6 +114,43 @@ describe("DeviceMetricCard", () => {
     const { container } = render(<DeviceMetricCard device={makeDevice({ status: "unknown" })} onClick={vi.fn()} />);
     const dot = container.querySelector(".bg-ui-text-dim");
     expect(dot).toBeInTheDocument();
+  });
+
+  it("shows PoE bar when poe_budget is set", () => {
+    render(<DeviceMetricCard device={makeDevice({ poe_consumption: 45, poe_budget: 100 })} onClick={vi.fn()} />);
+    expect(screen.getByText("PoE")).toBeInTheDocument();
+    expect(screen.getByText("45W / 100W")).toBeInTheDocument();
+  });
+
+  it("hides PoE bar when poe_budget is null", () => {
+    render(<DeviceMetricCard device={makeDevice({ poe_budget: null })} onClick={vi.fn()} />);
+    expect(screen.queryByText("PoE")).not.toBeInTheDocument();
+  });
+
+  it("hides PoE bar when poe_budget is zero", () => {
+    render(<DeviceMetricCard device={makeDevice({ poe_budget: 0 })} onClick={vi.fn()} />);
+    expect(screen.queryByText("PoE")).not.toBeInTheDocument();
+  });
+
+  it("shows blue PoE bar when usage is below 70%", () => {
+    const { container } = render(<DeviceMetricCard device={makeDevice({ poe_consumption: 30, poe_budget: 100 })} onClick={vi.fn()} />);
+    const bar = container.querySelector(".bg-ub-blue:not(.h-1\\.5)");
+    expect(bar).toBeInTheDocument();
+  });
+
+  it("handles null poe_consumption with poe_budget", () => {
+    render(<DeviceMetricCard device={makeDevice({ poe_consumption: null, poe_budget: 100 })} onClick={vi.fn()} />);
+    expect(screen.getByText("0W / 100W")).toBeInTheDocument();
+  });
+
+  it("shows red PoE bar when usage exceeds 90%", () => {
+    const { container } = render(<DeviceMetricCard device={makeDevice({ poe_consumption: 95, poe_budget: 100 })} onClick={vi.fn()} />);
+    expect(container.querySelector(".bg-status-danger")).toBeInTheDocument();
+  });
+
+  it("shows yellow PoE bar when usage exceeds 70%", () => {
+    const { container } = render(<DeviceMetricCard device={makeDevice({ poe_consumption: 75, poe_budget: 100 })} onClick={vi.fn()} />);
+    expect(container.querySelector(".bg-status-warning")).toBeInTheDocument();
   });
 
   it("has role=button and tabIndex", () => {

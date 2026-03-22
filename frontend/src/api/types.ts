@@ -230,6 +230,7 @@ export interface MetricsSnapshot {
   num_sta: number;
   version: string;
   poe_consumption: number | null;
+  poe_budget: number | null;
   status: string;
 }
 

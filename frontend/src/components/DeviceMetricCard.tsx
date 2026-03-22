@@ -22,6 +22,13 @@ function formatUptime(seconds: number): string {
   return `${days}d ${hours}h ${minutes}m`;
 }
 
+function poeBarColor(consumption: number, budget: number): string {
+  const ratio = consumption / budget;
+  if (ratio >= 0.9) return "bg-status-danger";
+  if (ratio >= 0.7) return "bg-status-warning";
+  return "bg-ub-blue";
+}
+
 function tempColor(temp: number): string {
   if (temp >= 80) return "text-status-danger";
   if (temp >= 60) return "text-status-warning";
@@ -88,6 +95,25 @@ export default function DeviceMetricCard({ device, onClick }: DeviceMetricCardPr
           </div>
         )}
 
+        <div className="col-span-2 min-h-[28px]">
+          {device.poe_budget !== null && device.poe_budget > 0 && (
+            <>
+              <span className="text-ui-text-dim dark:text-noc-text-dim">PoE</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="flex-1 h-1.5 rounded-full bg-ui-raised dark:bg-noc-input overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${poeBarColor(device.poe_consumption ?? 0, device.poe_budget)}`}
+                    style={{ width: `${Math.min(((device.poe_consumption ?? 0) / device.poe_budget) * 100, 100)}%` }}
+                  />
+                </div>
+                <span className="font-mono text-ui-text dark:text-noc-text-secondary whitespace-nowrap">
+                  {(device.poe_consumption ?? 0).toFixed(0)}W / {device.poe_budget.toFixed(0)}W
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
         <div>
           <span className="text-ui-text-dim dark:text-noc-text-dim">Clients</span>
           <p className="font-mono mt-0.5 text-ui-text dark:text-noc-text-secondary">
@@ -97,7 +123,7 @@ export default function DeviceMetricCard({ device, onClick }: DeviceMetricCardPr
       </div>
 
       <div className="mt-3 pt-2 border-t border-ui-border dark:border-noc-border text-xs text-ui-text-dim dark:text-noc-text-dim font-mono">
-        {formatUptime(device.uptime)}
+        Uptime: {formatUptime(device.uptime)}
       </div>
     </div>
   );

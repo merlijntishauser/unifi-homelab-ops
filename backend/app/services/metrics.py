@@ -83,6 +83,7 @@ def get_latest_snapshots(current_stats: list[DeviceStats] | None = None) -> list
                 num_sta=row.num_sta,
                 version=live.version if live else "",
                 poe_consumption=row.poe_consumption,
+                poe_budget=live.poe_budget if live else None,
                 status="online" if live else "unknown",
             )
         )

@@ -4,7 +4,7 @@ import type { AiPreset } from "../api/types";
 import { useSaveAiConfig, useDeleteAiConfig, useLogin } from "../hooks/queries";
 import { useAppContext } from "../hooks/useAppContext";
 import type { ThemePreference } from "../hooks/useAppContext";
-import { INPUT_CLASS, BACKDROP_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
+import { INPUT_CLASS, SELECT_CLASS, BACKDROP_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
 import PasswordInput from "./PasswordInput";
 
 interface SettingsModalProps {
@@ -283,7 +283,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
             value={model}
             onChange={e => dispatch({ model: e.target.value })}
             disabled={isEnvSourced}
-            className={INPUT_CLASS}
+            className={SELECT_CLASS}
           >
             {models.map(m => (
               <option key={m} value={m}>{m}</option>
@@ -310,7 +310,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
             value={providerType}
             onChange={e => dispatch({ providerType: e.target.value })}
             disabled={isEnvSourced}
-            className={INPUT_CLASS}
+            className={SELECT_CLASS}
           >
             <option value="openai">OpenAI Compatible</option>
             <option value="anthropic">Anthropic</option>
@@ -425,7 +425,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
           value={selectedPresetId ?? ""}
           onChange={e => handlePresetChange(e.target.value)}
           disabled={isEnvSourced}
-          className={INPUT_CLASS}
+          className={SELECT_CLASS}
         >
           <option value="">Select a provider...</option>
           {presets.map(p => (
@@ -455,7 +455,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
           id="settings-site-profile"
           value={siteProfile}
           onChange={e => dispatch({ siteProfile: e.target.value as SiteProfile })}
-          className={INPUT_CLASS}
+          className={SELECT_CLASS}
         >
           <option value="homelab">Homelab</option>
           <option value="smb">Small / Medium Business</option>

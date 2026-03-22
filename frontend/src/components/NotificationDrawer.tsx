@@ -1,5 +1,6 @@
 import type { AppNotification } from "../api/types";
 import { BACKDROP_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
+import { formatRelativeTime } from "../utils/format";
 
 interface NotificationDrawerProps {
   notifications: AppNotification[];
@@ -20,16 +21,6 @@ function SeverityDot({ severity }: { severity: string }) {
   return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${color}`} />;
 }
 
-function formatRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
 
 export default function NotificationDrawer({
   notifications,

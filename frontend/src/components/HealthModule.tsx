@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../hooks/useAppContext";
 import { useHealthSummary, useHealthAnalysis } from "../hooks/queries";
+import { formatRelativeTime } from "../utils/format";
 import type {
   FirewallSummary,
   HealthAnalysisResult,
@@ -170,15 +171,6 @@ function FindingCard({ finding, onNavigate }: { finding: HealthFinding; onNaviga
   );
 }
 
-function formatTimeAgo(isoString: string): string {
-  const diff = Date.now() - new Date(isoString).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
 
 function FindingsList({ findings, onNavigate }: { findings: HealthFinding[]; onNavigate: (module: string, entityId: string) => void }) {
   return (
@@ -238,7 +230,7 @@ function AnalysisSection({ aiConfigured, analysis, isPending, onAnalyze, onNavig
         </h2>
         {analysis?.analyzed_at && (
           <span className="text-xs text-ui-text-dim dark:text-noc-text-dim">
-            Last analyzed: {formatTimeAgo(analysis.analyzed_at)}
+            Last analyzed: {formatRelativeTime(analysis.analyzed_at)}
           </span>
         )}
       </div>

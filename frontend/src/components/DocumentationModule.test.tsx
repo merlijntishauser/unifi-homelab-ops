@@ -256,6 +256,17 @@ describe("DocumentationModule", () => {
     expect(screen.getByText("Zones")).toBeInTheDocument();
   });
 
+  it("renders non-mermaid code blocks as plain code", () => {
+    sectionsMock.data = {
+      sections: [
+        { id: "config", title: "Config", content: "```json\n{\"key\": \"value\"}\n```", item_count: 1, data: null },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Config"));
+    expect(screen.getByText(/"key"/)).toBeInTheDocument();
+  });
+
   it("renders mermaid code blocks as diagrams", async () => {
     sectionsMock.data = {
       sections: [

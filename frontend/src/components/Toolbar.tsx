@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { ThemePreference } from "../hooks/useAppContext";
 import Tooltip from "./Tooltip";
 
@@ -41,11 +42,7 @@ function StatusBadge({ active, label, tooltip, tooltipAlign }: { active: boolean
   );
 }
 
-const THEME_CYCLE: Record<ThemePreference, ThemePreference> = {
-  light: "dark",
-  dark: "system",
-  system: "light",
-};
+const THEME_OPTIONS: ThemePreference[] = ["light", "dark", "system"];
 
 const THEME_LABELS: Record<ThemePreference, string> = {
   light: "Light",
@@ -83,6 +80,59 @@ const THEME_ICONS: Record<ThemePreference, () => React.JSX.Element> = {
   system: MonitorIcon,
 };
 
+function ThemePicker({ themePreference, onThemePreferenceChange }: { themePreference: ThemePreference; onThemePreferenceChange: (pref: ThemePreference) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const ThemeIcon = THEME_ICONS[themePreference];
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all"
+        aria-label={`Theme: ${THEME_LABELS[themePreference]}`}
+        aria-expanded={open}
+      >
+        <ThemeIcon />
+      </button>
+      {open && (
+        <div className="absolute top-full right-0 mt-1.5 rounded-xl border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shadow-xl overflow-hidden animate-fade-in z-50" role="menu">
+          {THEME_OPTIONS.map((opt) => {
+            const Icon = THEME_ICONS[opt];
+            const isActive = themePreference === opt;
+            return (
+              <button
+                key={opt}
+                role="menuitem"
+                onClick={() => { onThemePreferenceChange(opt); setOpen(false); }}
+                className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm cursor-pointer transition-colors ${
+                  isActive
+                    ? "text-ub-blue bg-blue-50 dark:bg-ub-blue-dim"
+                    : "text-ui-text dark:text-noc-text hover:bg-ui-raised dark:hover:bg-noc-raised"
+                }`}
+              >
+                <Icon />
+                {THEME_LABELS[opt]}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Toolbar({
   themePreference,
   onThemePreferenceChange,
@@ -99,9 +149,6 @@ export default function Toolbar({
   const aiTooltip = aiInfo.configured
     ? `AI LLM: ${aiInfo.provider}\nModel: ${aiInfo.model}`
     : "Not configured";
-
-  const ThemeIcon = THEME_ICONS[themePreference];
-  const ariaLabel = `Theme: ${THEME_LABELS[themePreference]}`;
 
   return (
     <div className="relative z-30 flex items-center gap-2 lg:gap-3 px-4 lg:px-6 py-2.5 lg:py-3 mt-safe border-b border-ui-border dark:border-noc-border bg-ui-surface/80 dark:bg-noc-surface/80 backdrop-blur-md">
@@ -135,16 +182,7 @@ export default function Toolbar({
         </button>
       )}
 
-      <div className="relative group">
-        <button
-          onClick={() => onThemePreferenceChange(THEME_CYCLE[themePreference])}
-          className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all"
-          aria-label={ariaLabel}
-        >
-          <ThemeIcon />
-        </button>
-        <Tooltip text={`Theme: ${THEME_LABELS[themePreference]}`} />
-      </div>
+      <ThemePicker themePreference={themePreference} onThemePreferenceChange={onThemePreferenceChange} />
 
       {onAppLogout && (
         <div className="relative group">

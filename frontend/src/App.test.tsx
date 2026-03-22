@@ -312,7 +312,7 @@ describe("App", () => {
     });
   });
 
-  it("cycles theme preference dark -> system -> light", async () => {
+  it("changes theme via picker menu", async () => {
     authedDefaults();
     mockGetZones.mockResolvedValue([]);
     mockGetZonePairs.mockResolvedValue([]);
@@ -324,11 +324,7 @@ describe("App", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Theme: Dark" }));
-
-    expect(screen.getByRole("button", { name: "Theme: System" })).toBeInTheDocument();
-    expect(localStorage.getItem("themePreference")).toBe("system");
-
-    fireEvent.click(screen.getByRole("button", { name: "Theme: System" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Light" }));
 
     expect(screen.getByRole("button", { name: "Theme: Light" })).toBeInTheDocument();
     expect(localStorage.getItem("themePreference")).toBe("light");

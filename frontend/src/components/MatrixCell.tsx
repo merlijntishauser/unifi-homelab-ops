@@ -1,4 +1,5 @@
 import type { ActionLabel } from "../utils/matrixUtils";
+import Tooltip from "./Tooltip";
 
 interface MatrixCellProps {
   actionLabel: ActionLabel | null;
@@ -83,14 +84,7 @@ export default function MatrixCell({
           className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${dotColor}`}
         />
       )}
-      {tooltip && (
-        <span
-          data-testid="cell-tooltip"
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg"
-        >
-          {tooltip}
-        </span>
-      )}
+      {tooltip && <Tooltip text={tooltip} />}
     </button>
   );
 }

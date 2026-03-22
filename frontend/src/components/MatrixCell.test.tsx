@@ -98,22 +98,22 @@ describe("MatrixCell", () => {
   describe("tooltip", () => {
     it("shows user and predefined counts", () => {
       render(<MatrixCell {...baseProps} userRuleCount={3} predefinedRuleCount={2} />);
-      expect(screen.getByTestId("cell-tooltip")).toHaveTextContent("3 user rules, 2 predefined rules");
+      expect(screen.getByRole("tooltip")).toHaveTextContent("3 user rules, 2 predefined rules");
     });
 
     it("shows only user count when no predefined", () => {
       render(<MatrixCell {...baseProps} userRuleCount={1} predefinedRuleCount={0} />);
-      expect(screen.getByTestId("cell-tooltip")).toHaveTextContent("1 user rule");
+      expect(screen.getByRole("tooltip")).toHaveTextContent("1 user rule");
     });
 
     it("shows only predefined count when no user rules", () => {
       render(<MatrixCell {...baseProps} userRuleCount={0} predefinedRuleCount={1} />);
-      expect(screen.getByTestId("cell-tooltip")).toHaveTextContent("1 predefined rule");
+      expect(screen.getByRole("tooltip")).toHaveTextContent("1 predefined rule");
     });
 
     it("shows no tooltip when no rules", () => {
       render(<MatrixCell {...baseProps} actionLabel={null} userRuleCount={0} predefinedRuleCount={0} />);
-      expect(screen.queryByTestId("cell-tooltip")).not.toBeInTheDocument();
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     });
   });
 

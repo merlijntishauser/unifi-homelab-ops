@@ -1,4 +1,5 @@
 import type { ThemePreference } from "../hooks/useAppContext";
+import Tooltip from "./Tooltip";
 
 interface ConnectionInfo {
   url: string;
@@ -35,9 +36,7 @@ function StatusBadge({ active, label, tooltip }: { active: boolean; label: strin
         }`} />
         <span>{label}</span>
       </div>
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
-        {tooltip}
-      </div>
+      <Tooltip text={tooltip} />
     </div>
   );
 }
@@ -141,9 +140,7 @@ export default function Toolbar({
         >
           <ThemeIcon />
         </button>
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
-          {`Theme: ${THEME_LABELS[themePreference]}`}
-        </div>
+        <Tooltip text={`Theme: ${THEME_LABELS[themePreference]}`} />
       </div>
 
       {onAppLogout && (
@@ -159,9 +156,7 @@ export default function Toolbar({
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
           </button>
-          <div className="absolute top-full right-0 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
-            Log out
-          </div>
+          <Tooltip text="Log out" align="right" />
         </div>
       )}
     </div>

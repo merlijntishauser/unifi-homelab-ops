@@ -29,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input padding unified across LoginScreen, SettingsModal, and RulePanel (shared INPUT_CLASS)
 - Settings modal tab icons enlarged to match sidebar navigation icon size
 - Settings modal action buttons (Save, Test Connection, Delete) now have consistent height
-- Select inputs have enforced min-height matching text inputs
+- Select inputs styled with `appearance-none`, custom chevron, and explicit height matching text inputs
+- Toolbar buttons across all modules now have consistent height and proper flex alignment
 - `autocomplete` attributes added to all login forms for proper browser autofill
 - `react-hooks/exhaustive-deps` warnings in useNotificationState resolved
 - `act()` warnings in DocumentationModule mermaid tests resolved
@@ -40,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Duplicated SVG icons across BottomNav and ModuleSidebar consolidated into shared icons.tsx
 - Duplicated formatRelativeTime/formatTimeAgo consolidated into shared utils/format.ts
 - Inline tooltip patterns replaced with shared Tooltip component across Toolbar and MatrixCell
+- Topology "Export SVG/PNG" renamed to download icon + "SVG/PNG" matching Documentation module pattern
+- Documentation "Export Markdown" renamed to download icon + "Complete Markdown"
+- Toolbar padding increased and button height reduced for better proportions
 
 ## [1.1.1] - 2026-03-21
 

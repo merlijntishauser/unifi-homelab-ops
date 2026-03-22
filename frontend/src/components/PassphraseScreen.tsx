@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useAppLogin } from "../hooks/queries";
+import { INPUT_CLASS } from "./ui";
 
 interface PassphraseScreenProps {
   onAuthenticated: () => void;
@@ -19,9 +20,6 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
     e.preventDefault();
     appLoginMutation.mutate(password, { onSuccess: onAuthenticated });
   }
-
-  const inputClass =
-    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2.5 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-[#f0f2f5] dark:bg-[#080b12]">
@@ -84,7 +82,7 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Application password"
-            className={inputClass}
+            className={INPUT_CLASS}
             data-1p-ignore
           />
         </div>

@@ -1,6 +1,7 @@
 import { useReducer } from "react";
 import type { FormEvent } from "react";
 import { useLogin } from "../hooks/queries";
+import { INPUT_CLASS } from "./ui";
 
 interface LoginScreenProps {
   onLoggedIn: () => void;
@@ -44,9 +45,6 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
     );
   }
 
-  const inputClass =
-    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2.5 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-ui-bg dark:bg-noc-bg px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.07)_0%,_transparent_60%)]" />
@@ -80,7 +78,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             value={url}
             onChange={(e) => dispatch({ url: e.target.value })}
             placeholder="https://192.168.1.1"
-            className={inputClass}
+            className={INPUT_CLASS}
           />
         </div>
 
@@ -97,7 +95,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             required
             value={username}
             onChange={(e) => dispatch({ username: e.target.value })}
-            className={inputClass}
+            className={INPUT_CLASS}
           />
         </div>
 
@@ -114,7 +112,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             required
             value={password}
             onChange={(e) => dispatch({ password: e.target.value })}
-            className={inputClass}
+            className={INPUT_CLASS}
             data-1p-ignore
           />
         </div>
@@ -132,7 +130,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             required
             value={site}
             onChange={(e) => dispatch({ site: e.target.value })}
-            className={inputClass}
+            className={INPUT_CLASS}
           />
         </div>
 

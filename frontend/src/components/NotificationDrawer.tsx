@@ -1,4 +1,5 @@
 import type { AppNotification } from "../api/types";
+import { BACKDROP_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
 
 interface NotificationDrawerProps {
   notifications: AppNotification[];
@@ -47,12 +48,10 @@ export default function NotificationDrawer({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/30 z-40"
+        className={`${BACKDROP_CLASS} z-40`}
         onClick={onClose}
         onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
-        role="button"
-        tabIndex={-1}
-        aria-label="Close notification drawer"
+        role="presentation"
         data-testid="drawer-backdrop"
       />
       <aside
@@ -79,7 +78,7 @@ export default function NotificationDrawer({
           <button
             onClick={onClose}
             aria-label="Close notifications"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary transition-colors"
+            className={CLOSE_BUTTON_CLASS}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <line x1="18" y1="6" x2="6" y2="18" />

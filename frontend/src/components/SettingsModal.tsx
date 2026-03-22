@@ -4,6 +4,7 @@ import type { AiPreset } from "../api/types";
 import { useSaveAiConfig, useDeleteAiConfig, useLogin } from "../hooks/queries";
 import { useAppContext } from "../hooks/useAppContext";
 import type { ThemePreference } from "../hooks/useAppContext";
+import { INPUT_CLASS, BACKDROP_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -63,11 +64,6 @@ function UserIcon() {
     </svg>
   );
 }
-
-// --- Shared styles ---
-
-const INPUT_CLASS =
-  "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
 // --- Connection pane ---
 
@@ -535,12 +531,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm"
+      className={`${BACKDROP_CLASS} z-50 flex items-center justify-center`}
       onClick={onClose}
       onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
-      role="button"
-      tabIndex={-1}
-      aria-label="Close dialog"
+      role="presentation"
+      data-testid="settings-backdrop"
     >
       <div
         className="relative bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border md:rounded-xl shadow-xl w-full h-full md:w-[700px] md:h-[80vh] flex flex-col md:flex-row md:mx-4 animate-fade-in"
@@ -564,7 +559,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               {tab === "ai" && "AI Provider Settings"}
               {tab === "user" && "User Settings"}
             </h2>
-            <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-xl cursor-pointer transition-colors" aria-label="Close settings">
+            <button onClick={onClose} className={CLOSE_BUTTON_CLASS} aria-label="Close settings">
               &times;
             </button>
           </div>

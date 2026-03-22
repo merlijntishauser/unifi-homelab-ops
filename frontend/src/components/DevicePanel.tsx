@@ -1,4 +1,5 @@
 import type { TopologyDevice, TopologyPort } from "../api/types";
+import { CLOSE_BUTTON_CLASS } from "./ui";
 
 interface DevicePanelProps {
   device: TopologyDevice;
@@ -68,7 +69,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
         </h2>
         <button
           onClick={onClose}
-          className="text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-lg leading-none cursor-pointer transition-colors"
+          className={CLOSE_BUTTON_CLASS}
           aria-label="Close panel"
         >
           &times;

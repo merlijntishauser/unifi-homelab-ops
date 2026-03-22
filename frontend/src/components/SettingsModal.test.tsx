@@ -386,7 +386,7 @@ describe("SettingsModal", () => {
   it("calls onClose when backdrop is clicked", () => {
     const onClose = vi.fn();
     renderModal(onClose);
-    fireEvent.click(screen.getByRole("dialog").parentElement!);
+    fireEvent.click(screen.getByTestId("settings-backdrop"));
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -580,14 +580,14 @@ describe("SettingsModal", () => {
   it("calls onClose when Escape is pressed on backdrop", () => {
     const onClose = vi.fn();
     renderModal(onClose);
-    fireEvent.keyDown(screen.getByLabelText("Close dialog"), { key: "Escape" });
+    fireEvent.keyDown(screen.getByTestId("settings-backdrop"), { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
   });
 
   it("does not call onClose for non-Escape keys on backdrop", () => {
     const onClose = vi.fn();
     renderModal(onClose);
-    fireEvent.keyDown(screen.getByLabelText("Close dialog"), { key: "Tab" });
+    fireEvent.keyDown(screen.getByTestId("settings-backdrop"), { key: "Tab" });
     expect(onClose).not.toHaveBeenCalled();
   });
 

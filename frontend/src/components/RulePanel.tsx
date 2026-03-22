@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import type { ZonePair, Rule, Finding } from "../api/types";
 import { useSimulate, useAnalyzeWithAi, useToggleRule, useSwapRuleOrder } from "../hooks/queries";
 import ConfirmDialog from "./ConfirmDialog";
+import { INPUT_COMPACT_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
 import {
   RuleCard, SimulationForm, SimulationResult, FindingsList, AiAnalysisStatus,
   gradeColor, initialFormState, formReducer, buildSimulateRequest, deriveAiError, deriveMutationError,
@@ -126,8 +127,7 @@ export default function RulePanel({
 
   const simError = deriveMutationError(simulateMutation.error, "Simulation failed");
 
-  const inputClass =
-    "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2.5 py-2.5 lg:py-1.5 text-xs font-mono text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
+  const inputClass = INPUT_COMPACT_CLASS;
 
   return (
     <>
@@ -139,7 +139,7 @@ export default function RulePanel({
         </h2>
         <button
           onClick={onClose}
-          className="text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-lg leading-none cursor-pointer transition-colors"
+          className={CLOSE_BUTTON_CLASS}
           aria-label="Close panel"
         >
           &times;

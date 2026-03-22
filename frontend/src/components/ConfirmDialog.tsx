@@ -1,3 +1,5 @@
+import { BACKDROP_CLASS } from "./ui";
+
 interface ConfirmDialogProps {
   open: boolean;
   title: string;
@@ -21,7 +23,7 @@ export default function ConfirmDialog({
     <div
       data-testid="confirm-backdrop"
       role="presentation"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className={`${BACKDROP_CLASS} z-50 flex items-center justify-center`}
       onClick={onCancel}
       onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
     >

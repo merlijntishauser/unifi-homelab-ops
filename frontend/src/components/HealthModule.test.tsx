@@ -330,7 +330,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const firewallCard = screen.getByText("Firewall").closest("button");
-    expect(firewallCard?.className).toContain("border-status-danger");
+    expect(firewallCard?.querySelector("div")?.className).toContain("bg-status-danger");
   });
 
   it("shows warning border on topology card with firmware mismatches", () => {
@@ -340,7 +340,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const topoCard = screen.getByText("Topology").closest("button");
-    expect(topoCard?.className).toContain("border-status-warning");
+    expect(topoCard?.querySelector("div")?.className).toContain("bg-status-warning");
   });
 
   it("shows danger border on topology card when devices offline", () => {
@@ -350,7 +350,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const topoCard = screen.getByText("Topology").closest("button");
-    expect(topoCard?.className).toContain("border-status-danger");
+    expect(topoCard?.querySelector("div")?.className).toContain("bg-status-danger");
   });
 
   it("shows danger border on metrics card with high resource devices", () => {
@@ -360,7 +360,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const metricsCard = screen.getByText("Metrics").closest("button");
-    expect(metricsCard?.className).toContain("border-status-danger");
+    expect(metricsCard?.querySelector("div")?.className).toContain("bg-status-danger");
   });
 
   it("shows warning border on metrics card with recent reboots", () => {
@@ -370,7 +370,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const metricsCard = screen.getByText("Metrics").closest("button");
-    expect(metricsCard?.className).toContain("border-status-warning");
+    expect(metricsCard?.querySelector("div")?.className).toContain("bg-status-warning");
   });
 
   it("shows danger for metrics card with critical notifications", () => {
@@ -380,7 +380,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const metricsCard = screen.getByText("Metrics").closest("button");
-    expect(metricsCard?.className).toContain("border-status-danger");
+    expect(metricsCard?.querySelector("div")?.className).toContain("bg-status-danger");
   });
 
   it("shows warning for metrics card with medium notifications", () => {
@@ -390,7 +390,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const metricsCard = screen.getByText("Metrics").closest("button");
-    expect(metricsCard?.className).toContain("border-status-warning");
+    expect(metricsCard?.querySelector("div")?.className).toContain("bg-status-warning");
   });
 
   it("shows warning border on firewall card with grade D", () => {
@@ -400,7 +400,7 @@ describe("HealthModule", () => {
     };
     renderModule();
     const fwCard = screen.getByText("Firewall").closest("button");
-    expect(fwCard?.className).toContain("border-status-warning");
+    expect(fwCard?.querySelector("div")?.className).toContain("bg-status-warning");
   });
 
   it("shows last analyzed timestamp in minutes", () => {

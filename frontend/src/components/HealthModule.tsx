@@ -32,10 +32,10 @@ function getMetricsStatus(met: MetricsSummary): CardStatus {
   return "healthy";
 }
 
-const statusBorder: Record<CardStatus, string> = {
-  healthy: "border-status-success",
-  warning: "border-status-warning",
-  danger: "border-status-danger",
+const statusStrip: Record<CardStatus, string> = {
+  healthy: "bg-status-success",
+  warning: "bg-status-warning",
+  danger: "bg-status-danger",
 };
 
 function formatEntries(obj: Record<string, number>): string {
@@ -69,12 +69,15 @@ function SummaryCard({ title, status, onClick, children }: SummaryCardProps) {
   return (
     <button
       onClick={onClick}
-      className={`border-l-4 ${statusBorder[status]} border-y border-r border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface rounded-lg shadow-sm p-4 text-left hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors cursor-pointer w-full`}
+      className="flex overflow-hidden border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface rounded-lg shadow-sm text-left hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors cursor-pointer w-full"
     >
-      <h3 className="text-sm font-sans font-semibold text-ui-text-secondary dark:text-noc-text-secondary mb-3">
-        {title}
-      </h3>
-      <div className="space-y-1.5">{children}</div>
+      <div className={`w-1 shrink-0 ${statusStrip[status]}`} />
+      <div className="p-4 flex-1">
+        <h3 className="text-sm font-sans font-semibold text-ui-text-secondary dark:text-noc-text-secondary mb-3">
+          {title}
+        </h3>
+        <div className="space-y-1.5">{children}</div>
+      </div>
     </button>
   );
 }

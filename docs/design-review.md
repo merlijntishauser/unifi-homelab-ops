@@ -189,5 +189,5 @@ The `SummaryCard` component has a colored left border but no background differen
 | ~~6~~    | ~~Extract shared icons and utilities to reduce duplication~~          | ~~Done~~ |
 | ~~7~~    | ~~Add skip-to-content link~~                                          | ~~Done~~ |
 | ~~8~~    | ~~Fix heading hierarchy on Health page~~                              | ~~Done~~ |
-| 9        | Add password visibility toggle                                        | Standard UX expectation |
+| ~~9~~    | ~~Add password visibility toggle~~                                    | ~~Done~~ |
 | 10       | Fix backdrop ARIA roles to `role="presentation"`                      | Semantic correctness |

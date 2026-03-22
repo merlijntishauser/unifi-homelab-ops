@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useAppLogin } from "../hooks/queries";
-import { INPUT_CLASS } from "./ui";
+import PasswordInput from "./PasswordInput";
 
 interface PassphraseScreenProps {
   onAuthenticated: () => void;
@@ -75,16 +75,12 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
           >
             Password
           </label>
-          <input
+          <PasswordInput
             id="passphrase"
-            type="password"
             required
-            autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             placeholder="Application password"
-            className={INPUT_CLASS}
-            data-1p-ignore
           />
         </div>
 

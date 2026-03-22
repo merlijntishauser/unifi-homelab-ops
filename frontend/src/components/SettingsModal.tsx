@@ -5,6 +5,7 @@ import { useSaveAiConfig, useDeleteAiConfig, useLogin } from "../hooks/queries";
 import { useAppContext } from "../hooks/useAppContext";
 import type { ThemePreference } from "../hooks/useAppContext";
 import { INPUT_CLASS, BACKDROP_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
+import PasswordInput from "./PasswordInput";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -133,7 +134,7 @@ function ConnectionPane() {
 
       <div>
         <label htmlFor="conn-password" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Password</label>
-        <input id="conn-password" type="password" autoComplete="current-password" value={form.password} onChange={e => dispatch({ password: e.target.value })} className={INPUT_CLASS} data-1p-ignore />
+        <PasswordInput id="conn-password" value={form.password} onChange={v => dispatch({ password: v })} />
       </div>
 
       <div>

@@ -2,6 +2,7 @@ import { useReducer } from "react";
 import type { FormEvent } from "react";
 import { useLogin } from "../hooks/queries";
 import { INPUT_CLASS } from "./ui";
+import PasswordInput from "./PasswordInput";
 
 interface LoginScreenProps {
   onLoggedIn: () => void;
@@ -108,15 +109,11 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
           >
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             required
-            autoComplete="current-password"
             value={password}
-            onChange={(e) => dispatch({ password: e.target.value })}
-            className={INPUT_CLASS}
-            data-1p-ignore
+            onChange={(v) => dispatch({ password: v })}
           />
         </div>
 

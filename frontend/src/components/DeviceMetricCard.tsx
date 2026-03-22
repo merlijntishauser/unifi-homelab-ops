@@ -38,7 +38,7 @@ function tempColor(temp: number): string {
 export default function DeviceMetricCard({ device, onClick }: DeviceMetricCardProps) {
   return (
     <div
-      className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
+      className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised shadow-sm p-4 cursor-pointer hover:bg-ui-raised dark:hover:bg-noc-raised hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
       role="button"
       tabIndex={0}
       onClick={onClick}

@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Skip-to-content link for keyboard accessibility (visible on Tab focus)
+- Password visibility toggle on all password fields (LoginScreen, PassphraseScreen, SettingsModal)
+- Mobile bottom nav "More" overflow menu providing access to Docs, Rack Planner, Home Assistant, and Settings
+- Theme picker popover replacing the non-obvious cycling toggle (shows Light, Dark, System options)
+- Shared Tooltip component with center/left/right alignment
+- Shared PasswordInput component with show/hide toggle
+- Shared icon library (components/icons.tsx) and formatRelativeTime utility (utils/format.ts)
+- UI/UX design review document (docs/design-review.md)
+
+### Fixed
+- `prefers-reduced-motion` now respected: all animations and transitions disabled when OS setting is active
+- Mobile StatusBadge labels ("Controller", "AI") now always visible instead of hidden behind hover-only tooltips
+- Toolbar title no longer wraps on narrow screens; status badges stack below title on mobile
+- Health page heading hierarchy fixed (h1 -> h2 -> h3 instead of skipping h2)
+- Health summary cards now visually separated in dark mode with border, shadow, and background strip for status colors
+- PassphraseScreen background uses theme tokens instead of hardcoded hex values
+- Backdrop overlays unified to consistent opacity (`bg-black/50 dark:bg-black/60 backdrop-blur-sm`) and correct `role="presentation"`
+- Close buttons on RulePanel and DevicePanel now meet 44px minimum touch target
+- Input padding unified across LoginScreen, SettingsModal, and RulePanel (shared INPUT_CLASS)
+- Settings modal tab icons enlarged to match sidebar navigation icon size
+- Settings modal action buttons (Save, Test Connection, Delete) now have consistent height
+- Select inputs have enforced min-height matching text inputs
+- `autocomplete` attributes added to all login forms for proper browser autofill
+- `react-hooks/exhaustive-deps` warnings in useNotificationState resolved
+- `act()` warnings in DocumentationModule mermaid tests resolved
+
+### Changed
+- Route modules lazy-loaded via React.lazy() with Suspense fallback (main bundle: 1,345 kB -> 280 kB)
+- Vendor chunks split: react-vendor (99 kB), @xyflow/react (179 kB), mermaid (492 kB)
+- Duplicated SVG icons across BottomNav and ModuleSidebar consolidated into shared icons.tsx
+- Duplicated formatRelativeTime/formatTimeAgo consolidated into shared utils/format.ts
+- Inline tooltip patterns replaced with shared Tooltip component across Toolbar and MatrixCell
+
 ## [1.1.1] - 2026-03-21
 
 ### Added

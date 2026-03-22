@@ -69,7 +69,7 @@ function SummaryCard({ title, status, onClick, children }: SummaryCardProps) {
   return (
     <button
       onClick={onClick}
-      className={`border-l-4 ${statusBorder[status]} bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-lg shadow-sm p-4 text-left hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors cursor-pointer w-full`}
+      className={`border-l-4 ${statusBorder[status]} border-y border-r border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface rounded-lg shadow-sm p-4 text-left hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors cursor-pointer w-full`}
     >
       <h3 className="text-sm font-sans font-semibold text-ui-text-secondary dark:text-noc-text-secondary mb-3">
         {title}

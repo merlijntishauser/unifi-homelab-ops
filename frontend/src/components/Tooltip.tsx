@@ -1,12 +1,16 @@
 interface TooltipProps {
   text: string;
-  align?: "center" | "right";
+  align?: "center" | "left" | "right";
 }
 
+const alignClass = {
+  center: "left-1/2 -translate-x-1/2",
+  left: "left-0",
+  right: "right-0",
+};
+
 export default function Tooltip({ text, align = "center" }: TooltipProps) {
-  const position = align === "right"
-    ? "right-0"
-    : "left-1/2 -translate-x-1/2";
+  const position = alignClass[align];
 
   return (
     <div

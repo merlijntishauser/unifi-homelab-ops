@@ -33,7 +33,7 @@ function StatusBadge({ active, label, tooltip }: { active: boolean; label: strin
         <span className={`inline-block w-1.5 h-1.5 rounded-full ${
           active ? "bg-emerald-500 dark:bg-status-success" : "bg-ui-text-dim dark:bg-noc-text-dim"
         }`} />
-        <span className="hidden md:inline">{label}</span>
+        <span>{label}</span>
       </div>
       <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-ui-text dark:bg-noc-raised text-[11px] text-white dark:text-noc-text whitespace-pre opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-transparent dark:border-noc-border shadow-lg">
         {tooltip}

@@ -123,17 +123,17 @@ function ConnectionPane() {
 
       <div>
         <label htmlFor="conn-url" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Controller URL</label>
-        <input id="conn-url" type="url" value={form.url} onChange={e => dispatch({ url: e.target.value })} placeholder="https://192.168.1.1" className={INPUT_CLASS} />
+        <input id="conn-url" type="url" autoComplete="url" value={form.url} onChange={e => dispatch({ url: e.target.value })} placeholder="https://192.168.1.1" className={INPUT_CLASS} />
       </div>
 
       <div>
         <label htmlFor="conn-username" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Username</label>
-        <input id="conn-username" type="text" value={form.username} onChange={e => dispatch({ username: e.target.value })} className={INPUT_CLASS} />
+        <input id="conn-username" type="text" autoComplete="username" value={form.username} onChange={e => dispatch({ username: e.target.value })} className={INPUT_CLASS} />
       </div>
 
       <div>
         <label htmlFor="conn-password" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Password</label>
-        <input id="conn-password" type="password" value={form.password} onChange={e => dispatch({ password: e.target.value })} className={INPUT_CLASS} data-1p-ignore />
+        <input id="conn-password" type="password" autoComplete="current-password" value={form.password} onChange={e => dispatch({ password: e.target.value })} className={INPUT_CLASS} data-1p-ignore />
       </div>
 
       <div>
@@ -264,6 +264,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
           <input
             id="settings-api-key"
             type="password"
+            autoComplete="off"
             value={apiKey}
             onChange={e => dispatch({ apiKey: e.target.value })}
             placeholder={keySource === "env" ? "Loaded from environment" : hasKey ? "Key configured \u2014 leave blank to keep" : "Enter your API key"}

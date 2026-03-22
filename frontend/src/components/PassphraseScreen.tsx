@@ -79,6 +79,7 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
             id="passphrase"
             type="password"
             required
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Application password"

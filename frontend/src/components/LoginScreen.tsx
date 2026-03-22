@@ -75,6 +75,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             id="url"
             type="url"
             required
+            autoComplete="url"
             value={url}
             onChange={(e) => dispatch({ url: e.target.value })}
             placeholder="https://192.168.1.1"
@@ -93,6 +94,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             id="username"
             type="text"
             required
+            autoComplete="username"
             value={username}
             onChange={(e) => dispatch({ username: e.target.value })}
             className={INPUT_CLASS}
@@ -110,6 +112,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             id="password"
             type="password"
             required
+            autoComplete="current-password"
             value={password}
             onChange={(e) => dispatch({ password: e.target.value })}
             className={INPUT_CLASS}

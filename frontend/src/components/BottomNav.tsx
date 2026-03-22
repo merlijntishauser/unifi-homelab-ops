@@ -75,7 +75,7 @@ export default function BottomNav({ onOpenSettings }: BottomNavProps) {
           <span className="text-[10px]">{item.label}</span>
         </NavLink>
       ))}
-      <div ref={menuRef} className="relative">
+      <div ref={menuRef} className="relative flex items-center justify-center">
         <button
           onClick={() => setMoreOpen((prev) => !prev)}
           className={linkClass(isOverflowRouteActive || moreOpen)}

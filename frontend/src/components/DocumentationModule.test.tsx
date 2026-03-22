@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ColorMode } from "@xyflow/react";
 import { AppContext, type AppContextValue } from "../hooks/useAppContext";
@@ -263,10 +263,15 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => {
+      await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
+    });
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
       expect(mermaidMod.render).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
     });
   });
 
@@ -298,10 +303,13 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
       expect(mermaidMod.render).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
     });
     expect(screen.getByRole("button", { name: "Download SVG" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Download PNG" })).toBeInTheDocument();
@@ -323,7 +331,7 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
     await waitFor(() => {
       expect(screen.getByText("invalid")).toBeInTheDocument();
     });
@@ -427,7 +435,7 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
@@ -474,7 +482,7 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
@@ -556,7 +564,7 @@ describe("DocumentationModule", () => {
     vi.mocked(mermaidMock.render).mockRejectedValueOnce(new Error("fail"));
 
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     await waitFor(() => {
       expect(screen.getByText("invalid")).toBeInTheDocument();
@@ -577,7 +585,7 @@ describe("DocumentationModule", () => {
     vi.mocked(mermaidMock.render).mockRejectedValueOnce(new Error("fail"));
 
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     await waitFor(() => {
       expect(screen.getByText("invalid")).toBeInTheDocument();
@@ -594,7 +602,7 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
@@ -649,7 +657,7 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
@@ -709,7 +717,7 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule();
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
@@ -729,7 +737,7 @@ describe("DocumentationModule", () => {
       ],
     };
     renderModule({ colorMode: "light" as ColorMode });
-    fireEvent.click(screen.getByText("Network Topology"));
+    await act(async () => { fireEvent.click(screen.getByText("Network Topology")); });
 
     const { default: mermaidMod } = await import("mermaid");
     await waitFor(() => {
@@ -738,6 +746,9 @@ describe("DocumentationModule", () => {
           themeVariables: expect.objectContaining({ background: "#f7f8fa" }),
         }),
       );
+    });
+    await waitFor(() => {
+      expect(document.querySelector("svg")).not.toBeNull();
     });
   });
 });

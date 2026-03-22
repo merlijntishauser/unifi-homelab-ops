@@ -85,7 +85,7 @@ function DiagramContent({ query }: { query: UseQueryResult<TopologySvgResponse> 
 }
 
 const BTN = "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
-const BTN_ACTIVE = "rounded-lg border border-ub-blue px-3 py-1.5 text-sm text-ub-blue bg-blue-50 dark:bg-ub-blue-dim cursor-pointer transition-all";
+const BTN_ACTIVE = "rounded-lg border border-ub-blue px-3 py-1.5 min-h-[44px] text-sm text-ub-blue bg-blue-50 dark:bg-ub-blue-dim cursor-pointer transition-all";
 
 export default function TopologyModule() {
   const { colorMode, connectionInfo } = useAppContext();
@@ -147,7 +147,7 @@ export default function TopologyModule() {
   }, [savePositionsMutation]);
 
   const segmentClass = (active: boolean, isFirst: boolean) =>
-    `px-3 py-1.5 text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
+    `px-3 py-1.5 min-h-[44px] text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
       active ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue font-medium" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised"
     }`;
 

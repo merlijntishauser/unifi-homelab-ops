@@ -48,10 +48,10 @@ const DEVICE_TYPE_OPTIONS = [
 // --- Shared button style ---
 
 const btnClass =
-  "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+  "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
 
 const btnPrimaryClass =
-  "rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-all";
+  "rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 min-h-[44px] text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-all";
 
 // --- RackCard ---
 

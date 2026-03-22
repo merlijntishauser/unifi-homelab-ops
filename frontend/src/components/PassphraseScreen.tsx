@@ -22,7 +22,7 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-[#f0f2f5] dark:bg-[#080b12]">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-ui-bg dark:bg-noc-bg">
       {/* Grid pattern */}
       <div
         className="absolute inset-0 opacity-[0.08] dark:opacity-[0.12]"

@@ -12,7 +12,7 @@ export interface NotificationState {
 export function useNotificationState(enabled: boolean): NotificationState {
   const query = useNotificationsQuery(enabled);
   const dismissMutation = useDismissNotification();
-  const notifications = query.data ?? [];
+  const notifications = useMemo(() => query.data ?? [], [query.data]);
 
   const activeCount = useMemo(
     () => notifications.filter((n) => !n.dismissed && !n.resolved_at).length,

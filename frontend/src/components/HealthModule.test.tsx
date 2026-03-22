@@ -130,6 +130,16 @@ describe("HealthModule", () => {
     expect(screen.getByText("5")).toBeInTheDocument(); // zone pair count
   });
 
+  it("has correct heading hierarchy (h2 before h3)", () => {
+    renderModule();
+    const headings = screen.getAllByRole("heading");
+    const levels = headings.map((h) => Number(h.tagName[1]));
+    // Verify no heading level is skipped (each h3 must follow an h2)
+    for (let i = 1; i < levels.length; i++) {
+      expect(levels[i]).toBeLessThanOrEqual(levels[i - 1] + 1);
+    }
+  });
+
   it("shows auto-refresh label", () => {
     renderModule();
     expect(screen.getByText("Auto-refreshes every 60s")).toBeInTheDocument();

@@ -286,7 +286,14 @@ function SummarySection({ summary, isLoading, error }: { summary: HealthSummaryR
   }
 
   if (summary) {
-    return <SummaryCards summary={summary} />;
+    return (
+      <div className="space-y-4">
+        <h2 className="text-base font-sans font-semibold text-ui-text dark:text-noc-text">
+          System Summary
+        </h2>
+        <SummaryCards summary={summary} />
+      </div>
+    );
   }
 
   return null;

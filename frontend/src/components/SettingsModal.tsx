@@ -42,7 +42,7 @@ function TabButton({ icon, label, active, onClick }: TabButtonProps) {
 
 function LinkIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
       <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z" />
       <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z" />
     </svg>
@@ -51,7 +51,7 @@ function LinkIcon() {
 
 function CpuIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
       <path d="M14 6H6v8h8V6z" />
       <path fillRule="evenodd" d="M9.25 3V1.75a.75.75 0 011.5 0V3h1.5V1.75a.75.75 0 011.5 0V3h.5A2.75 2.75 0 0117 5.75v.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v.5A2.75 2.75 0 0114.25 17h-.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-.5A2.75 2.75 0 013 14.25v-.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-.5A2.75 2.75 0 015.75 3h.5V1.75a.75.75 0 011.5 0V3h1.5zM4.5 5.75c0-.69.56-1.25 1.25-1.25h8.5c.69 0 1.25.56 1.25 1.25v8.5c0 .69-.56 1.25-1.25 1.25h-8.5c-.69 0-1.25-.56-1.25-1.25v-8.5z" clipRule="evenodd" />
     </svg>
@@ -60,7 +60,7 @@ function CpuIcon() {
 
 function UserIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
       <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
     </svg>
   );
@@ -157,14 +157,14 @@ function ConnectionPane() {
         <button
           onClick={handleConnect}
           disabled={loginMutation.isPending}
-          className="flex-1 rounded-lg bg-ub-blue px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+          className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
         >
           {loginMutation.isPending ? "Connecting..." : "Connect"}
         </button>
         {connectionInfo && (
           <button
             onClick={onLogout}
-            className="rounded-lg border border-red-300 dark:border-status-danger/30 px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all"
+            className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all"
           >
             Disconnect
           </button>
@@ -474,14 +474,14 @@ function AiPane({ onClose }: { onClose: () => void }) {
       )}
 
       <div className="flex gap-2 pt-2">
-        <button onClick={handleSave} disabled={saving || (!isEnvSourced && !selectedPresetId)} className="flex-1 rounded-lg bg-ub-blue px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
+        <button onClick={handleSave} disabled={saving || (!isEnvSourced && !selectedPresetId)} className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
           {saving ? "Saving..." : "Save"}
         </button>
-        <button onClick={handleTest} disabled={testing} className="rounded-lg border border-ui-border dark:border-noc-border px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
+        <button onClick={handleTest} disabled={testing} className="rounded-lg border border-ui-border dark:border-noc-border min-h-[40px] px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
           {testing ? "Testing..." : "Test Connection"}
         </button>
         {configSource === "db" && (
-          <button onClick={handleDelete} className="rounded-lg border border-red-300 dark:border-status-danger/30 px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all">
+          <button onClick={handleDelete} className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all">
             Delete
           </button>
         )}

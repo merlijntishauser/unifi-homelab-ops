@@ -1,6 +1,6 @@
 /** Standard text input / select class used across all forms. */
 export const INPUT_CLASS =
-  "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-3 py-2.5 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
+  "w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input min-h-[40px] px-3 py-2.5 text-sm text-ui-text dark:text-noc-text placeholder-ui-text-dim dark:placeholder-noc-text-dim focus:border-ub-blue focus:outline-none focus:ring-1 focus:ring-ub-blue/40 transition-colors";
 
 /** Compact input variant for simulation forms (smaller padding, monospace). */
 export const INPUT_COMPACT_CLASS =

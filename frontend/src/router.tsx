@@ -1,26 +1,29 @@
+import { lazy } from "react";
 import type { RouteObject } from "react-router-dom";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppShell from "./components/AppShell";
-import FirewallModule from "./components/FirewallModule";
-import TopologyModule from "./components/TopologyModule";
-import MetricsModule from "./components/MetricsModule";
-import HealthModule from "./components/HealthModule";
-import DocumentationModule from "./components/DocumentationModule";
-import RackPlannerModule from "./components/RackPlannerModule";
-import HomeAssistantModule from "./components/HomeAssistantModule";
+import SuspenseRoute from "./components/SuspenseRoute";
+
+const FirewallModule = lazy(() => import("./components/FirewallModule"));
+const TopologyModule = lazy(() => import("./components/TopologyModule"));
+const MetricsModule = lazy(() => import("./components/MetricsModule"));
+const HealthModule = lazy(() => import("./components/HealthModule"));
+const DocumentationModule = lazy(() => import("./components/DocumentationModule"));
+const RackPlannerModule = lazy(() => import("./components/RackPlannerModule"));
+const HomeAssistantModule = lazy(() => import("./components/HomeAssistantModule"));
 
 const routes: RouteObject[] = [
   {
     element: <AppShell />,
     children: [
       { index: true, element: <Navigate to="/health" replace /> },
-      { path: "firewall", element: <FirewallModule /> },
-      { path: "topology", element: <TopologyModule /> },
-      { path: "metrics", element: <MetricsModule /> },
-      { path: "health", element: <HealthModule /> },
-      { path: "docs", element: <DocumentationModule /> },
-      { path: "rack-planner", element: <RackPlannerModule /> },
-      { path: "home-assistant", element: <HomeAssistantModule /> },
+      { path: "firewall", element: <SuspenseRoute><FirewallModule /></SuspenseRoute> },
+      { path: "topology", element: <SuspenseRoute><TopologyModule /></SuspenseRoute> },
+      { path: "metrics", element: <SuspenseRoute><MetricsModule /></SuspenseRoute> },
+      { path: "health", element: <SuspenseRoute><HealthModule /></SuspenseRoute> },
+      { path: "docs", element: <SuspenseRoute><DocumentationModule /></SuspenseRoute> },
+      { path: "rack-planner", element: <SuspenseRoute><RackPlannerModule /></SuspenseRoute> },
+      { path: "home-assistant", element: <SuspenseRoute><HomeAssistantModule /></SuspenseRoute> },
     ],
   },
 ];

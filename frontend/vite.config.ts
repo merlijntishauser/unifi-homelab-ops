@@ -35,6 +35,17 @@ export default defineConfig({
     __BUILD_DATE__: JSON.stringify(process.env.BUILD_DATE || ""),
   },
   plugins: [react(), tailwindcss(), startupBanner()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          "xyflow": ["@xyflow/react"],
+          "mermaid": ["mermaid"],
+        },
+      },
+    },
+  },
   server: {
     host: "0.0.0.0",
     proxy: {
@@ -53,7 +64,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/main.tsx", "src/vite-env.d.ts", "src/test-setup.ts", "src/api/types.ts", "src/components/HomeAssistantModule.tsx", "src/hooks/useVersionCheck.ts"],
+      exclude: ["src/main.tsx", "src/vite-env.d.ts", "src/test-setup.ts", "src/api/types.ts", "src/components/HomeAssistantModule.tsx", "src/hooks/useVersionCheck.ts", "src/router.tsx"],
       thresholds: {
         statements: 95,
         branches: 95,

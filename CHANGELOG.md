@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-03-22
+
 ### Added
 - Skip-to-content link for keyboard accessibility (visible on Tab focus)
 - Password visibility toggle on all password fields (LoginScreen, PassphraseScreen, SettingsModal)
@@ -182,7 +184,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.0...v1.0.1

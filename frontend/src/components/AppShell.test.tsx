@@ -101,6 +101,14 @@ function renderShell(ctx?: Partial<AppContextValue>) {
 }
 
 describe("AppShell", () => {
+  it("renders skip-to-content link targeting main content", () => {
+    renderShell();
+    const skipLink = screen.getByText("Skip to content");
+    expect(skipLink).toBeInTheDocument();
+    expect(skipLink).toHaveAttribute("href", "#main-content");
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
+  });
+
   it("renders toolbar", () => {
     renderShell();
     expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();

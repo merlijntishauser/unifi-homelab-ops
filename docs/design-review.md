@@ -187,7 +187,7 @@ The `SummaryCard` component has a colored left border but no background differen
 | ~~4~~ | ~~Add `autocomplete` attributes to login forms~~ | ~~Done~~ |
 | ~~5~~ | ~~Fix PassphraseScreen to use theme tokens instead of hardcoded hex~~ | ~~Done~~ |
 | ~~6~~ | ~~Extract shared icons and utilities to reduce duplication~~ | ~~Done~~ |
-| 7 | Add skip-to-content link | Keyboard accessibility |
+| ~~7~~ | ~~Add skip-to-content link~~ | ~~Done~~ |
 | 8 | Fix heading hierarchy on Health page | Screen reader navigation |
 | 9 | Add password visibility toggle | Standard UX expectation |
 | 10 | Fix backdrop ARIA roles to `role="presentation"` | Semantic correctness |

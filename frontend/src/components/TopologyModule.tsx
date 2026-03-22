@@ -84,8 +84,16 @@ function DiagramContent({ query }: { query: UseQueryResult<TopologySvgResponse> 
   return null;
 }
 
-const BTN = "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
-const BTN_ACTIVE = "rounded-lg border border-ub-blue px-3 py-1.5 min-h-[44px] text-sm text-ub-blue bg-blue-50 dark:bg-ub-blue-dim cursor-pointer transition-all";
+const dlIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
+const BTN = "inline-flex items-center gap-1.5 rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+const BTN_ACTIVE = "inline-flex items-center gap-1.5 rounded-lg border border-ub-blue px-3 py-1.5 min-h-[36px] text-sm text-ub-blue bg-blue-50 dark:bg-ub-blue-dim cursor-pointer transition-all";
 
 export default function TopologyModule() {
   const { colorMode, connectionInfo } = useAppContext();
@@ -147,13 +155,13 @@ export default function TopologyModule() {
   }, [savePositionsMutation]);
 
   const segmentClass = (active: boolean, isFirst: boolean) =>
-    `px-3 py-1.5 min-h-[44px] text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
+    `px-3 py-1.5 min-h-[36px] text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
       active ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue font-medium" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised"
     }`;
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-3 lg:px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+      <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <div className="flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
           <button onClick={() => handleSubViewChange("map")} className={segmentClass(subView === "map", true)}>Map</button>
           <button onClick={() => handleSubViewChange("diagram")} className={segmentClass(subView === "diagram", false)}>Diagram</button>
@@ -172,8 +180,8 @@ export default function TopologyModule() {
             <button onClick={handleProjectionChange} className={projection === "isometric" ? BTN_ACTIVE : BTN}>Isometric</button>
             {svgQuery.data && (
               <>
-                <button onClick={() => downloadSvg(svgQuery.data.svg)} className={`${BTN} hidden md:inline-flex`}>Export SVG</button>
-                <button onClick={() => downloadPng(svgQuery.data.svg)} className={`${BTN} hidden md:inline-flex`}>Export PNG</button>
+                <button onClick={() => downloadSvg(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download SVG">{dlIcon} SVG</button>
+                <button onClick={() => downloadPng(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download PNG">{dlIcon} PNG</button>
               </>
             )}
           </>

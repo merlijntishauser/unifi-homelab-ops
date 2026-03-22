@@ -48,10 +48,10 @@ const DEVICE_TYPE_OPTIONS = [
 // --- Shared button style ---
 
 const btnClass =
-  "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+  "inline-flex items-center rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
 
 const btnPrimaryClass =
-  "rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 min-h-[44px] text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-all";
+  "inline-flex items-center rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 min-h-[36px] text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-all";
 
 // --- RackCard ---
 
@@ -220,7 +220,7 @@ function RackOverview({ onSelectRack }: RackOverviewProps) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-3 lg:px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+      <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <span className="text-sm text-ui-text-dim dark:text-noc-text-dim">Rack Planner</span>
         <div className="ml-auto" />
         <button
@@ -1005,7 +1005,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-3 lg:px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+      <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <button onClick={onBack} className={btnClass} data-testid="back-button">
           Back
         </button>

@@ -172,7 +172,7 @@ describe("DocumentationModule", () => {
 
   it("has export button", () => {
     renderModule();
-    expect(screen.getByText("Export Markdown")).toBeInTheDocument();
+    expect(screen.getByText("Complete Markdown")).toBeInTheDocument();
   });
 
   it("has refresh button", () => {
@@ -202,7 +202,7 @@ describe("DocumentationModule", () => {
     });
 
     renderModule();
-    fireEvent.click(screen.getByText("Export Markdown"));
+    fireEvent.click(screen.getByText("Complete Markdown"));
 
     await waitFor(() => {
       expect(mockGetDocExport).toHaveBeenCalled();
@@ -223,14 +223,14 @@ describe("DocumentationModule", () => {
     mockGetDocExport.mockImplementation(() => new Promise<string>((resolve) => { resolveExport = resolve; }));
 
     renderModule();
-    fireEvent.click(screen.getByText("Export Markdown"));
+    fireEvent.click(screen.getByText("Complete Markdown"));
 
-    expect(screen.getByText("Exporting...")).toBeInTheDocument();
+    expect(screen.getByText("Downloading...")).toBeInTheDocument();
 
     // Resolve the export
     resolveExport("# Doc");
     await waitFor(() => {
-      expect(screen.getByText("Export Markdown")).toBeInTheDocument();
+      expect(screen.getByText("Complete Markdown")).toBeInTheDocument();
     });
   });
 
@@ -238,10 +238,10 @@ describe("DocumentationModule", () => {
     mockGetDocExport.mockRejectedValue(new Error("Network error"));
 
     renderModule();
-    fireEvent.click(screen.getByText("Export Markdown"));
+    fireEvent.click(screen.getByText("Complete Markdown"));
 
     await waitFor(() => {
-      expect(screen.getByText("Export Markdown")).toBeInTheDocument();
+      expect(screen.getByText("Complete Markdown")).toBeInTheDocument();
     });
     // Should not crash -- button is restored
   });

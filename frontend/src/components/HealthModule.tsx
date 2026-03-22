@@ -325,7 +325,7 @@ export default function HealthModule() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-3 lg:px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+      <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <span className="text-sm text-ui-text-dim dark:text-noc-text-dim">Auto-refreshes every 60s</span>
       </div>
 

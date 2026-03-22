@@ -73,7 +73,7 @@ function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
 }
 
 const BTN =
-  "rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+  "inline-flex items-center gap-1.5 rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
 
 function LoadingSpinner({ message }: { message: string }) {
   return (
@@ -310,9 +310,9 @@ export default function DocumentationModule() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-3 lg:px-4 py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
-        <button onClick={handleExport} disabled={exporting} className={BTN}>
-          {exporting ? "Exporting..." : "Export Markdown"}
+      <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
+        <button onClick={handleExport} disabled={exporting} className={BTN} aria-label="Download complete markdown">
+          {downloadIcon} {exporting ? "Downloading..." : "Complete Markdown"}
         </button>
         <button onClick={handleRefresh} disabled={sectionsQuery.isLoading} className={BTN}>
           Refresh

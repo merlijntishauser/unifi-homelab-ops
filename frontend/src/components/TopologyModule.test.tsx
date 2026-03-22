@@ -153,14 +153,14 @@ describe("TopologyModule", () => {
   it("shows export buttons in diagram view when SVG loaded", () => {
     renderModule();
     fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
-    expect(screen.getByRole("button", { name: "Export SVG" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Export PNG" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download SVG" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download PNG" })).toBeInTheDocument();
   });
 
   it("hides diagram controls in map view", () => {
     renderModule();
     expect(screen.queryByRole("button", { name: "Isometric" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Export SVG" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download SVG" })).not.toBeInTheDocument();
   });
 
   it("shows loading state for map", () => {
@@ -223,24 +223,24 @@ describe("TopologyModule", () => {
     expect(isoBtn).toBeInTheDocument();
   });
 
-  it("calls downloadSvg when Export SVG is clicked", () => {
+  it("calls downloadSvg when Download SVG is clicked", () => {
     renderModule();
     fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
-    fireEvent.click(screen.getByRole("button", { name: "Export SVG" }));
+    fireEvent.click(screen.getByRole("button", { name: "Download SVG" }));
     // downloadSvg is mocked via module mock but we verify no crash
   });
 
-  it("calls downloadPng when Export PNG is clicked", () => {
+  it("calls downloadPng when Download PNG is clicked", () => {
     renderModule();
     fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
-    fireEvent.click(screen.getByRole("button", { name: "Export PNG" }));
+    fireEvent.click(screen.getByRole("button", { name: "Download PNG" }));
   });
 
   it("hides export buttons when no SVG data in diagram view", () => {
     svgMock.data = undefined;
     renderModule();
     fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
-    expect(screen.queryByRole("button", { name: "Export SVG" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download SVG" })).not.toBeInTheDocument();
   });
 
   it("reads sub-view from localStorage", () => {

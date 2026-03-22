@@ -27,7 +27,7 @@ test.describe("documentation module", () => {
     await expect(page.getByRole("button", { name: "Download MD" }).first()).toBeVisible();
   });
 
-  test("shows export markdown button", async ({ page }) => {
-    await expect(page.getByRole("button", { name: "Export Markdown" })).toBeVisible();
+  test("shows download complete markdown button", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Download complete markdown" })).toBeVisible();
   });
 });

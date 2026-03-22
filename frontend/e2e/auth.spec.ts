@@ -9,7 +9,7 @@ test.describe("authentication", () => {
     await expect(page.getByRole("heading", { name: "Connect to UniFi Controller" })).toBeVisible();
     await expect(page.getByLabel("Controller URL")).toBeVisible();
     await expect(page.getByLabel("Username")).toBeVisible();
-    await expect(page.getByLabel("Password")).toBeVisible();
+    await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Connect" })).toBeVisible();
   });
 
@@ -19,7 +19,7 @@ test.describe("authentication", () => {
 
     await page.getByLabel("Controller URL").fill("https://192.168.1.1");
     await page.getByLabel("Username").fill("admin");
-    await page.getByLabel("Password").fill("password");
+    await page.getByLabel("Password", { exact: true }).fill("password");
     await page.getByRole("button", { name: "Connect" }).click();
 
     // After login, the app loads with the default route (Health)

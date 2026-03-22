@@ -151,7 +151,7 @@ test.describe("topology module", () => {
   test("diagram view renders SVG topology", async ({ page }) => {
     await page.getByRole("button", { name: "Diagram" }).click();
     await expect(page.getByRole("button", { name: "Isometric" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Export SVG" })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: "Download SVG" })).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -222,8 +222,8 @@ test.describe("documentation module", () => {
     await expect(page.getByRole("button", { name: "Download MD" }).first()).toBeVisible();
   });
 
-  test("export markdown button is present", async ({ page }) => {
-    await expect(page.getByRole("button", { name: "Export Markdown" })).toBeVisible({ timeout: 15000 });
+  test("download complete markdown button is present", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Download complete markdown" })).toBeVisible({ timeout: 15000 });
   });
 });
 

@@ -15,7 +15,7 @@ test.describe("topology module", () => {
 
     test("does not show diagram controls in map view", async ({ page }) => {
       await expect(page.getByRole("button", { name: "Isometric" })).not.toBeVisible();
-      await expect(page.getByRole("button", { name: "Export SVG" })).not.toBeVisible();
+      await expect(page.getByRole("button", { name: "Download SVG" })).not.toBeVisible();
     });
   });
 
@@ -28,16 +28,16 @@ test.describe("topology module", () => {
     test("shows projection toggle and export buttons", async ({ page }) => {
       await page.getByRole("button", { name: "Diagram" }).click();
       await expect(page.getByRole("button", { name: "Isometric" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Export SVG" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Export PNG" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Download SVG" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Download PNG" })).toBeVisible();
     });
 
     test("switches back to map view", async ({ page }) => {
       await page.getByRole("button", { name: "Diagram" }).click();
-      await expect(page.getByRole("button", { name: "Export SVG" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Download SVG" })).toBeVisible();
 
       await page.getByRole("button", { name: "Map" }).click();
-      await expect(page.getByRole("button", { name: "Export SVG" })).not.toBeVisible();
+      await expect(page.getByRole("button", { name: "Download SVG" })).not.toBeVisible();
     });
   });
 });

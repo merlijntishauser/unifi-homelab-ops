@@ -18,35 +18,21 @@ function renderBottomNav(
 }
 
 describe("BottomNav", () => {
-  it("renders all 5 nav items", () => {
+  it("renders 4 primary nav items and More button", () => {
     renderBottomNav();
-    expect(screen.getByText("Firewall")).toBeInTheDocument();
-    expect(screen.getByText("Topology")).toBeInTheDocument();
-    expect(screen.getByText("Metrics")).toBeInTheDocument();
     expect(screen.getByText("Health")).toBeInTheDocument();
-    expect(screen.getByText("Settings")).toBeInTheDocument();
+    expect(screen.getByText("Metrics")).toBeInTheDocument();
+    expect(screen.getByText("Topology")).toBeInTheDocument();
+    expect(screen.getByText("Firewall")).toBeInTheDocument();
+    expect(screen.getByText("More")).toBeInTheDocument();
   });
 
-  it("has correct link targets for NavLink items", () => {
+  it("has correct link targets for primary NavLink items", () => {
     renderBottomNav();
     expect(screen.getByText("Firewall").closest("a")).toHaveAttribute("href", "/firewall");
     expect(screen.getByText("Topology").closest("a")).toHaveAttribute("href", "/topology");
     expect(screen.getByText("Metrics").closest("a")).toHaveAttribute("href", "/metrics");
     expect(screen.getByText("Health").closest("a")).toHaveAttribute("href", "/health");
-  });
-
-  it("renders Settings as a button, not a link", () => {
-    renderBottomNav();
-    const settingsButton = screen.getByRole("button", { name: "Settings" });
-    expect(settingsButton).toBeInTheDocument();
-    expect(settingsButton.closest("a")).toBeNull();
-  });
-
-  it("calls onOpenSettings when Settings is clicked", () => {
-    const handler = vi.fn();
-    renderBottomNav("/firewall", handler);
-    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("shows active state on current route", () => {
@@ -67,19 +53,84 @@ describe("BottomNav", () => {
     expect(screen.getByRole("navigation", { name: "Bottom navigation" })).toBeInTheDocument();
   });
 
-  it("all items have text labels", () => {
+  it("More button opens overflow menu with remaining modules and Settings", () => {
     renderBottomNav();
-    const labels = ["Firewall", "Topology", "Metrics", "Health", "Settings"];
-    for (const label of labels) {
-      expect(screen.getByText(label)).toBeInTheDocument();
-    }
+    expect(screen.queryByText("Docs")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+
+    expect(screen.getByText("Docs")).toBeInTheDocument();
+    expect(screen.getByText("Rack Planner")).toBeInTheDocument();
+    expect(screen.getByText("Home Assistant")).toBeInTheDocument();
+    expect(screen.getByText("Settings")).toBeInTheDocument();
   });
 
-  it("has 4 links and 1 button", () => {
+  it("overflow menu has correct link targets", () => {
+    renderBottomNav();
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+
+    expect(screen.getByText("Docs").closest("a")).toHaveAttribute("href", "/docs");
+    expect(screen.getByText("Rack Planner").closest("a")).toHaveAttribute("href", "/rack-planner");
+    expect(screen.getByText("Home Assistant").closest("a")).toHaveAttribute("href", "/home-assistant");
+  });
+
+  it("calls onOpenSettings when Settings is clicked in overflow menu", () => {
+    const handler = vi.fn();
+    renderBottomNav("/firewall", handler);
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    fireEvent.click(screen.getByText("Settings"));
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("More button has aria-expanded attribute", () => {
+    renderBottomNav();
+    const moreButton = screen.getByRole("button", { name: "More" });
+    expect(moreButton).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(moreButton);
+    expect(moreButton).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("highlights More button when an overflow route is active", () => {
+    renderBottomNav("/docs");
+    const moreButton = screen.getByRole("button", { name: "More" });
+    expect(moreButton.className).toContain("text-ub-blue");
+  });
+
+  it("has 4 links and 1 button when menu is closed", () => {
     renderBottomNav();
     const links = screen.getAllByRole("link");
     const buttons = screen.getAllByRole("button");
     expect(links).toHaveLength(4);
     expect(buttons).toHaveLength(1);
+  });
+
+  it("closes menu when clicking outside", () => {
+    renderBottomNav();
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    expect(screen.getByText("Docs")).toBeInTheDocument();
+
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByText("Docs")).not.toBeInTheDocument();
+  });
+
+  it("closes menu when navigating via overflow link", () => {
+    renderBottomNav();
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    expect(screen.getByText("Docs")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Docs"));
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("closes menu on second click of More button", () => {
+    renderBottomNav();
+    const moreButton = screen.getByRole("button", { name: "More" });
+
+    fireEvent.click(moreButton);
+    expect(screen.getByText("Docs")).toBeInTheDocument();
+
+    fireEvent.click(moreButton);
+    expect(screen.queryByText("Docs")).not.toBeInTheDocument();
   });
 });

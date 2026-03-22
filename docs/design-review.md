@@ -182,7 +182,7 @@ The `SummaryCard` component has a colored left border but no background differen
 | Priority | Item | Impact |
 |---|---|---|
 | 1 | Add `prefers-reduced-motion` media query | Accessibility, quick win |
-| 2 | Fix mobile bottom nav to include all modules | 3 modules unreachable on mobile |
+| ~~2~~ | ~~Fix mobile bottom nav to include all modules~~ | ~~Done~~ |
 | 3 | Unify input/backdrop/close-button patterns across all modals | Visual consistency |
 | 4 | Add `autocomplete` attributes to login forms | Accessibility + UX |
 | 5 | Fix PassphraseScreen to use theme tokens instead of hardcoded hex | Token consistency |

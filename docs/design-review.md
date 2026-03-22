@@ -104,7 +104,7 @@ Options:
 - Add an overflow "More" item in the bottom nav that opens a sheet with the remaining modules
 - Or include all 7 items with horizontal scroll (less ideal but functional)
 
-### 10. Mobile StatusBadge labels hidden
+### 10.Mobile StatusBadge labels hidden 
 
 `Toolbar.tsx:36`: Badge labels use `hidden md:inline`, so on mobile the toolbar shows only tiny colored dots with no text. Users can't tell what "Controller" and "AI" badges mean without hovering (which doesn't exist on mobile).
 
@@ -152,7 +152,7 @@ The theme cycles through Dark -> System -> Light -> Dark on each click. There's 
 
 The `SummaryCard` component has a colored left border but no background differentiation from the content area. In dark mode they blend into the background more than in light mode, where the white cards clearly stand out against the gray background.
 
-### 19. `ub-purple` token documented but not defined
+### 19. `ub-purple` token documented but not definedsee 
 
 `AGENTS.md` lists `ub-purple` as an accent token, but it doesn't exist in `index.css`. The documentation is stale.
 
@@ -180,7 +180,7 @@ The `SummaryCard` component has a colored left border but no background differen
 ## Priority Action Items
 
 | Priority | Item                                                                  | Impact |
-|----------|-----------------------------------------------------------------------|---|
+|----------|-----------------------------------------------------------------------|--------|
 | ~~1~~    | ~~Add `prefers-reduced-motion` media query~~                          | ~~Done~~ |
 | ~~2~~    | ~~Fix mobile bottom nav to include all modules~~                      | ~~Done~~ |
 | ~~3~~    | ~~Unify input/backdrop/close-button patterns across all modals~~      | ~~Done~~ |
@@ -190,4 +190,4 @@ The `SummaryCard` component has a colored left border but no background differen
 | ~~7~~    | ~~Add skip-to-content link~~                                          | ~~Done~~ |
 | ~~8~~    | ~~Fix heading hierarchy on Health page~~                              | ~~Done~~ |
 | ~~9~~    | ~~Add password visibility toggle~~                                    | ~~Done~~ |
-| 10       | Fix backdrop ARIA roles to `role="presentation"`                      | Semantic correctness |
+| ~~10~~   | ~~Fix backdrop ARIA roles to `role="presentation"`~~                  | ~~Done~~ |

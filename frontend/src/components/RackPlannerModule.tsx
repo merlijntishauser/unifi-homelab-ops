@@ -321,9 +321,9 @@ const initialAddItemState: AddItemState = {
 const EMPTY_SPECS: DeviceSpec[] = [];
 
 const WIDTH_OPTIONS: { label: string; value: number }[] = [
-  { label: "Full (1U)", value: 1.0 },
-  { label: "Half (1/2)", value: 0.5 },
-  { label: "Quarter (1/4)", value: 0.25 },
+  { label: "Full width", value: 1.0 },
+  { label: "Half width", value: 0.5 },
+  { label: "Quarter width", value: 0.25 },
 ];
 
 function getValidPositionXOptions(widthFraction: number): { label: string; value: number }[] {

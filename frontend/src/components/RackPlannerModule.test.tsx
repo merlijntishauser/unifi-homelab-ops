@@ -1288,7 +1288,7 @@ describe("RackPlannerModule", () => {
         const widthSelect = screen.getByTestId("add-item-width") as HTMLSelectElement;
         expect(widthSelect).toBeInTheDocument();
         const options = Array.from(widthSelect.options).map((o) => o.text);
-        expect(options).toEqual(["Full (1U)", "Half (1/2)", "Quarter (1/4)"]);
+        expect(options).toEqual(["Full width", "Half width", "Quarter width"]);
       });
 
       it("does not show Position X dropdown when width is Full", () => {

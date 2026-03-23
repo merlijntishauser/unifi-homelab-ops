@@ -294,6 +294,7 @@ interface AddItemFormProps {
   submitLabel?: string;
   deviceSpecs?: DeviceSpec[];
   isUnifiDevice?: boolean;
+  onFormChange?: (data: RackItemInput) => void;
 }
 
 interface AddItemState {
@@ -340,11 +341,24 @@ function addItemReducer(state: AddItemState, update: Partial<AddItemState>): Add
   return { ...state, ...update };
 }
 
-function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add", deviceSpecs = EMPTY_SPECS, isUnifiDevice }: AddItemFormProps) {
-  const [form, dispatch] = useReducer(addItemReducer, { ...initialAddItemState, ...initialValues });
+function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add", deviceSpecs = EMPTY_SPECS, isUnifiDevice, onFormChange }: AddItemFormProps) {
+  const [form, rawDispatch] = useReducer(addItemReducer, { ...initialAddItemState, ...initialValues });
   const { label, deviceType, heightU, positionU, powerWatts, notes, widthFraction, positionX } = form;
   const isEditMode = submitLabel === "Save";
   const [tab, setTab] = useState<"unifi" | "custom">(isEditMode ? "custom" : "unifi");
+
+  // Wrap dispatch to notify parent of form changes for auto-save
+  const dispatch = useCallback((update: Partial<AddItemState>) => {
+    rawDispatch(update);
+    if (onFormChange) {
+      const next = { ...form, ...update };
+      onFormChange({
+        position_u: next.positionU, height_u: next.heightU, device_type: next.deviceType,
+        label: next.label, power_watts: next.powerWatts, notes: next.notes,
+        width_fraction: next.widthFraction, position_x: next.positionX,
+      });
+    }
+  }, [form, onFormChange]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const validPositionXOptions = useMemo(() => getValidPositionXOptions(widthFraction), [widthFraction]);
@@ -828,12 +842,12 @@ function buildRackSlots({ rack, occupiedSlots, handleDrop, handleDragOver, handl
 
 // --- RackSidePanel ---
 
-function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editingItem, addError, deviceSpecs, onAddItem, onAddFromTopology, onCloseAdd, onCloseBom, onCloseEdit, onSaveEdit }: {
+function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editingItem, addError, deviceSpecs, onAddItem, onAddFromTopology, onCloseAdd, onCloseBom, onCloseEdit, onSaveEdit, onEditFormChange }: {
   rack: Rack; rackId: number;
   showAddForm: boolean; showDevicePicker: boolean; bom: BomResponse | null; editingItem: RackItem | null; addError: string | null;
   deviceSpecs: DeviceSpec[];
   onAddItem: (data: RackItemInput) => void; onAddFromTopology: (device: { mac: string; name: string; model: string; type: string }) => void;
-  onCloseAdd: () => void; onCloseBom: () => void; onCloseEdit: () => void; onSaveEdit: (data: RackItemInput) => void;
+  onCloseAdd: () => void; onCloseBom: () => void; onCloseEdit: () => void; onSaveEdit: (data: RackItemInput) => void; onEditFormChange?: (data: RackItemInput) => void;
 }) {
   if (!showAddForm && !showDevicePicker && !bom && !editingItem) return null;
   return (
@@ -872,6 +886,7 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
             submitLabel="Save"
             deviceSpecs={deviceSpecs}
             isUnifiDevice={editingItem.device_mac !== null}
+            onFormChange={onEditFormChange}
           />
         </div>
         );
@@ -979,9 +994,18 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
     [rack, deleteItem],
   );
 
+  const [, setPendingEdit] = useState<{ itemId: number; data: RackItemInput } | null>(null);
+
   const handleEditItem = useCallback((item: RackItem) => {
+    setPendingEdit((pending) => {
+      // Auto-save current edit if switching to a different item
+      if (pending && pending.itemId !== item.id && rack) {
+        updateRackItem.mutate({ rackId: rack.id, itemId: pending.itemId, data: pending.data });
+      }
+      return null;
+    });
     setEditorState({ editingItem: item, showAddForm: false, showDevicePicker: false, bom: null });
-  }, []);
+  }, [rack, updateRackItem]);
 
   const handleDeleteRack = useCallback(() => {
     if (!window.confirm(`Delete "${rack?.name ?? "this rack"}" and all its items?`)) return;
@@ -1136,7 +1160,8 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             onAddFromTopology={handleAddFromTopology}
             onCloseAdd={() => { setEditorState({ showAddForm: false, addError: null }); }}
             onCloseBom={() => setEditorState({ bom: null })}
-            onCloseEdit={() => setEditorState({ editingItem: null })}
+            onCloseEdit={() => { setPendingEdit(null); setEditorState({ editingItem: null }); }}
+            onEditFormChange={(data) => { if (editingItem) setPendingEdit({ itemId: editingItem.id, data }); }}
             onSaveEdit={(data) => {
               if (!editingItem) return;
               updateRackItem.mutate(

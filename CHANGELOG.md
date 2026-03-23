@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Chart axis labels unreadable in dark mode (replaced currentColor with theme CSS variables)
+- Rack Planner: devices added from topology now disappear from the available devices list
+- Rack Planner: devices added from topology auto-populate height, width, and power from UniFi specs
+- Rack Planner: edit form shows "UniFi" badge and hides tab switcher for recognized devices
+- Rack Planner: edit form enriches values from device specs (fixes 0W power on older items)
+- Rack Planner: clicking a different item while editing auto-saves the current item
+- Rack Planner: width options renamed from "Full (1U)" to "Full width"
 - Rack Planner form inputs and selects now use shared INPUT_CLASS/SELECT_CLASS for consistent styling
 - Tooltip fly-in animation disabled on recharts for snappier interaction
 

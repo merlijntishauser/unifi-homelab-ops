@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import type { MetricsSnapshot, MetricsHistoryPoint, AppNotification } from "../api/types";
+import MetricsChart from "./MetricsChart";
+import type { ChartDatum } from "./MetricsChart";
 
 interface MetricsDetailViewProps {
   device: MetricsSnapshot;
@@ -42,81 +43,8 @@ function formatTimeLabel(iso: string): string {
   }
 }
 
-function formatAxisValue(value: number, unit: string): string {
-  if (unit === "bytes") return formatBytes(value);
-  if (unit === "C") return `${Math.round(value)}C`;
-  return `${Math.round(value)}${unit}`;
-}
-
-interface ChartDatum {
-  time: string;
-  value: number;
-}
-
-interface ChartSectionProps {
-  label: string;
-  value: string;
-  data: ChartDatum[];
-  color: string;
-  unit: string;
-}
-
-function ChartSection({ label, value, data, color, unit }: ChartSectionProps) {
-  return (
-    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4">
-      <div className="flex items-baseline justify-between mb-2">
-        <span className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary">{label}</span>
-        <span className="text-sm font-mono text-ui-text dark:text-noc-text">{value}</span>
-      </div>
-      <ResponsiveContainer width="100%" height={100}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.25} />
-              <stop offset="100%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} />
-          <XAxis
-            dataKey="time"
-            tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }}
-            tickLine={false}
-            axisLine={false}
-            interval="preserveStartEnd"
-            minTickGap={40}
-          />
-          <YAxis
-            tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }}
-            tickLine={false}
-            axisLine={false}
-            width={36}
-            tickFormatter={(v: number) => formatAxisValue(v, unit)}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "var(--color-noc-surface, #141820)",
-              border: "1px solid var(--color-noc-border, rgba(255,255,255,0.08))",
-              borderRadius: 8,
-              fontSize: 12,
-              fontFamily: "var(--font-mono)",
-            }}
-            labelStyle={{ color: "var(--color-noc-text-secondary, #8b95a5)", fontSize: 11 }}
-            itemStyle={{ color: "var(--color-noc-text, #f0f2f5)" }}
-            formatter={(v) => [formatAxisValue(Number(v ?? 0), unit), label]}
-          />
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={2}
-            fill={`url(#grad-${label})`}
-            dot={false}
-            activeDot={{ r: 3, strokeWidth: 0, fill: color }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
+function Chart(props: { label: string; value: string; data: ChartDatum[]; color: string; unit: string }) {
+  return <MetricsChart {...props} />;
 }
 
 export default function MetricsDetailView({
@@ -156,10 +84,10 @@ export default function MetricsDetailView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 mb-4 lg:mb-6">
-        <ChartSection label="CPU" value={`${Math.round(device.cpu)}%`} data={cpuData} color="#006fff" unit="%" />
-        <ChartSection label="Memory" value={`${Math.round(device.mem)}%`} data={memData} color="#8b5cf6" unit="%" />
+        <Chart label="CPU" value={`${Math.round(device.cpu)}%`} data={cpuData} color="#006fff" unit="%" />
+        <Chart label="Memory" value={`${Math.round(device.mem)}%`} data={memData} color="#8b5cf6" unit="%" />
         {hasTemperature && (
-          <ChartSection
+          <Chart
             label="Temperature"
             value={`${Math.round(device.temperature!)}C`}
             data={tempData}
@@ -167,7 +95,7 @@ export default function MetricsDetailView({
             unit="C"
           />
         )}
-        <ChartSection
+        <Chart
           label="Traffic (TX + RX)"
           value={formatBytes(device.tx_bytes + device.rx_bytes)}
           data={trafficData}

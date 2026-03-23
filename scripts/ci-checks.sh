@@ -26,8 +26,8 @@ cd "$ROOT/frontend" && npx vitest run --coverage
 
 echo "=== Frontend: react-doctor ==="
 score=$(cd "$ROOT/frontend" && npx react-doctor . --yes --score 2>/dev/null | tail -1 | tr -dc '0-9')
-if [ -z "$score" ] || [ "$score" -lt 99 ]; then
-    echo "FAIL: React Doctor score below 99 (got: ${score:-unknown})"
+if [ -z "$score" ] || [ "$score" -lt 100 ]; then
+    echo "FAIL: React Doctor score below 100 (got: ${score:-unknown})"
     exit 1
 else
     echo "  Score: $score/100"

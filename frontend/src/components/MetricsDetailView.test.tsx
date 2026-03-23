@@ -1,18 +1,14 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import MetricsDetailView from "./MetricsDetailView";
 import type { MetricsSnapshot, MetricsHistoryPoint, AppNotification } from "../api/types";
 
-// Mock ResponsiveContainer since jsdom has no layout dimensions
-vi.mock("recharts", async () => {
-  const actual = await vi.importActual<typeof import("recharts")>("recharts");
-  return {
-    ...actual,
-    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
-      <div style={{ width: 400, height: 100 }}>{children}</div>
-    ),
-  };
-});
+// Mock MetricsChart since recharts doesn't render in jsdom
+vi.mock("./MetricsChart", () => ({
+  default: ({ label, value }: { label: string; value: string }) => (
+    <div data-testid={`chart-${label}`}>{label}: {value}</div>
+  ),
+}));
 
 function makeDevice(overrides?: Partial<MetricsSnapshot>): MetricsSnapshot {
   return {
@@ -98,36 +94,37 @@ describe("MetricsDetailView", () => {
     expect(screen.getByText("Up 1d 1h 1m")).toBeInTheDocument();
   });
 
-  it("renders CPU and Memory chart sections", () => {
+  it("renders CPU and Memory chart sections", async () => {
     render(
       <MetricsDetailView device={makeDevice()} history={makeHistory(5)} notifications={[]} onBack={vi.fn()} />,
     );
-    expect(screen.getByText("CPU")).toBeInTheDocument();
-    expect(screen.getByText("Memory")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-CPU")).toBeInTheDocument());
+    expect(screen.getByTestId("chart-Memory")).toBeInTheDocument();
   });
 
-  it("renders temperature chart when temperature is available", () => {
+  it("renders temperature chart when temperature is available", async () => {
     render(
       <MetricsDetailView device={makeDevice({ temperature: 55 })} history={makeHistory(3)} notifications={[]} onBack={vi.fn()} />,
     );
-    expect(screen.getByText("Temperature")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-Temperature")).toBeInTheDocument());
   });
 
-  it("does not render temperature chart when temperature is null", () => {
+  it("does not render temperature chart when temperature is null", async () => {
     render(
       <MetricsDetailView device={makeDevice({ temperature: null })} history={[]} notifications={[]} onBack={vi.fn()} />,
     );
-    expect(screen.queryByText("Temperature")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-CPU")).toBeInTheDocument());
+    expect(screen.queryByTestId("chart-Temperature")).not.toBeInTheDocument();
   });
 
-  it("renders traffic chart section", () => {
+  it("renders traffic chart section", async () => {
     render(
       <MetricsDetailView device={makeDevice()} history={makeHistory(3)} notifications={[]} onBack={vi.fn()} />,
     );
-    expect(screen.getByText("Traffic (TX + RX)")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-Traffic (TX + RX)")).toBeInTheDocument());
   });
 
-  it("formats bytes correctly", () => {
+  it("formats bytes correctly in traffic chart value", async () => {
     render(
       <MetricsDetailView
         device={makeDevice({ tx_bytes: 1048576, rx_bytes: 2097152 })}
@@ -136,7 +133,7 @@ describe("MetricsDetailView", () => {
         onBack={vi.fn()}
       />,
     );
-    expect(screen.getByText("3.0 MB")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-Traffic (TX + RX)")).toHaveTextContent("3.0 MB"));
   });
 
   it("renders notifications when present", () => {
@@ -160,15 +157,15 @@ describe("MetricsDetailView", () => {
     expect(screen.queryByText("Active Notifications")).not.toBeInTheDocument();
   });
 
-  it("renders chart sections with recharts", () => {
+  it("passes correct values to chart components", async () => {
     render(
       <MetricsDetailView device={makeDevice()} history={makeHistory(5)} notifications={[]} onBack={vi.fn()} />,
     );
-    expect(screen.getByText("25%")).toBeInTheDocument(); // CPU value
-    expect(screen.getByText("60%")).toBeInTheDocument(); // Mem value
+    await waitFor(() => expect(screen.getByTestId("chart-CPU")).toHaveTextContent("25%"));
+    expect(screen.getByTestId("chart-Memory")).toHaveTextContent("60%");
   });
 
-  it("formats bytes as B for small values", () => {
+  it("formats bytes as B for small values", async () => {
     render(
       <MetricsDetailView
         device={makeDevice({ tx_bytes: 100, rx_bytes: 200 })}
@@ -177,10 +174,10 @@ describe("MetricsDetailView", () => {
         onBack={vi.fn()}
       />,
     );
-    expect(screen.getByText("300 B")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-Traffic (TX + RX)")).toHaveTextContent("300 B"));
   });
 
-  it("formats bytes as KB for medium values", () => {
+  it("formats bytes as KB for medium values", async () => {
     render(
       <MetricsDetailView
         device={makeDevice({ tx_bytes: 2048, rx_bytes: 0 })}
@@ -189,10 +186,10 @@ describe("MetricsDetailView", () => {
         onBack={vi.fn()}
       />,
     );
-    expect(screen.getByText("2.0 KB")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-Traffic (TX + RX)")).toHaveTextContent("2.0 KB"));
   });
 
-  it("formats bytes as GB for large values", () => {
+  it("formats bytes as GB for large values", async () => {
     render(
       <MetricsDetailView
         device={makeDevice({ tx_bytes: 1073741824, rx_bytes: 0 })}
@@ -201,7 +198,7 @@ describe("MetricsDetailView", () => {
         onBack={vi.fn()}
       />,
     );
-    expect(screen.getByText("1.0 GB")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-Traffic (TX + RX)")).toHaveTextContent("1.0 GB"));
   });
 
   it("renders high severity notification with red dot", () => {
@@ -243,11 +240,11 @@ describe("MetricsDetailView", () => {
     expect(grayDot).toBeInTheDocument();
   });
 
-  it("renders chart with temperature unit formatting", () => {
+  it("passes temperature value to chart", async () => {
     render(
       <MetricsDetailView device={makeDevice({ temperature: 55 })} history={makeHistory(3)} notifications={[]} onBack={vi.fn()} />,
     );
-    expect(screen.getByText("55C")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("chart-Temperature")).toHaveTextContent("55C"));
   });
 
   it("renders with history that has no temperature", () => {

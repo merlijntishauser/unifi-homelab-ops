@@ -49,7 +49,7 @@ type RechartsModule = typeof import("recharts");
 
 function ChartLoading() {
   return (
-    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4 h-[164px] flex items-center justify-center">
+    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4 h-[210px] flex items-center justify-center">
       <div className="h-5 w-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
     </div>
   );
@@ -96,8 +96,8 @@ export default function MetricsChart({ label, value, data, color, unit, referenc
   return (
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4">
       <ChartHeader label={label} value={value} />
-      <ResponsiveContainer width="100%" height={120}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+      <ResponsiveContainer width="100%" height={160}>
+        <AreaChart data={data} margin={{ top: 12, right: 4, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.25} />
@@ -128,8 +128,8 @@ export function DualMetricsChart({ label, value, data, primaryColor, secondaryCo
   return (
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4">
       <ChartHeader label={label} value={value} />
-      <ResponsiveContainer width="100%" height={120}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+      <ResponsiveContainer width="100%" height={160}>
+        <AreaChart data={data} margin={{ top: 12, right: 4, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id={`grad-${label}-primary`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={primaryColor} stopOpacity={0.25} />

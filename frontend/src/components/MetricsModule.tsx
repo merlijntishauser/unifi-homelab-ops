@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useAppContext } from "../hooks/useAppContext";
 import { useMetricsDevices, useMetricsHistory, useNotifications } from "../hooks/queries";
 import DeviceMetricCard from "./DeviceMetricCard";
-import MetricsDetailView from "./MetricsDetailView";
+
+const MetricsDetailView = lazy(() => import("./MetricsDetailView"));
 
 export default function MetricsModule() {
   const { connectionInfo } = useAppContext();
@@ -56,12 +57,18 @@ export default function MetricsModule() {
             </p>
           </div>
         ) : selectedDevice ? (
-          <MetricsDetailView
-            device={selectedDevice}
-            history={history}
-            notifications={notifications.filter((n) => n.device_mac === selectedDevice.mac)}
-            onBack={() => setSelectedMac(null)}
-          />
+          <Suspense fallback={
+            <div className="flex-1 flex flex-col items-center justify-center gap-3">
+              <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+            </div>
+          }>
+            <MetricsDetailView
+              device={selectedDevice}
+              history={history}
+              notifications={notifications.filter((n) => n.device_mac === selectedDevice.mac)}
+              onBack={() => setSelectedMac(null)}
+            />
+          </Suspense>
         ) : (
           <div className="flex-1 overflow-y-auto p-4 lg:p-6">
             {devices.length === 0 ? (

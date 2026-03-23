@@ -33,6 +33,13 @@ beforeEach(() => {
 });
 
 describe("ModuleSidebar", () => {
+  it("defaults to expanded when localStorage throws", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("blocked"); });
+    renderSidebar();
+    expect(screen.getByText("Health")).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
   it("renders navigation with all module links", () => {
     renderSidebar();
     const nav = screen.getByRole("navigation", { name: "Module navigation" });

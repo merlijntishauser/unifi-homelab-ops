@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ColorMode } from "@xyflow/react";
 import { AppContext, type AppContextValue } from "../hooks/useAppContext";
@@ -149,17 +149,21 @@ describe("MetricsModule", () => {
     expect(screen.getByText("No devices found")).toBeInTheDocument();
   });
 
-  it("navigates to detail view when device card is clicked", () => {
+  it("navigates to detail view when device card is clicked", async () => {
     renderModule();
     fireEvent.click(screen.getByText("Gateway"));
-    expect(screen.getByTestId("detail-view")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("detail-view")).toBeInTheDocument();
+    });
     expect(screen.getByText("Gateway")).toBeInTheDocument();
   });
 
-  it("returns to grid view when back is clicked in detail view", () => {
+  it("returns to grid view when back is clicked in detail view", async () => {
     renderModule();
     fireEvent.click(screen.getByText("Gateway"));
-    expect(screen.getByTestId("detail-view")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("detail-view")).toBeInTheDocument();
+    });
     fireEvent.click(screen.getByText("Back to overview"));
     expect(screen.getByTestId("device-card-aa:01")).toBeInTheDocument();
   });
@@ -171,10 +175,20 @@ describe("MetricsModule", () => {
     expect(screen.getByText("Failed to load devices")).toBeInTheDocument();
   });
 
-  it("deep-links to device from URL search param", () => {
+  it("falls back to grid when deep-linked device is not found", () => {
+    window.history.replaceState({}, "", "?device=nonexistent");
+    renderModule();
+    // Should show grid, not detail view
+    expect(screen.getByTestId("device-card-aa:01")).toBeInTheDocument();
+    expect(screen.queryByTestId("detail-view")).not.toBeInTheDocument();
+  });
+
+  it("deep-links to device from URL search param", async () => {
     window.history.replaceState({}, "", "?device=aa:01");
     renderModule();
-    expect(screen.getByTestId("detail-view")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("detail-view")).toBeInTheDocument();
+    });
     expect(screen.getByText("Gateway")).toBeInTheDocument();
     // URL should be cleaned
     expect(window.location.search).toBe("");

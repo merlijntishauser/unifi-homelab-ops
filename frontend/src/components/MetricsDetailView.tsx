@@ -1,5 +1,6 @@
+import { useMemo } from "react";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import type { MetricsSnapshot, MetricsHistoryPoint, AppNotification } from "../api/types";
-import Sparkline from "./Sparkline";
 
 interface MetricsDetailViewProps {
   device: MetricsSnapshot;
@@ -25,10 +26,11 @@ function SeverityDot({ severity }: { severity: string }) {
   return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${color}`} />;
 }
 
-function formatAxisValue(value: number, unit: string): string {
-  if (unit === "bytes") return formatBytes(value);
-  if (unit === "C") return `${Math.round(value)}C`;
-  return `${Math.round(value)}${unit}`;
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
 function formatTimeLabel(iso: string): string {
@@ -40,48 +42,79 @@ function formatTimeLabel(iso: string): string {
   }
 }
 
-function ChartSection({
-  label,
-  value,
-  data,
-  timestamps,
-  color,
-  unit,
-}: {
+function formatAxisValue(value: number, unit: string): string {
+  if (unit === "bytes") return formatBytes(value);
+  if (unit === "C") return `${Math.round(value)}C`;
+  return `${Math.round(value)}${unit}`;
+}
+
+interface ChartDatum {
+  time: string;
+  value: number;
+}
+
+interface ChartSectionProps {
   label: string;
   value: string;
-  data: number[];
-  timestamps: string[];
+  data: ChartDatum[];
   color: string;
   unit: string;
-}) {
-  const min = data.length > 0 ? Math.min(...data) : 0;
-  const max = data.length > 0 ? Math.max(...data) : 0;
-  const minLabel = formatAxisValue(min, unit);
-  const maxLabel = formatAxisValue(max, unit);
+}
 
-  const firstTime = timestamps.length > 0 ? formatTimeLabel(timestamps[0]) : "";
-  const lastTime = timestamps.length > 1 ? formatTimeLabel(timestamps[timestamps.length - 1]) : "";
-
+function ChartSection({ label, value, data, color, unit }: ChartSectionProps) {
   return (
-    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4">
+    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4">
       <div className="flex items-baseline justify-between mb-2">
         <span className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary">{label}</span>
         <span className="text-sm font-mono text-ui-text dark:text-noc-text">{value}</span>
       </div>
-      <div className="flex gap-1">
-        <div className="flex flex-col justify-between text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim w-10 text-right shrink-0 py-0.5">
-          <span>{maxLabel}</span>
-          <span>{minLabel}</span>
-        </div>
-        <div className="flex-1 flex flex-col">
-          <Sparkline data={data} width={400} height={60} color={color} className="w-full" />
-          <div className="flex justify-between text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim mt-0.5">
-            <span>{firstTime}</span>
-            <span>{lastTime}</span>
-          </div>
-        </div>
-      </div>
+      <ResponsiveContainer width="100%" height={100}>
+        <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+          <defs>
+            <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} />
+          <XAxis
+            dataKey="time"
+            tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }}
+            tickLine={false}
+            axisLine={false}
+            interval="preserveStartEnd"
+            minTickGap={40}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }}
+            tickLine={false}
+            axisLine={false}
+            width={36}
+            tickFormatter={(v: number) => formatAxisValue(v, unit)}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "var(--color-noc-surface, #141820)",
+              border: "1px solid var(--color-noc-border, rgba(255,255,255,0.08))",
+              borderRadius: 8,
+              fontSize: 12,
+              fontFamily: "var(--font-mono)",
+            }}
+            labelStyle={{ color: "var(--color-noc-text-secondary, #8b95a5)", fontSize: 11 }}
+            itemStyle={{ color: "var(--color-noc-text, #f0f2f5)" }}
+            formatter={(v) => [formatAxisValue(Number(v ?? 0), unit), label]}
+          />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={2}
+            fill={`url(#grad-${label})`}
+            dot={false}
+            activeDot={{ r: 3, strokeWidth: 0, fill: color }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -92,19 +125,20 @@ export default function MetricsDetailView({
   notifications,
   onBack,
 }: MetricsDetailViewProps) {
-  const cpuData = history.map((h) => h.cpu);
-  const memData = history.map((h) => h.mem);
-  const tempData = history.filter((h) => h.temperature !== null).map((h) => h.temperature!);
-  const tempTimestamps = history.filter((h) => h.temperature !== null).map((h) => h.timestamp);
-  const trafficData = history.map((h) => h.tx_bytes + h.rx_bytes);
-  const timestamps = history.map((h) => h.timestamp);
+  const cpuData = useMemo(() => history.map((h) => ({ time: formatTimeLabel(h.timestamp), value: h.cpu })), [history]);
+  const memData = useMemo(() => history.map((h) => ({ time: formatTimeLabel(h.timestamp), value: h.mem })), [history]);
+  const tempData = useMemo(() =>
+    history.filter((h) => h.temperature !== null).map((h) => ({ time: formatTimeLabel(h.timestamp), value: h.temperature! })),
+    [history],
+  );
+  const trafficData = useMemo(() => history.map((h) => ({ time: formatTimeLabel(h.timestamp), value: h.tx_bytes + h.rx_bytes })), [history]);
   const hasTemperature = device.temperature !== null;
 
   return (
     <div className="flex-1 overflow-y-auto p-4 lg:p-6">
       <button
         onClick={onBack}
-        className="rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[44px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all mb-4"
+        className="inline-flex items-center rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all mb-4"
       >
         Back to overview
       </button>
@@ -122,14 +156,13 @@ export default function MetricsDetailView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 mb-4 lg:mb-6">
-        <ChartSection label="CPU" value={`${Math.round(device.cpu)}%`} data={cpuData} timestamps={timestamps} color="#006fff" unit="%" />
-        <ChartSection label="Memory" value={`${Math.round(device.mem)}%`} data={memData} timestamps={timestamps} color="#8b5cf6" unit="%" />
+        <ChartSection label="CPU" value={`${Math.round(device.cpu)}%`} data={cpuData} color="#006fff" unit="%" />
+        <ChartSection label="Memory" value={`${Math.round(device.mem)}%`} data={memData} color="#8b5cf6" unit="%" />
         {hasTemperature && (
           <ChartSection
             label="Temperature"
             value={`${Math.round(device.temperature!)}C`}
             data={tempData}
-            timestamps={tempTimestamps}
             color="#ffaa2c"
             unit="C"
           />
@@ -138,7 +171,6 @@ export default function MetricsDetailView({
           label="Traffic (TX + RX)"
           value={formatBytes(device.tx_bytes + device.rx_bytes)}
           data={trafficData}
-          timestamps={timestamps}
           color="#00d68f"
           unit="bytes"
         />
@@ -169,11 +201,4 @@ export default function MetricsDetailView({
       )}
     </div>
   );
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }

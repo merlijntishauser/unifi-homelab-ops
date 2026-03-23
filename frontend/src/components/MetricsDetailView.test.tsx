@@ -3,6 +3,17 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import MetricsDetailView from "./MetricsDetailView";
 import type { MetricsSnapshot, MetricsHistoryPoint, AppNotification } from "../api/types";
 
+// Mock ResponsiveContainer since jsdom has no layout dimensions
+vi.mock("recharts", async () => {
+  const actual = await vi.importActual<typeof import("recharts")>("recharts");
+  return {
+    ...actual,
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+      <div style={{ width: 400, height: 100 }}>{children}</div>
+    ),
+  };
+});
+
 function makeDevice(overrides?: Partial<MetricsSnapshot>): MetricsSnapshot {
   return {
     mac: "aa:bb:cc:dd:ee:01",
@@ -18,6 +29,7 @@ function makeDevice(overrides?: Partial<MetricsSnapshot>): MetricsSnapshot {
     num_sta: 5,
     version: "4.0.6",
     poe_consumption: null,
+    poe_budget: null,
     status: "online",
     ...overrides,
   };
@@ -148,12 +160,12 @@ describe("MetricsDetailView", () => {
     expect(screen.queryByText("Active Notifications")).not.toBeInTheDocument();
   });
 
-  it("renders sparkline SVGs in chart sections", () => {
-    const { container } = render(
+  it("renders chart sections with recharts", () => {
+    render(
       <MetricsDetailView device={makeDevice()} history={makeHistory(5)} notifications={[]} onBack={vi.fn()} />,
     );
-    const svgs = container.querySelectorAll("svg");
-    expect(svgs.length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByText("25%")).toBeInTheDocument(); // CPU value
+    expect(screen.getByText("60%")).toBeInTheDocument(); // Mem value
   });
 
   it("formats bytes as B for small values", () => {
@@ -229,6 +241,13 @@ describe("MetricsDetailView", () => {
     );
     const grayDot = container.querySelector(".bg-ui-text-dim");
     expect(grayDot).toBeInTheDocument();
+  });
+
+  it("renders chart with temperature unit formatting", () => {
+    render(
+      <MetricsDetailView device={makeDevice({ temperature: 55 })} history={makeHistory(3)} notifications={[]} onBack={vi.fn()} />,
+    );
+    expect(screen.getByText("55C")).toBeInTheDocument();
   });
 
   it("renders with history that has no temperature", () => {

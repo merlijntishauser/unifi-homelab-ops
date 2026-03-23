@@ -7,6 +7,7 @@ export interface DeviceNodeData {
   ip: string;
   status: string;
   clientCount: number;
+  selected: boolean;
   onSelect: () => void;
   [key: string]: unknown;
 }
@@ -70,11 +71,16 @@ function DeviceIcon({ deviceType }: { deviceType: string }) {
 }
 
 export default function DeviceNodeComponent({ data }: NodeProps<DeviceNode>) {
-  const borderColor = data.deviceType === "gateway" ? "border-ub-blue" : "border-ui-border dark:border-noc-border";
+  const isGateway = data.deviceType === "gateway";
+  const borderColor = data.selected
+    ? "border-ub-blue ring-2 ring-ub-blue/40"
+    : isGateway
+      ? "border-ub-blue"
+      : "border-ui-border dark:border-noc-border";
 
   return (
     <div
-      className={`rounded-lg border ${borderColor} bg-ui-surface dark:bg-noc-raised shadow-md w-[200px] cursor-pointer`}
+      className={`rounded-lg border ${borderColor} bg-ui-surface dark:bg-noc-raised shadow-md w-[200px] cursor-pointer transition-all`}
       onClick={data.onSelect}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") data.onSelect(); }}
       role="button"

@@ -66,6 +66,7 @@ function MapContent({
           edges={edges}
           colorMode={colorMode}
           onDeviceSelect={onDeviceSelect}
+          selectedMac={selectedDevice?.mac ?? null}
           savedPositions={positionsQuery.data}
           onNodeDragEnd={onNodeDragEnd}
         />

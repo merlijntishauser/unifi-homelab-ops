@@ -293,6 +293,7 @@ interface AddItemFormProps {
   initialValues?: Partial<AddItemState>;
   submitLabel?: string;
   deviceSpecs?: DeviceSpec[];
+  isUnifiDevice?: boolean;
 }
 
 interface AddItemState {
@@ -339,7 +340,7 @@ function addItemReducer(state: AddItemState, update: Partial<AddItemState>): Add
   return { ...state, ...update };
 }
 
-function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add", deviceSpecs = EMPTY_SPECS }: AddItemFormProps) {
+function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add", deviceSpecs = EMPTY_SPECS, isUnifiDevice }: AddItemFormProps) {
   const [form, dispatch] = useReducer(addItemReducer, { ...initialAddItemState, ...initialValues });
   const { label, deviceType, heightU, positionU, powerWatts, notes, widthFraction, positionX } = form;
   const [tab, setTab] = useState<"unifi" | "custom">(initialValues ? "custom" : "unifi");
@@ -368,7 +369,10 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
   return (
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4" data-testid="add-item-form">
       <div className="flex items-center gap-2 mb-3">
-        <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text">Add Item</h3>
+        <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text">{submitLabel === "Save" ? "Edit Item" : "Add Item"}</h3>
+        {isUnifiDevice && (
+          <span className="rounded-full bg-ub-blue-dim text-ub-blue text-[10px] font-semibold px-2 py-0.5">UniFi</span>
+        )}
         <div className="ml-auto flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
           <button
             onClick={() => setTab("unifi")}
@@ -704,6 +708,11 @@ function DevicePicker({ rackId, onAdd }: DevicePickerProps) {
     api.getAvailableDevices(rackId).then(setDevices).catch(() => setDevices([])).finally(() => setLoading(false));
   }, [rackId]);
 
+  const handleAdd = (device: { mac: string; name: string; model: string; type: string }) => {
+    onAdd(device);
+    setDevices((prev) => prev.filter((d) => d.mac !== device.mac));
+  };
+
   if (loading) {
     return <p className="text-xs text-ui-text-dim dark:text-noc-text-dim p-3">Loading devices...</p>;
   }
@@ -728,7 +737,7 @@ function DevicePicker({ rackId, onAdd }: DevicePickerProps) {
                   <div className="text-xs text-ui-text-dim dark:text-noc-text-dim truncate">{meta.label} -- {device.model}</div>
                 </div>
                 <button
-                  onClick={() => onAdd(device)}
+                  onClick={() => handleAdd(device)}
                   className="shrink-0 rounded border border-ub-blue/20 px-2 py-1 text-xs text-ub-blue hover:bg-ub-blue/10 cursor-pointer transition-colors"
                 >
                   Add to Rack
@@ -842,7 +851,6 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
       )}
       {editingItem && (
         <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4" data-testid="edit-item-form">
-          <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text mb-3">Edit: {editingItem.label}</h3>
           <AddItemForm
             onSubmit={onSaveEdit}
             onCancel={onCloseEdit}
@@ -855,6 +863,7 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
             }}
             submitLabel="Save"
             deviceSpecs={deviceSpecs}
+            isUnifiDevice={editingItem.device_mac !== null}
           />
         </div>
       )}
@@ -971,20 +980,26 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   }, [rackId, rack, deleteRack, onBack]);
 
   const handleAddFromTopology = useCallback((device: { mac: string; name: string; model: string; type: string }) => {
+    // Look up device specs for dimensions and power
+    const specs = specsQuery.data ?? [];
+    const spec = specs.find((s) => s.model === device.model);
+    const heightU = spec?.height_u ?? 1;
+    const widthFraction = spec?.width_fraction ?? 1.0;
+    const maxPower = spec?.max_power_w ?? null;
+
     const freeSlots: number[] = [];
     if (rack) {
       for (let s = 1; s <= rack.height_u; s++) {
-        // A 1U item needs both half-slots free (s and s+0.5)
         if (!occupiedSlots.has(s) && !occupiedSlots.has(s + 0.5)) freeSlots.push(s);
       }
     }
     const positionU = freeSlots.length > 0 ? freeSlots[0] : 1;
     setEditorState({ addError: null });
     addItem.mutate(
-      { rackId, data: { position_u: positionU, label: device.name, device_type: device.type, device_mac: device.mac, height_u: 1, width_fraction: 1.0, position_x: 0.0 } },
+      { rackId, data: { position_u: positionU, label: device.name, device_type: device.type, device_mac: device.mac, height_u: heightU, width_fraction: widthFraction, position_x: 0.0, power_watts: maxPower ?? undefined } },
       { onError: (err) => setEditorState({ addError: err instanceof Error ? err.message : "Rack is full" }) },
     );
-  }, [rackId, addItem, rack, occupiedSlots]);
+  }, [rackId, addItem, rack, occupiedSlots, specsQuery.data]);
 
   const handleShowBom = useCallback(async () => {
     const data = await api.getRackBom(rackId);

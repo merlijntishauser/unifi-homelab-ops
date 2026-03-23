@@ -841,7 +841,7 @@ describe("RackPlannerModule", () => {
       const label = screen.getByText("USW-24-PoE");
       fireEvent.click(label);
       expect(screen.getByTestId("edit-item-form")).toBeInTheDocument();
-      expect(screen.getByText(/Edit: USW-24-PoE/)).toBeInTheDocument();
+      expect(screen.getByText("Edit Item")).toBeInTheDocument();
       expect(screen.getByText("Save")).toBeInTheDocument();
     });
 
@@ -1070,8 +1070,9 @@ describe("RackPlannerModule", () => {
               device_type: "switch",
               device_mac: "aa:bb:cc:dd:ee:01",
               height_u: 1,
-              width_fraction: 1.0,
+              width_fraction: 0.5,
               position_x: 0.0,
+              power_watts: 52,
             },
           },
           expect.objectContaining({ onError: expect.any(Function) }),

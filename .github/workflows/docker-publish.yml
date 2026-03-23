@@ -62,7 +62,7 @@ jobs:
           mkdir -p /tmp/digests/${{ matrix.variant }}
           echo "${{ steps.build.outputs.digest }}" > "/tmp/digests/${{ matrix.variant }}/${{ steps.platform_pair.outputs.pair }}"
       - if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digest-${{ matrix.variant }}-${{ steps.platform_pair.outputs.pair }}
           path: /tmp/digests
@@ -94,7 +94,7 @@ jobs:
               type=sha,prefix=sha-,suffix=-alpine
               type=raw,value=alpine,enable={{is_default_branch}}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: digest-${{ matrix.variant }}-*
           path: /tmp/digests

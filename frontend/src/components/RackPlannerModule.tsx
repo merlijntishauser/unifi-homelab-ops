@@ -852,7 +852,9 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
       {bom && (
         <BomView bom={bom} onClose={onCloseBom} />
       )}
-      {editingItem && (
+      {editingItem && (() => {
+        const spec = editingItem.device_model ? deviceSpecs.find((s) => s.model === editingItem.device_model) : undefined;
+        return (
         <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4" data-testid="edit-item-form">
           <AddItemForm
             onSubmit={onSaveEdit}
@@ -860,16 +862,20 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
             maxPositionU={rack.height_u}
             initialValues={{
               label: editingItem.label, deviceType: editingItem.device_type,
-              heightU: editingItem.height_u, positionU: editingItem.position_u,
-              powerWatts: editingItem.power_watts, notes: editingItem.notes,
-              widthFraction: editingItem.width_fraction, positionX: editingItem.position_x,
+              heightU: spec?.height_u ?? editingItem.height_u,
+              positionU: editingItem.position_u,
+              powerWatts: editingItem.power_watts || (spec?.max_power_w ?? 0),
+              notes: editingItem.notes,
+              widthFraction: spec?.width_fraction ?? editingItem.width_fraction,
+              positionX: editingItem.position_x,
             }}
             submitLabel="Save"
             deviceSpecs={deviceSpecs}
             isUnifiDevice={editingItem.device_mac !== null}
           />
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

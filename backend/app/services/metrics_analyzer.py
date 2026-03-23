@@ -11,8 +11,11 @@ log = structlog.get_logger()
 
 _SYSTEM_PROMPT = """You are a network operations analyst reviewing 24h device metrics for a UniFi network device.
 
+Important context: UniFi devices typically run at ~80% memory utilization by design.
+This is normal and not a concern. Only flag memory if it sustains above 95%.
+
 Provide a concise, actionable summary in 3-5 bullet points. Focus on:
-- Anomalies or concerning patterns (CPU spikes, memory pressure, traffic surges)
+- Anomalies or concerning patterns (CPU spikes, sustained high memory >95%, traffic surges)
 - Whether current resource utilization is healthy or approaching limits
 - Trends that suggest action may be needed soon
 

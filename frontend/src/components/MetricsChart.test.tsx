@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import MetricsChart, { DualMetricsChart } from "./MetricsChart";
+import MetricsChart from "./MetricsChart";
 
 // Store captured props from mock recharts components
 const capturedProps: Record<string, Record<string, unknown>> = {};
@@ -109,57 +109,3 @@ describe("MetricsChart", () => {
   });
 });
 
-describe("DualMetricsChart", () => {
-  it("renders dual series chart with legend", async () => {
-    render(
-      <DualMetricsChart
-        label="Traffic"
-        value="1 MB"
-        data={[{ time: "08:00", primary: 100, secondary: 200 }]}
-        primaryColor="#006fff"
-        secondaryColor="#00d68f"
-        primaryLabel="TX"
-        secondaryLabel="RX"
-        unit="bytes"
-      />,
-    );
-    await waitFor(() => expect(screen.getByText("Traffic")).toBeInTheDocument());
-    expect(screen.getByText("1 MB")).toBeInTheDocument();
-    expect(screen.getByTestId("recharts-Legend")).toBeInTheDocument();
-  });
-
-  it("shows loading spinner initially", () => {
-    const { container } = render(
-      <DualMetricsChart label="Traffic" value="0 B" data={[]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
-    );
-    expect(container.querySelector(".animate-spin")).toBeInTheDocument();
-  });
-
-  it("passes YAxis tickFormatter for bytes", async () => {
-    render(
-      <DualMetricsChart label="Traffic" value="1 MB" data={[{ time: "08:00", primary: 100, secondary: 200 }]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
-    );
-    await waitFor(() => expect(capturedProps["YAxis"]).toBeDefined());
-    const formatter = capturedProps["YAxis"].tickFormatter as (v: number) => string;
-    expect(formatter(1024)).toBe("1.0 KB");
-  });
-
-  it("passes Tooltip formatter that includes series name", async () => {
-    render(
-      <DualMetricsChart label="Traffic" value="1 MB" data={[{ time: "08:00", primary: 100, secondary: 200 }]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
-    );
-    await waitFor(() => expect(capturedProps["Tooltip"]).toBeDefined());
-    const formatter = capturedProps["Tooltip"].formatter as (v: unknown, name: unknown) => [string, string];
-    expect(formatter(1024, "TX")).toEqual(["1.0 KB", "TX"]);
-  });
-
-  it("passes Tooltip formatter that handles null values", async () => {
-    render(
-      <DualMetricsChart label="Traffic" value="0 B" data={[{ time: "08:00", primary: 0, secondary: 0 }]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
-    );
-    await waitFor(() => expect(capturedProps["Tooltip"]).toBeDefined());
-    const formatter = capturedProps["Tooltip"].formatter as (v: unknown, name: unknown) => [string, string];
-    expect(formatter(null, "TX")).toEqual(["0 B", "TX"]);
-    expect(formatter(undefined, "RX")).toEqual(["0 B", "RX"]);
-  });
-});

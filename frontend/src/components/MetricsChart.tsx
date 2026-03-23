@@ -5,12 +5,6 @@ interface ChartDatum {
   value: number;
 }
 
-interface DualChartDatum {
-  time: string;
-  primary: number;
-  secondary: number;
-}
-
 interface MetricsChartProps {
   label: string;
   value: string;
@@ -21,16 +15,6 @@ interface MetricsChartProps {
   referenceLabel?: string;
 }
 
-interface DualMetricsChartProps {
-  label: string;
-  value: string;
-  data: DualChartDatum[];
-  primaryColor: string;
-  secondaryColor: string;
-  primaryLabel: string;
-  secondaryLabel: string;
-  unit: string;
-}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -119,39 +103,4 @@ export default function MetricsChart({ label, value, data, color, unit, referenc
   );
 }
 
-export function DualMetricsChart({ label, value, data, primaryColor, secondaryColor, primaryLabel, secondaryLabel, unit }: DualMetricsChartProps) {
-  const rc = useRecharts();
-
-  if (!rc) return <ChartLoading />;
-
-  const { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } = rc;
-
-  return (
-    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4">
-      <ChartHeader label={label} value={value} />
-      <ResponsiveContainer width="100%" height={160}>
-        <AreaChart data={data} margin={{ top: 12, right: 4, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={`grad-${label}-primary`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={primaryColor} stopOpacity={0.25} />
-              <stop offset="100%" stopColor={primaryColor} stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id={`grad-${label}-secondary`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={secondaryColor} stopOpacity={0.25} />
-              <stop offset="100%" stopColor={secondaryColor} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-noc-text-dim, #4d5666)" strokeOpacity={0.3} />
-          <XAxis dataKey="time" tick={{ fontSize: 10, fill: "var(--color-noc-text-secondary, #8b95a5)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={40} />
-          <YAxis tick={{ fontSize: 10, fill: "var(--color-noc-text-secondary, #8b95a5)" }} tickLine={false} axisLine={false} width={36} tickFormatter={(v: number) => formatAxisValue(v, unit)} />
-          <Tooltip {...tooltipStyle} formatter={(v, name) => [formatAxisValue(Number(v ?? 0), unit), String(name)]} />
-          <Legend iconType="line" wrapperStyle={{ fontSize: 11 }} />
-          <Area type="monotone" dataKey="primary" name={primaryLabel} stackId="1" stroke={primaryColor} strokeWidth={1.5} fill={`url(#grad-${label}-primary)`} dot={false} activeDot={{ r: 3, strokeWidth: 0, fill: primaryColor }} />
-          <Area type="monotone" dataKey="secondary" name={secondaryLabel} stackId="1" stroke={secondaryColor} strokeWidth={1.5} fill={`url(#grad-${label}-secondary)`} dot={false} activeDot={{ r: 3, strokeWidth: 0, fill: secondaryColor }} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-export type { ChartDatum, DualChartDatum };
+export type { ChartDatum };

@@ -1,4 +1,6 @@
+import { useContext } from "react";
 import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
+import { SelectedMacContext } from "./SelectedNodeContext";
 
 export interface DeviceNodeData {
   label: string;
@@ -7,7 +9,6 @@ export interface DeviceNodeData {
   ip: string;
   status: string;
   clientCount: number;
-  selected: boolean;
   onSelect: () => void;
   [key: string]: unknown;
 }
@@ -70,9 +71,11 @@ function DeviceIcon({ deviceType }: { deviceType: string }) {
   }
 }
 
-export default function DeviceNodeComponent({ data }: NodeProps<DeviceNode>) {
+export default function DeviceNodeComponent({ data, id }: NodeProps<DeviceNode>) {
+  const selectedMac = useContext(SelectedMacContext);
+  const isSelected = id === selectedMac;
   const isGateway = data.deviceType === "gateway";
-  const borderColor = data.selected
+  const borderColor = isSelected
     ? "border-ub-blue ring-2 ring-ub-blue/40"
     : isGateway
       ? "border-ub-blue"

@@ -14,6 +14,7 @@ import {
 import dagre from "@dagrejs/dagre";
 import type { NodePosition, TopologyDevice, TopologyEdge } from "../api/types";
 import DeviceNode, { type DeviceNodeData } from "./DeviceNode";
+import { SelectedMacContext } from "./SelectedNodeContext";
 
 interface DeviceMapProps {
   devices: TopologyDevice[];
@@ -78,7 +79,6 @@ function buildElements(
   devices: TopologyDevice[],
   topologyEdges: TopologyEdge[],
   onDeviceSelect: (device: TopologyDevice) => void,
-  selectedMac: string | null,
   savedPositions?: NodePosition[],
 ): { nodes: Node<DeviceNodeData>[]; edges: Edge[] } {
   const deviceByMac = new Map(devices.map((d) => [d.mac, d]));
@@ -102,7 +102,6 @@ function buildElements(
       ip: device.ip,
       status: device.status,
       clientCount: device.client_count,
-      selected: device.mac === selectedMac,
       onSelect: () => onDeviceSelect(device),
     },
   }));
@@ -185,19 +184,21 @@ function DeviceMapInner({
 
 export default function DeviceMap({ devices, edges: topologyEdges, colorMode, onDeviceSelect, selectedMac, savedPositions, onNodeDragEnd }: DeviceMapProps) {
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(
-    () => buildElements(devices, topologyEdges, onDeviceSelect, selectedMac ?? null, savedPositions),
-    [devices, topologyEdges, onDeviceSelect, selectedMac, savedPositions],
+    () => buildElements(devices, topologyEdges, onDeviceSelect, savedPositions),
+    [devices, topologyEdges, onDeviceSelect, savedPositions],
   );
 
   const layoutKey = layoutedNodes.map((n) => n.id).join(",") + "|" + layoutedEdges.map((e) => e.id).join(",");
 
   return (
-    <DeviceMapInner
-      key={layoutKey}
-      initialNodes={layoutedNodes}
-      initialEdges={layoutedEdges}
-      colorMode={colorMode}
-      onNodeDragEnd={onNodeDragEnd}
-    />
+    <SelectedMacContext.Provider value={selectedMac ?? null}>
+      <DeviceMapInner
+        key={layoutKey}
+        initialNodes={layoutedNodes}
+        initialEdges={layoutedEdges}
+        colorMode={colorMode}
+        onNodeDragEnd={onNodeDragEnd}
+      />
+    </SelectedMacContext.Provider>
   );
 }

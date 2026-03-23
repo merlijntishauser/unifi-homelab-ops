@@ -1066,13 +1066,13 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
           {rack.size} / {rack.height_u}U / {rack.total_power.toFixed(1)}W
         </span>
         <div className="ml-auto" />
-        <button onClick={() => setEditorState({ showAddForm: !showAddForm })} className={btnClass} data-testid="add-item-button">
+        <button onClick={() => setEditorState({ showAddForm: !showAddForm, editingItem: null, showDevicePicker: false, bom: null })} className={btnClass} data-testid="add-item-button">
           Add Item
         </button>
-        <button onClick={() => setEditorState({ showDevicePicker: !showDevicePicker })} className={btnClass} data-testid="import-button">
+        <button onClick={() => setEditorState({ showDevicePicker: !showDevicePicker, editingItem: null, showAddForm: false, bom: null })} className={btnClass} data-testid="import-button">
           {showDevicePicker ? "Hide Devices" : "Add from Topology"}
         </button>
-        <button onClick={handleShowBom} className={btnClass} data-testid="bom-button">
+        <button onClick={() => { setEditorState({ editingItem: null, showAddForm: false, showDevicePicker: false }); handleShowBom(); }} className={btnClass} data-testid="bom-button">
           Bill of Materials
         </button>
         <button onClick={handleDeleteRack} className={`${btnClass} hover:!text-status-danger hover:!border-status-danger`} data-testid="delete-rack-button">

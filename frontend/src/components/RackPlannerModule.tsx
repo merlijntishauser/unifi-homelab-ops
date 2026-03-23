@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import type { BomResponse, DeviceSpec, Rack, RackItem, RackItemInput, RackSummary } from "../api/types";
 import { api } from "../api/client";
+import { INPUT_CLASS, SELECT_CLASS } from "./ui";
 import {
   useRacks,
   useRack,
@@ -141,7 +142,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Main Rack"
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
         </div>
         <div>
@@ -150,7 +151,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             id="new-rack-size"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={SELECT_CLASS}
           >
             <option value="10-inch">10-inch</option>
             <option value="19-inch">19-inch</option>
@@ -165,7 +166,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             onChange={(e) => setHeightU(parseInt(e.target.value) || 6)}
             min={6}
             max={48}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
         </div>
         <div className="col-span-2">
@@ -176,7 +177,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Office closet"
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
         </div>
       </div>
@@ -424,7 +425,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             value={label}
             onChange={(e) => dispatch({ label: e.target.value })}
             placeholder="e.g. USW-24-PoE"
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
         </div>
         <div>
@@ -433,7 +434,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             id="add-item-type"
             value={deviceType}
             onChange={(e) => dispatch({ deviceType: e.target.value })}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={SELECT_CLASS}
           >
             {DEVICE_TYPE_OPTIONS.map((t) => (
               <option key={t} value={t}>{getDeviceTypeMeta(t).label}</option>
@@ -450,7 +451,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             min={0}
             max={5}
             step={0.5}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
           {heightU === 0 && (
             <p className="text-[10px] text-ui-text-dim dark:text-noc-text-dim mt-0.5">0U items mount on side rails</p>
@@ -467,7 +468,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
               const currentXStillValid = newValidOptions.some((opt) => opt.value === positionX);
               dispatch({ widthFraction: newWidth, positionX: currentXStillValid ? positionX : 0.0 });
             }}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={SELECT_CLASS}
             data-testid="add-item-width"
           >
             {WIDTH_OPTIONS.map((opt) => (
@@ -482,7 +483,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
               id="add-item-position-x"
               value={positionX}
               onChange={(e) => dispatch({ positionX: parseFloat(e.target.value) })}
-              className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+              className={SELECT_CLASS}
               data-testid="add-item-position-x"
             >
               {validPositionXOptions.map((opt) => (
@@ -501,7 +502,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             min={1}
             max={maxPositionU}
             step={0.5}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
         </div>
         <div>
@@ -513,7 +514,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             onChange={(e) => dispatch({ powerWatts: parseFloat(e.target.value) || 0 })}
             min={0}
             step={0.1}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
         </div>
         <div className="col-span-2">
@@ -523,7 +524,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             type="text"
             value={notes}
             onChange={(e) => dispatch({ notes: e.target.value })}
-            className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text"
+            className={INPUT_CLASS}
           />
         </div>
       </div>

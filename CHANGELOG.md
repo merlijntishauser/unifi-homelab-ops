@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Metrics detail page redesign**: device info card (model, MAC, IP, firmware, uptime), color-coded stat strip with health thresholds (CPU/memory/temperature/PoE), and conditional charts
+- **Separate TX/RX traffic charts** with delta-computed throughput, total and peak rate (/s) labels
+- **Connected Clients chart** for access points (conditional on device type)
+- **PoE Consumption chart** with budget reference line for PoE switches
+- **AI device insights**: per-device 24h metrics analysis via configured AI provider (POST /api/metrics/devices/{mac}/analyze)
+- `ip` field on MetricsSnapshot, sourced from raw controller device data
+- PoE utilization bar on device metric overview cards with color thresholds
+- Hover background effect on metrics device cards matching Health card pattern
+- "Uptime:" prefix on device card uptime display
+
+### Fixed
+- Chart axis labels unreadable in dark mode (replaced currentColor with theme CSS variables)
+- Rack Planner form inputs and selects now use shared INPUT_CLASS/SELECT_CLASS for consistent styling
+- Tooltip fly-in animation disabled on recharts for snappier interaction
+
+### Changed
+- Chart height increased from 120px to 160px with 12px top margin for label spacing
+- Recharts added as dependency (3.8.0, MIT) replacing custom inline SVG sparklines
+- MetricsDetailView lazy-loads MetricsChart to code-split recharts
+- Removed unused DualMetricsChart after TX/RX chart split
+
 ## [1.1.2] - 2026-03-22
 
 ### Added

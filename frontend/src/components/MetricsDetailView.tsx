@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { MetricsSnapshot, MetricsHistoryPoint, AppNotification } from "../api/types";
-import MetricsChart, { DualMetricsChart } from "./MetricsChart";
-import type { ChartDatum, DualChartDatum } from "./MetricsChart";
+import MetricsChart from "./MetricsChart";
+import type { ChartDatum } from "./MetricsChart";
 import { formatRelativeTime } from "../utils/format";
+import { useAppContext } from "../hooks/useAppContext";
 
 interface MetricsDetailViewProps {
   device: MetricsSnapshot;
@@ -100,18 +101,28 @@ function SeverityDot({ severity }: { severity: string }) {
 
 // --- Delta computation for traffic ---
 
-function computeDeltas(history: MetricsHistoryPoint[]): DualChartDatum[] {
-  const result: DualChartDatum[] = [];
+interface TrafficDeltas {
+  tx: ChartDatum[];
+  rx: ChartDatum[];
+  totalTx: number;
+  totalRx: number;
+}
+
+function computeDeltas(history: MetricsHistoryPoint[]): TrafficDeltas {
+  const tx: ChartDatum[] = [];
+  const rx: ChartDatum[] = [];
+  let totalTx = 0;
+  let totalRx = 0;
   for (let i = 1; i < history.length; i++) {
     const txDelta = Math.max(0, history[i].tx_bytes - history[i - 1].tx_bytes);
     const rxDelta = Math.max(0, history[i].rx_bytes - history[i - 1].rx_bytes);
-    result.push({
-      time: formatTimeLabel(history[i].timestamp),
-      primary: txDelta,
-      secondary: rxDelta,
-    });
+    const time = formatTimeLabel(history[i].timestamp);
+    tx.push({ time, value: txDelta });
+    rx.push({ time, value: rxDelta });
+    totalTx += txDelta;
+    totalRx += rxDelta;
   }
-  return result;
+  return { tx, rx, totalTx, totalRx };
 }
 
 // --- Info grid row ---
@@ -122,6 +133,52 @@ function InfoRow({ label, value, mono }: { label: string; value: string; mono?: 
       <span className="text-ui-text-dim dark:text-noc-text-dim">{label}</span>
       <span className={`text-ui-text dark:text-noc-text-secondary ${mono ? "font-mono" : ""}`}>{value}</span>
     </>
+  );
+}
+
+// --- AI Insights card ---
+
+function AiInsightsCard({ aiConfigured, aiInsight, aiLoading, onAnalyze }: {
+  aiConfigured: boolean;
+  aiInsight: string | null;
+  aiLoading: boolean;
+  onAnalyze: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4 flex flex-col">
+      <div className="flex items-baseline justify-between mb-3">
+        <span className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary">AI Insights</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-ui-text-dim dark:text-noc-text-dim">
+          <path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22" />
+          <path d="M12 2a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93" />
+          <circle cx="12" cy="14" r="1" />
+        </svg>
+      </div>
+      <div className="flex-1 flex flex-col justify-center">
+        {aiLoading ? (
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin shrink-0" />
+            <p className="text-xs text-ui-text-secondary dark:text-noc-text-secondary">Analyzing 24h metrics...</p>
+          </div>
+        ) : aiInsight ? (
+          <p className="text-xs text-ui-text dark:text-noc-text-secondary leading-relaxed whitespace-pre-line">{aiInsight}</p>
+        ) : !aiConfigured ? (
+          <p className="text-xs text-ui-text-dim dark:text-noc-text-dim">Configure an AI provider in Settings to enable device insights.</p>
+        ) : (
+          <button
+            onClick={onAnalyze}
+            className="inline-flex items-center gap-1.5 self-start rounded-lg bg-ub-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22" />
+              <path d="M12 2a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93" />
+              <circle cx="12" cy="14" r="1" />
+            </svg>
+            Analyze Device
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -139,7 +196,7 @@ export default function MetricsDetailView({
     history.filter((h) => h.temperature !== null).map((h) => ({ time: formatTimeLabel(h.timestamp), value: h.temperature! })),
     [history],
   );
-  const trafficData = useMemo<DualChartDatum[]>(() => computeDeltas(history), [history]);
+  const traffic = useMemo(() => computeDeltas(history), [history]);
   const clientData = useMemo<ChartDatum[]>(() => history.map((h) => ({ time: formatTimeLabel(h.timestamp), value: h.num_sta })), [history]);
   const poeData = useMemo<ChartDatum[]>(() =>
     history.filter((h) => h.poe_consumption !== null).map((h) => ({ time: formatTimeLabel(h.timestamp), value: h.poe_consumption! })),
@@ -150,7 +207,9 @@ export default function MetricsDetailView({
   const hasClients = device.type === "uap" || device.num_sta > 0;
   const hasPoe = device.poe_budget !== null && device.poe_budget > 0;
 
-  const totalTrafficDelta = trafficData.reduce((sum, d) => sum + d.primary + d.secondary, 0);
+  const { aiConfigured } = useAppContext();
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 lg:p-6" data-testid="detail-view">
@@ -213,16 +272,8 @@ export default function MetricsDetailView({
         {hasTemperature && (
           <MetricsChart label="Temperature" value={`${Math.round(device.temperature!)}C`} data={tempData} color="#ffaa2c" unit="C" />
         )}
-        <DualMetricsChart
-          label="Traffic"
-          value={formatBytes(totalTrafficDelta)}
-          data={trafficData}
-          primaryColor="#006fff"
-          secondaryColor="#00d68f"
-          primaryLabel="TX"
-          secondaryLabel="RX"
-          unit="bytes"
-        />
+        <MetricsChart label="TX Traffic" value={formatBytes(traffic.totalTx)} data={traffic.tx} color="#006fff" unit="bytes" />
+        <MetricsChart label="RX Traffic" value={formatBytes(traffic.totalRx)} data={traffic.rx} color="#00d68f" unit="bytes" />
         {hasClients && (
           <MetricsChart label="Connected Clients" value={String(device.num_sta)} data={clientData} color="#06b6d4" unit="" />
         )}
@@ -237,6 +288,26 @@ export default function MetricsDetailView({
             referenceLabel={`Budget ${device.poe_budget!.toFixed(0)}W`}
           />
         )}
+
+        {/* AI Insights */}
+        <AiInsightsCard
+          aiConfigured={aiConfigured}
+          aiInsight={aiInsight}
+          aiLoading={aiLoading}
+          onAnalyze={async () => {
+            setAiLoading(true);
+            setAiInsight(null);
+            try {
+              const { api } = await import("../api/client");
+              const result = await api.analyzeDeviceMetrics(device.mac);
+              setAiInsight(result.insight);
+            } catch (err) {
+              setAiInsight(err instanceof Error ? err.message : "Analysis failed");
+            } finally {
+              setAiLoading(false);
+            }
+          }}
+        />
       </div>
 
       {/* Notifications */}

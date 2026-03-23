@@ -138,6 +138,8 @@ export const api = {
   getNotifications: () => fetchJson<AppNotification[]>("/metrics/notifications"),
   dismissNotification: (id: number) =>
     fetchJson(`/metrics/notifications/${id}/dismiss`, { method: "POST" }),
+  analyzeDeviceMetrics: (mac: string) =>
+    fetchJson<{ insight: string }>(`/metrics/devices/${encodeURIComponent(mac)}/analyze`, { method: "POST" }),
   getHealthSummary: () => fetchJson<HealthSummaryResponse>("/health/summary"),
   analyzeHealth: () =>
     fetchJson<HealthAnalysisResult>("/health/analyze", { method: "POST" }),

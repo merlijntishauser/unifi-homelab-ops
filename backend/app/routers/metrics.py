@@ -3,7 +3,7 @@
 import asyncio
 
 import structlog
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.config import get_unifi_config, has_credentials
 from app.models import MetricsDevicesResponse, MetricsHistoryResponse, Notification
@@ -58,3 +58,27 @@ async def metrics_notifications() -> list[Notification]:
 async def dismiss(notification_id: int) -> dict[str, str]:
     dismiss_notification(notification_id)
     return {"status": "ok"}
+
+
+@router.post("/devices/{mac}/analyze")
+async def analyze_device_metrics(mac: str) -> dict[str, str]:
+    """AI analysis of a device's 24h metrics."""
+    from app.services.ai_settings import get_full_ai_config
+    from app.services.metrics_analyzer import analyze_device
+
+    config = get_full_ai_config()
+    if config is None:
+        raise HTTPException(status_code=400, detail="AI provider not configured")
+
+    history = get_device_history(mac, hours=24)
+    if not history:
+        raise HTTPException(status_code=404, detail="No metrics history for this device")
+
+    live, ip_lookup = await asyncio.to_thread(_fetch_live_stats)
+    snapshots = await asyncio.to_thread(get_latest_snapshots, current_stats=live or None, ip_lookup=ip_lookup or None)  # type: ignore[arg-type]
+    device = next((s for s in snapshots if s.mac == mac), None)
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found")
+
+    insight = await asyncio.to_thread(analyze_device, device, history, config)
+    return {"insight": insight}

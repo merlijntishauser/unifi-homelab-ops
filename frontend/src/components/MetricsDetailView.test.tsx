@@ -8,9 +8,11 @@ vi.mock("./MetricsChart", () => ({
   default: ({ label, value }: { label: string; value: string }) => (
     <div data-testid={`chart-${label}`}>{label}: {value}</div>
   ),
-  DualMetricsChart: ({ label, value }: { label: string; value: string }) => (
-    <div data-testid={`chart-${label}`}>{label}: {value}</div>
-  ),
+}));
+
+// Mock useAppContext for AI card
+vi.mock("../hooks/useAppContext", () => ({
+  useAppContext: () => ({ aiConfigured: true }),
 }));
 
 function makeDevice(overrides?: Partial<MetricsSnapshot>): MetricsSnapshot {
@@ -147,9 +149,10 @@ describe("MetricsDetailView", () => {
     expect(screen.getByTestId("chart-Memory")).toBeInTheDocument();
   });
 
-  it("renders traffic chart as dual series", () => {
+  it("renders separate TX and RX traffic charts", () => {
     render(<MetricsDetailView device={makeDevice()} history={makeHistory(3)} notifications={[]} onBack={vi.fn()} />);
-    expect(screen.getByTestId("chart-Traffic")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-TX Traffic")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-RX Traffic")).toBeInTheDocument();
   });
 
   it("renders temperature chart when available", () => {
@@ -184,15 +187,16 @@ describe("MetricsDetailView", () => {
 
   // --- Traffic delta computation ---
 
-  it("computes traffic deltas from cumulative counters", () => {
+  it("computes separate TX and RX deltas from cumulative counters", () => {
     const history: MetricsHistoryPoint[] = [
       { timestamp: "2026-01-01T00:00:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 100, rx_bytes: 200, num_sta: 0, poe_consumption: null },
       { timestamp: "2026-01-01T00:01:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 350, rx_bytes: 500, num_sta: 0, poe_consumption: null },
       { timestamp: "2026-01-01T00:02:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 600, rx_bytes: 900, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    // Total delta: TX (250+250=500) + RX (300+400=700) = 1200 = 1.2 KB
-    expect(screen.getByTestId("chart-Traffic")).toHaveTextContent("1.2 KB");
+    // TX delta: 250+250=500 bytes, RX delta: 300+400=700 bytes
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("500 B");
+    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("700 B");
   });
 
   it("formats traffic deltas in MB range", () => {
@@ -201,7 +205,8 @@ describe("MetricsDetailView", () => {
       { timestamp: "2026-01-01T00:01:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 1048576, rx_bytes: 1048576, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    expect(screen.getByTestId("chart-Traffic")).toHaveTextContent("2.0 MB");
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("1.0 MB");
+    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("1.0 MB");
   });
 
   it("formats traffic deltas in GB range", () => {
@@ -210,7 +215,7 @@ describe("MetricsDetailView", () => {
       { timestamp: "2026-01-01T00:01:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 1073741824, rx_bytes: 0, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    expect(screen.getByTestId("chart-Traffic")).toHaveTextContent("1.0 GB");
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("1.0 GB");
   });
 
   it("handles invalid timestamps gracefully in traffic deltas", () => {
@@ -219,8 +224,8 @@ describe("MetricsDetailView", () => {
       { timestamp: "also-invalid", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 100, rx_bytes: 100, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    // Should not crash -- renders with empty time labels
-    expect(screen.getByTestId("chart-Traffic")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-TX Traffic")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-RX Traffic")).toBeInTheDocument();
   });
 
   it("clamps negative deltas to zero on counter reset", () => {
@@ -229,7 +234,16 @@ describe("MetricsDetailView", () => {
       { timestamp: "2026-01-01T00:01:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 500, rx_bytes: 500, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    expect(screen.getByTestId("chart-Traffic")).toHaveTextContent("0 B");
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("0 B");
+    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("0 B");
+  });
+
+  // --- AI Insights card ---
+
+  it("shows Analyze Device button when AI is configured", () => {
+    render(<MetricsDetailView device={makeDevice()} history={[]} notifications={[]} onBack={vi.fn()} />);
+    expect(screen.getByText("AI Insights")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Analyze Device/ })).toBeInTheDocument();
   });
 
   // --- Notifications ---

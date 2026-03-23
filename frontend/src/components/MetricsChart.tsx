@@ -104,9 +104,9 @@ export default function MetricsChart({ label, value, data, color, unit, referenc
               <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} />
-          <XAxis dataKey="time" tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={40} />
-          <YAxis tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }} tickLine={false} axisLine={false} width={36} tickFormatter={(v: number) => formatAxisValue(v, unit)} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-noc-text-dim, #4d5666)" strokeOpacity={0.3} />
+          <XAxis dataKey="time" tick={{ fontSize: 10, fill: "var(--color-noc-text-secondary, #8b95a5)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={40} />
+          <YAxis tick={{ fontSize: 10, fill: "var(--color-noc-text-secondary, #8b95a5)" }} tickLine={false} axisLine={false} width={36} tickFormatter={(v: number) => formatAxisValue(v, unit)} />
           <Tooltip {...tooltipStyle} formatter={(v) => [formatAxisValue(Number(v ?? 0), unit), label]} />
           {referenceLine !== undefined && (
             <ReferenceLine y={referenceLine} stroke="#ff4d5e" strokeDasharray="6 3" strokeOpacity={0.7} label={{ value: referenceLabel ?? "", position: "right", fontSize: 10, fill: "#ff4d5e" }} />
@@ -140,9 +140,9 @@ export function DualMetricsChart({ label, value, data, primaryColor, secondaryCo
               <stop offset="100%" stopColor={secondaryColor} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} />
-          <XAxis dataKey="time" tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={40} />
-          <YAxis tick={{ fontSize: 10, fill: "currentColor", opacity: 0.4 }} tickLine={false} axisLine={false} width={36} tickFormatter={(v: number) => formatAxisValue(v, unit)} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-noc-text-dim, #4d5666)" strokeOpacity={0.3} />
+          <XAxis dataKey="time" tick={{ fontSize: 10, fill: "var(--color-noc-text-secondary, #8b95a5)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={40} />
+          <YAxis tick={{ fontSize: 10, fill: "var(--color-noc-text-secondary, #8b95a5)" }} tickLine={false} axisLine={false} width={36} tickFormatter={(v: number) => formatAxisValue(v, unit)} />
           <Tooltip {...tooltipStyle} formatter={(v, name) => [formatAxisValue(Number(v ?? 0), unit), String(name)]} />
           <Legend iconType="line" wrapperStyle={{ fontSize: 11 }} />
           <Area type="monotone" dataKey="primary" name={primaryLabel} stackId="1" stroke={primaryColor} strokeWidth={1.5} fill={`url(#grad-${label}-primary)`} dot={false} activeDot={{ r: 3, strokeWidth: 0, fill: primaryColor }} />

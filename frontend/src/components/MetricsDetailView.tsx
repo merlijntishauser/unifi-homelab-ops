@@ -106,6 +106,8 @@ interface TrafficDeltas {
   rx: ChartDatum[];
   totalTx: number;
   totalRx: number;
+  peakTx: number;
+  peakRx: number;
 }
 
 function computeDeltas(history: MetricsHistoryPoint[]): TrafficDeltas {
@@ -113,16 +115,23 @@ function computeDeltas(history: MetricsHistoryPoint[]): TrafficDeltas {
   const rx: ChartDatum[] = [];
   let totalTx = 0;
   let totalRx = 0;
+  let peakTxRate = 0;
+  let peakRxRate = 0;
   for (let i = 1; i < history.length; i++) {
     const txDelta = Math.max(0, history[i].tx_bytes - history[i - 1].tx_bytes);
     const rxDelta = Math.max(0, history[i].rx_bytes - history[i - 1].rx_bytes);
+    const timeDiffSec = Math.max(1, (new Date(history[i].timestamp).getTime() - new Date(history[i - 1].timestamp).getTime()) / 1000);
+    const txRate = txDelta / timeDiffSec;
+    const rxRate = rxDelta / timeDiffSec;
     const time = formatTimeLabel(history[i].timestamp);
     tx.push({ time, value: txDelta });
     rx.push({ time, value: rxDelta });
     totalTx += txDelta;
     totalRx += rxDelta;
+    if (txRate > peakTxRate) peakTxRate = txRate;
+    if (rxRate > peakRxRate) peakRxRate = rxRate;
   }
-  return { tx, rx, totalTx, totalRx };
+  return { tx, rx, totalTx, totalRx, peakTx: peakTxRate, peakRx: peakRxRate };
 }
 
 // --- Info grid row ---
@@ -272,8 +281,8 @@ export default function MetricsDetailView({
         {hasTemperature && (
           <MetricsChart label="Temperature" value={`${Math.round(device.temperature!)}C`} data={tempData} color="#ffaa2c" unit="C" />
         )}
-        <MetricsChart label="TX Traffic" value={formatBytes(traffic.totalTx)} data={traffic.tx} color="#006fff" unit="bytes" />
-        <MetricsChart label="RX Traffic" value={formatBytes(traffic.totalRx)} data={traffic.rx} color="#00d68f" unit="bytes" />
+        <MetricsChart label="TX Traffic" value={`Total: ${formatBytes(traffic.totalTx)} | Peak: ${formatBytes(traffic.peakTx)}/s`} data={traffic.tx} color="#006fff" unit="bytes" />
+        <MetricsChart label="RX Traffic" value={`Total: ${formatBytes(traffic.totalRx)} | Peak: ${formatBytes(traffic.peakRx)}/s`} data={traffic.rx} color="#00d68f" unit="bytes" />
         {hasClients && (
           <MetricsChart label="Connected Clients" value={String(device.num_sta)} data={clientData} color="#06b6d4" unit="" />
         )}

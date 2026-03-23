@@ -74,6 +74,7 @@ const tooltipStyle = {
   },
   labelStyle: { color: "var(--color-noc-text-secondary, #8b95a5)", fontSize: 11 },
   itemStyle: { color: "var(--color-noc-text, #f0f2f5)" },
+  isAnimationActive: false,
 };
 
 function useRecharts() {

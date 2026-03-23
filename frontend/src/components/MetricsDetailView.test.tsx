@@ -194,9 +194,11 @@ describe("MetricsDetailView", () => {
       { timestamp: "2026-01-01T00:02:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 600, rx_bytes: 900, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    // TX delta: 250+250=500 bytes, RX delta: 300+400=700 bytes
-    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("500 B");
-    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("700 B");
+    // TX delta: 250+250=500 total. RX delta: 300+400=700 total.
+    // Peak rate depends on interval (60s between points): TX peak 250/60=4.2 B/s, RX peak 400/60=6.7 B/s
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("Total: 500 B");
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("/s");
+    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("Total: 700 B");
   });
 
   it("formats traffic deltas in MB range", () => {
@@ -205,8 +207,8 @@ describe("MetricsDetailView", () => {
       { timestamp: "2026-01-01T00:01:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 1048576, rx_bytes: 1048576, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("1.0 MB");
-    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("1.0 MB");
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("Total: 1.0 MB");
+    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("Total: 1.0 MB");
   });
 
   it("formats traffic deltas in GB range", () => {
@@ -215,7 +217,7 @@ describe("MetricsDetailView", () => {
       { timestamp: "2026-01-01T00:01:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 1073741824, rx_bytes: 0, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("1.0 GB");
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("Total: 1.0 GB");
   });
 
   it("handles invalid timestamps gracefully in traffic deltas", () => {
@@ -234,8 +236,8 @@ describe("MetricsDetailView", () => {
       { timestamp: "2026-01-01T00:01:00Z", cpu: 0, mem: 0, temperature: null, uptime: 0, tx_bytes: 500, rx_bytes: 500, num_sta: 0, poe_consumption: null },
     ];
     render(<MetricsDetailView device={makeDevice()} history={history} notifications={[]} onBack={vi.fn()} />);
-    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("0 B");
-    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("0 B");
+    expect(screen.getByTestId("chart-TX Traffic")).toHaveTextContent("Total: 0 B");
+    expect(screen.getByTestId("chart-RX Traffic")).toHaveTextContent("Total: 0 B");
   });
 
   // --- AI Insights card ---

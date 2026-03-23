@@ -133,4 +133,18 @@ describe("BottomNav", () => {
     fireEvent.click(moreButton);
     expect(screen.queryByText("Docs")).not.toBeInTheDocument();
   });
+
+  it("highlights active overflow menu item when on overflow route", () => {
+    renderBottomNav("/docs");
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    const docsLink = screen.getByText("Docs").closest("a");
+    expect(docsLink?.className).toContain("text-ub-blue");
+  });
+
+  it("shows inactive overflow menu item when on different route", () => {
+    renderBottomNav("/firewall");
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    const docsLink = screen.getByText("Docs").closest("a");
+    expect(docsLink?.className).not.toContain("text-ub-blue");
+  });
 });

@@ -11,11 +11,12 @@ vi.mock("../utils/export", () => ({
 }));
 
 vi.mock("./DeviceMap", () => ({
-  default: ({ devices, onDeviceSelect }: { devices: Array<{ mac: string; name: string }>; onDeviceSelect: (d: unknown) => void }) => (
+  default: ({ devices, onDeviceSelect, onNodeDragEnd }: { devices: Array<{ mac: string; name: string }>; onDeviceSelect: (d: unknown) => void; onNodeDragEnd: (mac: string, x: number, y: number) => void }) => (
     <div data-testid="device-map">
       {devices.map((d) => (
         <button key={d.mac} data-testid={`device-${d.mac}`} onClick={() => onDeviceSelect(d)}>{d.name}</button>
       ))}
+      <button data-testid="trigger-drag" onClick={() => onNodeDragEnd("aa:bb:cc:dd:ee:01", 100, 200)}>Drag</button>
     </div>
   ),
 }));
@@ -34,6 +35,9 @@ vi.mock("./SvgViewer", () => ({
     <div data-testid="svg-viewer">{svgContent.substring(0, 20)}</div>
   ),
 }));
+
+const savePositionsMutateFn = vi.hoisted(() => vi.fn());
+const resetPositionsMutateFn = vi.hoisted(() => vi.fn());
 
 const svgMock = vi.hoisted(() => ({
   data: { svg: "<svg>test</svg>", projection: "isometric" } as { svg: string; projection: string } | undefined,
@@ -60,8 +64,8 @@ vi.mock("../hooks/queries", async () => {
     useTopologySvg: () => svgMock,
     useTopologyDevices: () => devicesMock,
     useTopologyPositions: () => ({ data: [], isLoading: false }),
-    useSaveTopologyPositions: () => ({ mutate: vi.fn() }),
-    useResetTopologyPositions: () => ({ mutate: vi.fn(), isPending: false }),
+    useSaveTopologyPositions: () => ({ mutate: savePositionsMutateFn }),
+    useResetTopologyPositions: () => ({ mutate: resetPositionsMutateFn, isPending: false }),
   };
 });
 
@@ -304,5 +308,33 @@ describe("TopologyModule", () => {
     renderModule();
     fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
     expect(screen.queryByRole("button", { name: "Reset Layout" })).not.toBeInTheDocument();
+  });
+
+  it("Reset Layout button calls resetPositionsMutation.mutate", () => {
+    resetPositionsMutateFn.mockClear();
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Reset Layout" }));
+    expect(resetPositionsMutateFn).toHaveBeenCalledWith(undefined);
+  });
+
+  it("handleNodeDragEnd debounces and calls savePositionsMutation", async () => {
+    vi.useFakeTimers();
+    savePositionsMutateFn.mockClear();
+    renderModule();
+    fireEvent.click(screen.getByTestId("trigger-drag"));
+    // Should not be called immediately
+    expect(savePositionsMutateFn).not.toHaveBeenCalled();
+    // Advance timer past debounce (500ms)
+    vi.advanceTimersByTime(600);
+    expect(savePositionsMutateFn).toHaveBeenCalledTimes(1);
+    expect(savePositionsMutateFn).toHaveBeenCalledWith([{ mac: "aa:bb:cc:dd:ee:01", x: 100, y: 200 }]);
+    vi.useRealTimers();
+  });
+
+  it("readStorage returns fallback when localStorage has invalid value", () => {
+    localStorage.setItem("topologySubView", "invalid-value");
+    renderModule();
+    // Falls back to "map" since "invalid-value" is not in valid list
+    expect(screen.getByTestId("device-map")).toBeInTheDocument();
   });
 });

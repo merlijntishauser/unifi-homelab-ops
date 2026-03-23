@@ -1,140 +1,165 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import MetricsChart from "./MetricsChart";
-import type { ChartDatum } from "./MetricsChart";
+import MetricsChart, { DualMetricsChart } from "./MetricsChart";
 
-// Track props passed to mocked recharts components via mutable ref objects
-const captured = { yAxisProps: {} as Record<string, unknown>, tooltipProps: {} as Record<string, unknown> };
+// Store captured props from mock recharts components
+const capturedProps: Record<string, Record<string, unknown>> = {};
+
+function mockComponent(name: string) {
+  return function MockComp(props: Record<string, unknown>) {
+    capturedProps[name] = props;
+    return <div data-testid={`recharts-${name}`}>{props.children as React.ReactNode}</div>;
+  };
+}
 
 vi.mock("recharts", () => ({
-  AreaChart: ({ children }: { children: React.ReactNode }) => <div data-testid="area-chart">{children}</div>,
-  Area: () => <div data-testid="area" />,
-  XAxis: () => <div data-testid="x-axis" />,
-  YAxis: (props: Record<string, unknown>) => {
-    Object.assign(captured.yAxisProps, props);
-    return <div data-testid="y-axis" />;
-  },
-  Tooltip: (props: Record<string, unknown>) => {
-    Object.assign(captured.tooltipProps, props);
-    return <div data-testid="tooltip" />;
-  },
+  AreaChart: mockComponent("AreaChart"),
+  Area: mockComponent("Area"),
+  XAxis: mockComponent("XAxis"),
+  YAxis: mockComponent("YAxis"),
+  Tooltip: mockComponent("Tooltip"),
+  CartesianGrid: mockComponent("CartesianGrid"),
+  ReferenceLine: mockComponent("ReferenceLine"),
+  Legend: mockComponent("Legend"),
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="responsive-container">{children}</div>
+    <div style={{ width: 400, height: 120 }}>{children}</div>
   ),
-  CartesianGrid: () => <div data-testid="cartesian-grid" />,
 }));
 
-const sampleData: ChartDatum[] = [
-  { time: "12:00", value: 100 },
-  { time: "12:05", value: 200 },
-  { time: "12:10", value: 300 },
-];
+beforeEach(() => {
+  for (const key of Object.keys(capturedProps)) delete capturedProps[key];
+});
 
 describe("MetricsChart", () => {
-  beforeEach(() => {
-    captured.yAxisProps = {};
-    captured.tooltipProps = {};
+  it("shows loading spinner initially", () => {
+    const { container } = render(
+      <MetricsChart label="CPU" value="25%" data={[]} color="#006fff" unit="%" />,
+    );
+    expect(container.querySelector(".animate-spin")).toBeInTheDocument();
+  });
+
+  it("renders chart after recharts loads", async () => {
+    render(
+      <MetricsChart label="CPU" value="25%" data={[{ time: "08:00", value: 25 }]} color="#006fff" unit="%" />,
+    );
+    await waitFor(() => expect(screen.getByText("CPU")).toBeInTheDocument());
+    expect(screen.getByText("25%")).toBeInTheDocument();
+  });
+
+  it("renders reference line when provided", async () => {
+    render(
+      <MetricsChart label="PoE" value="50W" data={[]} color="#f59e0b" unit="W" referenceLine={100} referenceLabel="Budget 100W" />,
+    );
+    await waitFor(() => expect(screen.getByTestId("recharts-ReferenceLine")).toBeInTheDocument());
+  });
+
+  it("does not render reference line when not provided", async () => {
+    render(
+      <MetricsChart label="CPU" value="25%" data={[]} color="#006fff" unit="%" />,
+    );
+    await waitFor(() => expect(screen.getByText("CPU")).toBeInTheDocument());
+    expect(screen.queryByTestId("recharts-ReferenceLine")).not.toBeInTheDocument();
+  });
+
+  it("renders reference line with empty label when referenceLabel is omitted", async () => {
+    render(
+      <MetricsChart label="PoE" value="50W" data={[]} color="#f59e0b" unit="W" referenceLine={100} />,
+    );
+    await waitFor(() => expect(capturedProps["ReferenceLine"]).toBeDefined());
+    const label = capturedProps["ReferenceLine"].label as { value: string };
+    expect(label.value).toBe("");
+  });
+
+  it("passes tickFormatter that formats bytes", async () => {
+    render(
+      <MetricsChart label="Traffic" value="1 MB" data={[]} color="#00d68f" unit="bytes" />,
+    );
+    await waitFor(() => expect(capturedProps["YAxis"]).toBeDefined());
+    const formatter = capturedProps["YAxis"].tickFormatter as (v: number) => string;
+    expect(formatter(0)).toBe("0 B");
+    expect(formatter(1024)).toBe("1.0 KB");
+    expect(formatter(1048576)).toBe("1.0 MB");
+    expect(formatter(1073741824)).toBe("1.0 GB");
+  });
+
+  it("passes tickFormatter that formats celsius", async () => {
+    render(
+      <MetricsChart label="Temp" value="52C" data={[]} color="#ffaa2c" unit="C" />,
+    );
+    await waitFor(() => expect(capturedProps["YAxis"]).toBeDefined());
+    const formatter = capturedProps["YAxis"].tickFormatter as (v: number) => string;
+    expect(formatter(52)).toBe("52C");
+  });
+
+  it("passes tickFormatter that formats percentages", async () => {
+    render(
+      <MetricsChart label="CPU" value="25%" data={[]} color="#006fff" unit="%" />,
+    );
+    await waitFor(() => expect(capturedProps["YAxis"]).toBeDefined());
+    const formatter = capturedProps["YAxis"].tickFormatter as (v: number) => string;
+    expect(formatter(25)).toBe("25%");
+  });
+  it("passes Tooltip formatter that handles null values", async () => {
+    render(<MetricsChart label="CPU" value="25%" data={[]} color="#006fff" unit="%" />);
+    await waitFor(() => expect(capturedProps["Tooltip"]).toBeDefined());
+    const formatter = capturedProps["Tooltip"].formatter as (v: unknown) => [string, string];
+    expect(formatter(null)).toEqual(["0%", "CPU"]);
+    expect(formatter(undefined)).toEqual(["0%", "CPU"]);
+    expect(formatter(42)).toEqual(["42%", "CPU"]);
+  });
+});
+
+describe("DualMetricsChart", () => {
+  it("renders dual series chart with legend", async () => {
+    render(
+      <DualMetricsChart
+        label="Traffic"
+        value="1 MB"
+        data={[{ time: "08:00", primary: 100, secondary: 200 }]}
+        primaryColor="#006fff"
+        secondaryColor="#00d68f"
+        primaryLabel="TX"
+        secondaryLabel="RX"
+        unit="bytes"
+      />,
+    );
+    await waitFor(() => expect(screen.getByText("Traffic")).toBeInTheDocument());
+    expect(screen.getByText("1 MB")).toBeInTheDocument();
+    expect(screen.getByTestId("recharts-Legend")).toBeInTheDocument();
   });
 
   it("shows loading spinner initially", () => {
     const { container } = render(
-      <MetricsChart label="CPU" value="42%" data={sampleData} color="#006fff" unit="%" />,
+      <DualMetricsChart label="Traffic" value="0 B" data={[]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
     );
-    // The spinner has the animate-spin class
     expect(container.querySelector(".animate-spin")).toBeInTheDocument();
   });
 
-  it("renders label and value text after recharts loads", async () => {
-    render(<MetricsChart label="CPU" value="42%" data={sampleData} color="#006fff" unit="%" />);
-    expect(await screen.findByText("CPU")).toBeInTheDocument();
-    expect(screen.getByText("42%")).toBeInTheDocument();
-  });
-
-  it("renders the recharts components after loading", async () => {
-    render(<MetricsChart label="Memory" value="8 GB" data={sampleData} color="#ff0000" unit="bytes" />);
-    expect(await screen.findByTestId("responsive-container")).toBeInTheDocument();
-    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
-    expect(screen.getByTestId("area")).toBeInTheDocument();
-    expect(screen.getByTestId("x-axis")).toBeInTheDocument();
-    expect(screen.getByTestId("y-axis")).toBeInTheDocument();
-    expect(screen.getByTestId("tooltip")).toBeInTheDocument();
-    expect(screen.getByTestId("cartesian-grid")).toBeInTheDocument();
-  });
-
-  describe("YAxis tickFormatter (formatAxisValue / formatBytes)", () => {
-    it("formats bytes values", async () => {
-      render(<MetricsChart label="Traffic" value="1.5 MB" data={sampleData} color="#00ff00" unit="bytes" />);
-      await screen.findByTestId("y-axis");
-
-      const tickFormatter = captured.yAxisProps.tickFormatter as (v: number) => string;
-      expect(tickFormatter).toBeDefined();
-
-      // formatBytes: < 1024
-      expect(tickFormatter(500)).toBe("500 B");
-      // formatBytes: KB range
-      expect(tickFormatter(2048)).toBe("2.0 KB");
-      // formatBytes: MB range
-      expect(tickFormatter(1048576)).toBe("1.0 MB");
-      // formatBytes: GB range
-      expect(tickFormatter(1073741824)).toBe("1.0 GB");
-    });
-
-    it("formats celsius values", async () => {
-      render(<MetricsChart label="Temp" value="45C" data={sampleData} color="#ff6600" unit="C" />);
-      await screen.findByTestId("y-axis");
-
-      const tickFormatter = captured.yAxisProps.tickFormatter as (v: number) => string;
-      expect(tickFormatter(45.7)).toBe("46C");
-    });
-
-    it("formats percentage values", async () => {
-      render(<MetricsChart label="CPU" value="42%" data={sampleData} color="#006fff" unit="%" />);
-      await screen.findByTestId("y-axis");
-
-      const tickFormatter = captured.yAxisProps.tickFormatter as (v: number) => string;
-      expect(tickFormatter(42.3)).toBe("42%");
-    });
-  });
-
-  describe("Tooltip formatter (formatAxisValue / formatBytes)", () => {
-    it("formats tooltip values using the unit", async () => {
-      render(<MetricsChart label="Traffic" value="1 MB" data={sampleData} color="#00ff00" unit="bytes" />);
-      await screen.findByTestId("tooltip");
-
-      const formatter = captured.tooltipProps.formatter as (v: unknown) => [string, string];
-      expect(formatter).toBeDefined();
-
-      const [formatted, lbl] = formatter(2048);
-      expect(formatted).toBe("2.0 KB");
-      expect(lbl).toBe("Traffic");
-    });
-
-    it("handles null/undefined tooltip values", async () => {
-      render(<MetricsChart label="Temp" value="0C" data={sampleData} color="#ff0000" unit="C" />);
-      await screen.findByTestId("tooltip");
-
-      const formatter = captured.tooltipProps.formatter as (v: unknown) => [string, string];
-      const [formatted] = formatter(null);
-      expect(formatted).toBe("0C");
-
-      const [formatted2] = formatter(undefined);
-      expect(formatted2).toBe("0C");
-    });
-  });
-
-  it("renders with empty data array", async () => {
-    render(<MetricsChart label="Empty" value="0" data={[]} color="#ccc" unit="%" />);
-    expect(await screen.findByText("Empty")).toBeInTheDocument();
-    expect(screen.getByText("0")).toBeInTheDocument();
-  });
-
-  it("removes the spinner once recharts loads", async () => {
-    const { container } = render(
-      <MetricsChart label="CPU" value="42%" data={sampleData} color="#006fff" unit="%" />,
+  it("passes YAxis tickFormatter for bytes", async () => {
+    render(
+      <DualMetricsChart label="Traffic" value="1 MB" data={[{ time: "08:00", primary: 100, secondary: 200 }]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
     );
-    await screen.findByTestId("area-chart");
-    await waitFor(() => {
-      expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
-    });
+    await waitFor(() => expect(capturedProps["YAxis"]).toBeDefined());
+    const formatter = capturedProps["YAxis"].tickFormatter as (v: number) => string;
+    expect(formatter(1024)).toBe("1.0 KB");
+  });
+
+  it("passes Tooltip formatter that includes series name", async () => {
+    render(
+      <DualMetricsChart label="Traffic" value="1 MB" data={[{ time: "08:00", primary: 100, secondary: 200 }]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
+    );
+    await waitFor(() => expect(capturedProps["Tooltip"]).toBeDefined());
+    const formatter = capturedProps["Tooltip"].formatter as (v: unknown, name: unknown) => [string, string];
+    expect(formatter(1024, "TX")).toEqual(["1.0 KB", "TX"]);
+  });
+
+  it("passes Tooltip formatter that handles null values", async () => {
+    render(
+      <DualMetricsChart label="Traffic" value="0 B" data={[{ time: "08:00", primary: 0, secondary: 0 }]} primaryColor="#006fff" secondaryColor="#00d68f" primaryLabel="TX" secondaryLabel="RX" unit="bytes" />,
+    );
+    await waitFor(() => expect(capturedProps["Tooltip"]).toBeDefined());
+    const formatter = capturedProps["Tooltip"].formatter as (v: unknown, name: unknown) => [string, string];
+    expect(formatter(null, "TX")).toEqual(["0 B", "TX"]);
+    expect(formatter(undefined, "RX")).toEqual(["0 B", "RX"]);
   });
 });

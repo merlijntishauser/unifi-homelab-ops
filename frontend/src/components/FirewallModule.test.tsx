@@ -169,6 +169,16 @@ describe("FirewallModule", () => {
     expect(screen.queryByLabelText(/Show (filtered zones|disabled rules)/)).not.toBeInTheDocument();
   });
 
+  it("shows combined toggle label when both hidden zones and disabled rules exist", () => {
+    renderModule({ hasHiddenZones: true, hasDisabledRules: true });
+    expect(screen.getByLabelText("Show filtered zones and disabled rules")).toBeInTheDocument();
+  });
+
+  it("shows stringified error for non-Error object in dataError", () => {
+    renderModule({ dataError: "Network timeout" as unknown as Error });
+    expect(screen.getByText("Network timeout")).toBeInTheDocument();
+  });
+
   it("navigates to graph view when zone is clicked", async () => {
     renderModule();
     fireEvent.click(screen.getByTestId("matrix-zone-z1"));

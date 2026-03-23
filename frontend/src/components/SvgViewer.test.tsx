@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import SvgViewer from "./SvgViewer";
 
@@ -82,5 +82,47 @@ describe("SvgViewer", () => {
     // Move without pressing down
     fireEvent.pointerMove(viewer, { clientX: 150, clientY: 120 });
     expect(viewer.className).toContain("cursor-grab");
+  });
+
+  it("zooms out on wheel with positive deltaY", () => {
+    render(<SvgViewer svgContent={STUB_SVG} />);
+    const viewer = screen.getByTestId("svg-viewer");
+    vi.spyOn(viewer, "getBoundingClientRect").mockReturnValue({
+      left: 0, top: 0, right: 800, bottom: 600, width: 800, height: 600, x: 0, y: 0, toJSON: () => {},
+    });
+    // Zoom out with positive deltaY
+    fireEvent.wheel(viewer, { deltaY: 100, clientX: 400, clientY: 300 });
+    const zoomLabel = screen.getByLabelText("Reset zoom");
+    expect(parseInt(zoomLabel.textContent ?? "0")).toBeLessThan(100);
+  });
+
+  it("handles wheel event when containerRef has no bounding rect", () => {
+    render(<SvgViewer svgContent={STUB_SVG} />);
+    const viewer = screen.getByTestId("svg-viewer");
+    // getBoundingClientRect returns undefined in edge case
+    vi.spyOn(viewer, "getBoundingClientRect").mockReturnValue(undefined as unknown as DOMRect);
+    fireEvent.wheel(viewer, { deltaY: -100, clientX: 400, clientY: 300 });
+    // Should not crash -- zoom stays at 100%
+    expect(screen.getByLabelText("Reset zoom")).toHaveTextContent("100%");
+  });
+
+  it("clamps zoom to minimum on excessive zoom out", () => {
+    render(<SvgViewer svgContent={STUB_SVG} />);
+    // Zoom out many times to hit MIN_ZOOM
+    for (let i = 0; i < 50; i++) {
+      fireEvent.click(screen.getByLabelText("Zoom out"));
+    }
+    const zoomLabel = screen.getByLabelText("Reset zoom");
+    expect(parseInt(zoomLabel.textContent ?? "0")).toBeGreaterThanOrEqual(10);
+  });
+
+  it("clamps zoom to maximum on excessive zoom in", () => {
+    render(<SvgViewer svgContent={STUB_SVG} />);
+    // Zoom in many times to hit MAX_ZOOM
+    for (let i = 0; i < 80; i++) {
+      fireEvent.click(screen.getByLabelText("Zoom in"));
+    }
+    const zoomLabel = screen.getByLabelText("Reset zoom");
+    expect(parseInt(zoomLabel.textContent ?? "0")).toBeLessThanOrEqual(500);
   });
 });

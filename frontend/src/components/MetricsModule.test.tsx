@@ -193,4 +193,23 @@ describe("MetricsModule", () => {
     // URL should be cleaned
     expect(window.location.search).toBe("");
   });
+
+  it("falls back to null when selectedMac set but device not in devices list", async () => {
+    // Click to select a device, then change the devices list so it no longer contains it
+    renderModule();
+    // Select device aa:01
+    fireEvent.click(screen.getByText("Gateway"));
+    await waitFor(() => {
+      expect(screen.getByTestId("detail-view")).toBeInTheDocument();
+    });
+    // Now remove the device from the list -- selectedMac is still "aa:01" but find returns undefined
+    devicesMock.data = {
+      devices: [
+        { mac: "aa:02", name: "Switch", model: "USW-24", type: "switch", cpu: 8, mem: 30, temperature: null, uptime: 43200, tx_bytes: 512, rx_bytes: 768, num_sta: 10, version: "7.1.0", poe_consumption: 45.2, status: "online" },
+      ],
+    };
+    // Re-render to pick up new devices list
+    fireEvent.click(screen.getByText("Back to overview"));
+    expect(screen.getByTestId("device-card-aa:02")).toBeInTheDocument();
+  });
 });

@@ -231,6 +231,7 @@ export interface MetricsSnapshot {
   version: string;
   poe_consumption: number | null;
   poe_budget: number | null;
+  ip: string;
   status: string;
 }
 

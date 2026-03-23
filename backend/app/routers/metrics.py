@@ -19,26 +19,27 @@ log = structlog.get_logger()
 router = APIRouter(tags=["metrics"])
 
 
-def _fetch_live_stats() -> list[object]:  # pragma: no cover -- integration with live controller
-    """Fetch current device stats for name/model enrichment."""
+def _fetch_live_stats() -> tuple[list[object], dict[str, str]]:  # pragma: no cover -- integration with live controller
+    """Fetch current device stats for name/model enrichment. Returns (stats, ip_lookup)."""
     if not has_credentials():
-        return []
+        return [], {}
     credentials = get_unifi_config()
     if credentials is None:
-        return []
+        return [], {}
     from unifi_topology import fetch_device_stats, normalize_device_stats
 
     from app.services.firewall import to_topology_config
 
     config = to_topology_config(credentials)
     raw = fetch_device_stats(config, site=credentials.site)
-    return list(normalize_device_stats(raw))  # type: ignore[arg-type]
+    ip_lookup = {d.get("mac", ""): d.get("ip", "") for d in raw if isinstance(d, dict)}
+    return list(normalize_device_stats(raw)), ip_lookup  # type: ignore[arg-type]
 
 
 @router.get("/devices")
 async def metrics_devices() -> MetricsDevicesResponse:
-    live = await asyncio.to_thread(_fetch_live_stats)
-    snapshots = await asyncio.to_thread(get_latest_snapshots, current_stats=live or None)  # type: ignore[arg-type]
+    live, ip_lookup = await asyncio.to_thread(_fetch_live_stats)
+    snapshots = await asyncio.to_thread(get_latest_snapshots, current_stats=live or None, ip_lookup=ip_lookup or None)  # type: ignore[arg-type]
     return MetricsDevicesResponse(devices=snapshots)
 
 

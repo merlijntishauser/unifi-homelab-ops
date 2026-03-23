@@ -1170,6 +1170,25 @@ describe("RulePanel", () => {
       });
     });
 
+    it("shows cached label when AI returns empty findings from cache", async () => {
+      mockAnalyzeWithAi.mockResolvedValue({
+        status: "ok",
+        findings: [],
+        cached: true,
+        message: null,
+      });
+
+      const pair = makePair([makeRule()], analysisWithFindings);
+      renderPanel(pair, "External", "Internal", true);
+
+      fireEvent.click(screen.getByRole("button", { name: "Analyze with AI" }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/no additional findings/)).toBeInTheDocument();
+        expect(screen.getByText("(cached)")).toBeInTheDocument();
+      });
+    });
+
     it("shows cached indicator when result is from cache", async () => {
       mockAnalyzeWithAi.mockResolvedValue({
         status: "ok",
@@ -1484,6 +1503,68 @@ describe("RulePanel", () => {
       fireEvent.click(screen.getByText("Details"));
       expect(screen.getByText("This is the rationale")).toBeInTheDocument();
     });
+
+    it("shows recommended_action when 'Details' is clicked", () => {
+      const analysis = {
+        score: 85,
+        grade: "B",
+        findings: [{
+          id: "test-finding",
+          severity: "high" as const,
+          title: "Test Finding",
+          description: "Test description",
+          rationale: "This is the rationale",
+          recommended_action: "Restrict this rule to specific IPs",
+          rule_id: null,
+          source: "static" as const,
+        }],
+      };
+      renderPanel(makePair([], analysis));
+      fireEvent.click(screen.getByText("Details"));
+      expect(screen.getByText("This is the rationale")).toBeInTheDocument();
+      expect(screen.getByText(/Restrict this rule to specific IPs/)).toBeInTheDocument();
+    });
+
+    it("shows recommended_action without rationale", () => {
+      const analysis = {
+        score: 85,
+        grade: "B",
+        findings: [{
+          id: "test-finding",
+          severity: "high" as const,
+          title: "Test Finding",
+          description: "Test description",
+          recommended_action: "Add port restrictions",
+          rule_id: null,
+          source: "static" as const,
+        }],
+      };
+      renderPanel(makePair([], analysis));
+      fireEvent.click(screen.getByText("Details"));
+      expect(screen.getByText(/Add port restrictions/)).toBeInTheDocument();
+    });
+
+    it("hides rationale and action when 'Hide details' is clicked", () => {
+      const analysis = {
+        score: 85,
+        grade: "B",
+        findings: [{
+          id: "test-finding",
+          severity: "high" as const,
+          title: "Test Finding",
+          description: "Test description",
+          rationale: "Rationale text",
+          recommended_action: "Action text",
+          rule_id: null,
+          source: "static" as const,
+        }],
+      };
+      renderPanel(makePair([], analysis));
+      fireEvent.click(screen.getByText("Details"));
+      expect(screen.getByText("Rationale text")).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Hide details"));
+      expect(screen.queryByText("Rationale text")).not.toBeInTheDocument();
+    });
   });
 
   describe("findings severity grouping", () => {
@@ -1504,6 +1585,22 @@ describe("RulePanel", () => {
       const lowIdx = titles.indexOf("Low finding");
       expect(highIdx).toBeLessThan(medIdx);
       expect(medIdx).toBeLessThan(lowIdx);
+    });
+
+    it("sorts unknown severity after known severities", () => {
+      const analysis = {
+        score: 50,
+        grade: "D",
+        findings: [
+          { id: "f-unknown", severity: "info" as "high", title: "Unknown finding", description: "d", rule_id: null, source: "static" as const },
+          { id: "f-high", severity: "high" as const, title: "High finding", description: "d", rule_id: null, source: "static" as const },
+        ],
+      };
+      renderPanel(makePair([], analysis));
+      const titles = screen.getAllByText(/finding/).map((el) => el.textContent);
+      const highIdx = titles.indexOf("High finding");
+      const unknownIdx = titles.indexOf("Unknown finding");
+      expect(highIdx).toBeLessThan(unknownIdx);
     });
   });
 

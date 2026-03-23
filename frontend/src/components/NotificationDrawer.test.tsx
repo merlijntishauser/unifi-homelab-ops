@@ -276,4 +276,13 @@ describe("NotificationDrawer", () => {
     const grayDot = container.querySelector(".bg-ui-text-dim");
     expect(grayDot).toBeInTheDocument();
   });
+
+  it("does not call onClose when non-Escape key is pressed on backdrop", () => {
+    const onClose = vi.fn();
+    render(
+      <NotificationDrawer notifications={[]} {...defaultProps} onClose={onClose} />,
+    );
+    fireEvent.keyDown(screen.getByTestId("drawer-backdrop"), { key: "Tab" });
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

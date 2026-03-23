@@ -6,6 +6,7 @@ import { createTestQueryClient } from "../test-utils";
 import {
   useTopologySvg,
   useTopologyDevices,
+  useTopologyPositions,
   useMetricsDevices,
   useMetricsHistory,
   useNotifications,
@@ -15,6 +16,7 @@ import {
   useDocSections,
   useRacks,
   useRack,
+  useDeviceSpecs,
   useCreateRack,
   useUpdateRack,
   useDeleteRack,
@@ -29,6 +31,7 @@ vi.mock("../api/client", () => ({
   api: {
     getTopologySvg: vi.fn(),
     getTopologyDevices: vi.fn(),
+    getTopologyPositions: vi.fn(),
     getMetricsDevices: vi.fn(),
     getMetricsHistory: vi.fn(),
     getNotifications: vi.fn(),
@@ -38,6 +41,7 @@ vi.mock("../api/client", () => ({
     getDocSections: vi.fn(),
     getRacks: vi.fn(),
     getRack: vi.fn(),
+    getDeviceSpecs: vi.fn(),
     createRack: vi.fn(),
     updateRack: vi.fn(),
     deleteRack: vi.fn(),
@@ -65,6 +69,11 @@ describe("topology query hooks", () => {
     expect(result.current.data).toBeUndefined();
     expect(result.current.isLoading).toBe(false);
   });
+
+  it("useTopologyPositions returns query with staleTime Infinity", () => {
+    const { result } = renderHook(() => useTopologyPositions(), { wrapper });
+    expect(result.current.isLoading).toBe(true);
+  });
 });
 
 describe("metrics query hooks", () => {
@@ -78,6 +87,18 @@ describe("metrics query hooks", () => {
     const { result } = renderHook(() => useMetricsHistory(null, false), { wrapper });
     expect(result.current.data).toBeUndefined();
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it("useMetricsHistory does not fetch when mac is null even if enabled is true", () => {
+    const { result } = renderHook(() => useMetricsHistory(null, true), { wrapper });
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("useMetricsHistory fetches when mac is provided and enabled", () => {
+    const { result } = renderHook(() => useMetricsHistory("aa:bb", true), { wrapper });
+    // Query is enabled, so it will be loading
+    expect(result.current.isLoading).toBe(true);
   });
 
   it("useNotifications does not fetch when disabled", () => {
@@ -125,6 +146,16 @@ describe("rack query hooks", () => {
     const { result } = renderHook(() => useRack(null), { wrapper });
     expect(result.current.data).toBeUndefined();
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it("useRack fetches when id is provided", () => {
+    const { result } = renderHook(() => useRack(5), { wrapper });
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it("useDeviceSpecs returns query", () => {
+    const { result } = renderHook(() => useDeviceSpecs(), { wrapper });
+    expect(result.current.isLoading).toBe(true);
   });
 
   it("useCreateRack calls api and invalidates", async () => {

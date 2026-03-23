@@ -44,10 +44,14 @@ def record_snapshot(stats: list[DeviceStats]) -> None:
         session.close()
 
 
-def get_latest_snapshots(current_stats: list[DeviceStats] | None = None) -> list[MetricsSnapshot]:
+def get_latest_snapshots(
+    current_stats: list[DeviceStats] | None = None,
+    ip_lookup: dict[str, str] | None = None,
+) -> list[MetricsSnapshot]:
     """Get the most recent metric row per device MAC.
 
     When current_stats is provided, enrich with live name/model/type/version/status.
+    When ip_lookup is provided, enrich with device IP address.
     """
     session = get_session()
     try:
@@ -64,6 +68,7 @@ def get_latest_snapshots(current_stats: list[DeviceStats] | None = None) -> list
     stats_lookup: dict[str, DeviceStats] = {}
     if current_stats:
         stats_lookup = {s.mac: s for s in current_stats}
+    ips = ip_lookup or {}
 
     snapshots: list[MetricsSnapshot] = []
     for row in rows:
@@ -84,6 +89,7 @@ def get_latest_snapshots(current_stats: list[DeviceStats] | None = None) -> list
                 version=live.version if live else "",
                 poe_consumption=row.poe_consumption,
                 poe_budget=live.poe_budget if live else None,
+                ip=ips.get(row.mac, ""),
                 status="online" if live else "unknown",
             )
         )

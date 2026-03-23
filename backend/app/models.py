@@ -153,6 +153,7 @@ class MetricsSnapshot(BaseModel):
     version: str = ""
     poe_consumption: float | None = None
     poe_budget: float | None = None
+    ip: str = ""
     status: str = "online"
 
 

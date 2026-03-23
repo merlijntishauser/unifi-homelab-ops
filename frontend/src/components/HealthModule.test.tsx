@@ -323,6 +323,51 @@ describe("HealthModule", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
+  it("navigates to module root when finding has no entity id", () => {
+    analyzeMock.data = {
+      status: "ok",
+      findings: [
+        { severity: "high", title: "General firewall issue", description: "d", affected_module: "firewall", affected_entity_id: "", recommended_action: "", confidence: "" },
+      ],
+      cached: false,
+      analyzed_at: new Date().toISOString(),
+      message: null,
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("General firewall issue"));
+    expect(mockNavigate).toHaveBeenCalledWith("/firewall");
+  });
+
+  it("navigates to topology with device param when finding targets topology", () => {
+    analyzeMock.data = {
+      status: "ok",
+      findings: [
+        { severity: "medium", title: "Device offline", description: "d", affected_module: "topology", affected_entity_id: "aa:bb:cc:dd:ee:01", recommended_action: "", confidence: "" },
+      ],
+      cached: false,
+      analyzed_at: new Date().toISOString(),
+      message: null,
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("Device offline"));
+    expect(mockNavigate).toHaveBeenCalledWith("/topology?device=aa%3Abb%3Acc%3Add%3Aee%3A01");
+  });
+
+  it("navigates to metrics with device param when finding targets metrics", () => {
+    analyzeMock.data = {
+      status: "ok",
+      findings: [
+        { severity: "medium", title: "High CPU", description: "d", affected_module: "metrics", affected_entity_id: "aa:bb:cc:dd:ee:02", recommended_action: "", confidence: "" },
+      ],
+      cached: false,
+      analyzed_at: new Date().toISOString(),
+      message: null,
+    };
+    renderModule();
+    fireEvent.click(screen.getByText("High CPU"));
+    expect(mockNavigate).toHaveBeenCalledWith("/metrics?device=aa%3Abb%3Acc%3Add%3Aee%3A02");
+  });
+
   it("shows danger border on firewall card when grade F exists", () => {
     summaryMock.data = {
       ...summaryMock.data!,

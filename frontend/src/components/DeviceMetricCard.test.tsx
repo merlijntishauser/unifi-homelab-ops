@@ -19,6 +19,7 @@ function makeDevice(overrides?: Partial<MetricsSnapshot>): MetricsSnapshot {
     version: "4.0.6",
     poe_consumption: null,
     poe_budget: null,
+    ip: "192.168.1.1",
     status: "online",
     ...overrides,
   };

@@ -244,4 +244,13 @@ describe("DeviceMap", () => {
     render(<DeviceMap devices={testDevices} edges={testEdges} colorMode="dark" onDeviceSelect={vi.fn()} savedPositions={[]} />);
     expect(screen.getByTestId("nodes-count").textContent).toBe("2");
   });
+
+  it("handles unknown device type by assigning default rank", () => {
+    const unknownDevice: TopologyDevice = {
+      mac: "aa:04", name: "NVR", model: "UNVR", model_name: "Network Video Recorder",
+      type: "unvr", ip: "10.0.0.4", version: "3.0", uptime: 0, status: "online", client_count: 0, ports: [],
+    };
+    render(<DeviceMap devices={[...testDevices, unknownDevice]} edges={testEdges} colorMode="dark" onDeviceSelect={vi.fn()} />);
+    expect(screen.getByTestId("nodes-count").textContent).toBe("3");
+  });
 });

@@ -97,4 +97,10 @@ describe("DeviceNode", () => {
       unmount();
     }
   });
+
+  it("shows dim status dot for unknown status", () => {
+    const { container } = render(<DeviceNode data={{ ...defaultData, status: "adopting" }} />);
+    const dot = container.querySelector("[class*='bg-ui-text-dim']");
+    expect(dot).not.toBeNull();
+  });
 });

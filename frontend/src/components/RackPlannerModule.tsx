@@ -871,6 +871,7 @@ function RackSidePanel({ rack, rackId, showAddForm, showDevicePicker, bom, editi
         return (
         <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4" data-testid="edit-item-form">
           <AddItemForm
+            key={editingItem.id}
             onSubmit={onSaveEdit}
             onCancel={onCloseEdit}
             maxPositionU={rack.height_u}

@@ -26,8 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rack Planner: edit form enriches values from device specs (fixes 0W power on older items)
 - Rack Planner: clicking a different item while editing auto-saves the current item
 - Rack Planner: width options renamed from "Full (1U)" to "Full width"
-- Rack Planner form inputs and selects now use shared INPUT_CLASS/SELECT_CLASS for consistent styling
+- Rack Planner: form inputs and selects now use shared INPUT_CLASS/SELECT_CLASS for consistent styling
+- Rack Planner: edit form now updates when switching between items (key-based remount)
+- Rack Planner: toolbar buttons (Add Item, Add from Topology, BOM) now close the edit panel
 - Tooltip fly-in animation disabled on recharts for snappier interaction
+
+### Added (Rack Planner)
+- NAS device type with rose/red face color in light and dark modes
 
 ### Changed
 - Chart height increased from 120px to 160px with 12px top margin for label spacing

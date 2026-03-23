@@ -343,7 +343,8 @@ function addItemReducer(state: AddItemState, update: Partial<AddItemState>): Add
 function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLabel = "Add", deviceSpecs = EMPTY_SPECS, isUnifiDevice }: AddItemFormProps) {
   const [form, dispatch] = useReducer(addItemReducer, { ...initialAddItemState, ...initialValues });
   const { label, deviceType, heightU, positionU, powerWatts, notes, widthFraction, positionX } = form;
-  const [tab, setTab] = useState<"unifi" | "custom">(initialValues ? "custom" : "unifi");
+  const isEditMode = submitLabel === "Save";
+  const [tab, setTab] = useState<"unifi" | "custom">(isEditMode ? "custom" : "unifi");
   const [searchQuery, setSearchQuery] = useState("");
 
   const validPositionXOptions = useMemo(() => getValidPositionXOptions(widthFraction), [widthFraction]);
@@ -373,20 +374,22 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
         {isUnifiDevice && (
           <span className="rounded-full bg-ub-blue-dim text-ub-blue text-[10px] font-semibold px-2 py-0.5">UniFi</span>
         )}
-        <div className="ml-auto flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
-          <button
-            onClick={() => setTab("unifi")}
-            className={`px-3 py-1 text-xs font-medium transition-colors ${tab === "unifi" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
-          >
-            UniFi Device
-          </button>
-          <button
-            onClick={() => setTab("custom")}
-            className={`px-3 py-1 text-xs font-medium transition-colors border-l border-ui-border dark:border-noc-border ${tab === "custom" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
-          >
-            Custom
-          </button>
-        </div>
+        {!isEditMode && (
+          <div className="ml-auto flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
+            <button
+              onClick={() => setTab("unifi")}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${tab === "unifi" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
+            >
+              UniFi Device
+            </button>
+            <button
+              onClick={() => setTab("custom")}
+              className={`px-3 py-1 text-xs font-medium transition-colors border-l border-ui-border dark:border-noc-border ${tab === "custom" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
+            >
+              Custom
+            </button>
+          </div>
+        )}
       </div>
 
       {tab === "unifi" && (

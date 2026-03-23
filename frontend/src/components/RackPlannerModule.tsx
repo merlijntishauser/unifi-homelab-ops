@@ -28,6 +28,7 @@ const DEVICE_TYPE_META: Record<string, DeviceTypeMeta> = {
   "patch-panel": { label: "Patch Panel", faceVar: "patch", accent: "#6b7280" },
   ups: { label: "UPS", faceVar: "ups", accent: "#f59e0b" },
   ap: { label: "Access Point", faceVar: "ap", accent: "#8b5cf6" },
+  nas: { label: "NAS", faceVar: "nas", accent: "#e11d48" },
   shelf: { label: "Shelf", faceVar: "other", accent: "#4b5563" },
   other: { label: "Other", faceVar: "other", accent: "#4b5563" },
 };
@@ -41,6 +42,7 @@ const DEVICE_TYPE_OPTIONS = [
   "switch",
   "ap",
   "patch-panel",
+  "nas",
   "shelf",
   "ups",
   "other",

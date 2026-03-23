@@ -129,6 +129,7 @@ body {
   --rack-face-patch-top: #e5e7eb; --rack-face-patch-bottom: #d1d5db;
   --rack-face-ups-top: #fef3c7; --rack-face-ups-bottom: #fde68a;
   --rack-face-ap-top: #ede9fe; --rack-face-ap-bottom: #ddd6fe;
+  --rack-face-nas-top: #ffe4e6; --rack-face-nas-bottom: #fecdd3;
   --rack-face-other-top: #f3f4f6; --rack-face-other-bottom: #e5e7eb;
   --rack-u-border: rgba(0, 0, 0, 0.20);
   --rack-half-u-border: rgba(0, 0, 0, 0.08);
@@ -149,6 +150,7 @@ body {
   --rack-face-patch-top: #353840; --rack-face-patch-bottom: #2a2d35;
   --rack-face-ups-top: #4d4228; --rack-face-ups-bottom: #3a321e;
   --rack-face-ap-top: #302840; --rack-face-ap-bottom: #252030;
+  --rack-face-nas-top: #4a2028; --rack-face-nas-bottom: #3a181e;
   --rack-face-other-top: #353840; --rack-face-other-bottom: #2a2d35;
   --rack-u-border: rgba(255, 255, 255, 0.20);
   --rack-half-u-border: rgba(255, 255, 255, 0.08);

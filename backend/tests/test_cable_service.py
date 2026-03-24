@@ -413,7 +413,8 @@ class TestSyncFromTopology:
             result = sync_from_topology(MOCK_CREDENTIALS)
         assert len(result) == 0
 
-    def test_skips_edges_without_port(self) -> None:
+    def test_creates_cables_without_port_info(self) -> None:
+        """Edges without local_port/remote_port still create cables (port fields are nullable)."""
         topo = self._mock_topology(edges=[
             TopologyEdge(
                 from_mac="aa:01", to_mac="aa:02", local_port=None, remote_port=None,
@@ -422,7 +423,9 @@ class TestSyncFromTopology:
         ])
         with patch("app.services.topology.get_topology_devices", return_value=topo):
             result = sync_from_topology(MOCK_CREDENTIALS)
-        assert len(result) == 0
+        assert len(result) == 1
+        assert result[0].source_port is None
+        assert result[0].dest_port is None
 
     def test_updates_existing_cables(self) -> None:
         # Pre-create a cable
@@ -453,6 +456,7 @@ class TestSyncFromTopology:
     def test_marks_disappeared_as_disconnected(self) -> None:
         create_cable(CableRunInput(
             source_device_mac="aa:01",
+            dest_device_mac="zz:99",
             source_port=99,
             label="C-OLD",
             status="active",
@@ -529,14 +533,14 @@ class TestSyncFromTopology:
             result = sync_from_topology(MOCK_CREDENTIALS)
         assert len(result) >= 1
 
-    def test_skips_existing_cables_without_source_mac_or_port(self) -> None:
-        """Cables without source_device_mac or source_port are not indexed for sync matching."""
-        create_cable(CableRunInput(source_device_mac=None, source_port=None, label="C-NOSRC"))
-        create_cable(CableRunInput(source_device_mac="aa:01", source_port=None, label="C-NOPORT"))
+    def test_skips_existing_cables_without_source_or_dest_mac(self) -> None:
+        """Cables without source_device_mac or dest_device_mac are not indexed for sync matching."""
+        create_cable(CableRunInput(source_device_mac=None, dest_device_mac=None, label="C-NOSRC"))
+        create_cable(CableRunInput(source_device_mac="aa:01", dest_device_mac=None, label="C-NODEST"))
         topo = self._mock_topology()
         with patch("app.services.topology.get_topology_devices", return_value=topo):
             result = sync_from_topology(MOCK_CREDENTIALS)
-        # The two cables without proper source are ignored in matching; new cable created from edge
+        # The two cables without proper MAC pair are not matched; new cable created from edge
         all_cables = list_cables()
         assert len(all_cables) >= 3  # 2 pre-existing + 1 from sync
 

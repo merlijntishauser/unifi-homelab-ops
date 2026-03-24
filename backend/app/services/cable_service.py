@@ -396,13 +396,14 @@ def sync_from_topology(credentials: UnifiCredentials) -> list[CableRun]:
     finally:
         session.close()
 
-    existing_index: dict[tuple[str, int], CableRunRow] = {}
+    # Index existing cables by (source_mac, dest_mac) pair for matching
+    existing_index: dict[tuple[str, str], CableRunRow] = {}
     for row in existing_rows:
-        if row.source_device_mac and row.source_port is not None:
-            existing_index[(row.source_device_mac.lower(), row.source_port)] = row
+        if row.source_device_mac and row.dest_device_mac:
+            existing_index[(row.source_device_mac.lower(), row.dest_device_mac.lower())] = row
 
     # Track which existing cables were seen in the current topology
-    seen_keys: set[tuple[str, int]] = set()
+    seen_keys: set[tuple[str, str]] = set()
 
     synced_ids: list[int] = []
 
@@ -410,11 +411,8 @@ def sync_from_topology(credentials: UnifiCredentials) -> list[CableRun]:
         # Skip wireless edges
         if edge.wireless:
             continue
-        # Skip edges without port info
-        if edge.local_port is None:
-            continue
 
-        key = (edge.from_mac.lower(), edge.local_port)
+        key = (edge.from_mac.lower(), edge.to_mac.lower())
         seen_keys.add(key)
 
         if key in existing_index:

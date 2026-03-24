@@ -31,9 +31,28 @@ label_settings_router = APIRouter(tags=["cabling"])
 # ── Cable endpoints ──
 
 
+def _fetch_device_names() -> dict[str, str]:
+    """Fetch device names from topology for cable enrichment."""
+    from app.config import get_unifi_config, has_credentials
+
+    if not has_credentials():
+        return {}
+    credentials = get_unifi_config()
+    if credentials is None:
+        return {}
+    from app.services.topology import get_topology_devices
+
+    try:
+        topology = get_topology_devices(credentials)
+        return {d.mac.lower(): d.name for d in topology.devices}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
 @cable_router.get("")
 async def cables_list() -> list[CableRun]:
-    return list_cables()
+    device_names = await asyncio.to_thread(_fetch_device_names)
+    return list_cables(device_names or None)
 
 
 @cable_router.post("", status_code=201)

@@ -1,7 +1,7 @@
 .PHONY: up down build build-prod build-prod-alpine run-prod run-prod-alpine smoke-prod smoke-prod-alpine quality complexity test react-doctor backend-install frontend-install ci e2e e2e-headed e2e-prod e2e-prod-up e2e-prod-down release help
 
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
 backend-install: ## Install backend dependencies
 	cd backend && uv sync

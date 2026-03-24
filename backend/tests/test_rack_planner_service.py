@@ -121,6 +121,18 @@ class TestUpdateRack:
         with pytest.raises(ValueError, match="Cannot reduce height"):
             update_rack(rack_id, RackInput(name="Test Rack", height_u=6))
 
+    def test_reduce_height_succeeds_when_items_fit(self) -> None:
+        rack_id = _create_test_rack(height_u=12)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=2, label="Low Device"))
+        updated = update_rack(rack_id, RackInput(name="Test Rack", height_u=6))
+        assert updated.height_u == 6
+
+    def test_increase_height_skips_item_check(self) -> None:
+        rack_id = _create_test_rack(height_u=6)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=2, label="Device"))
+        updated = update_rack(rack_id, RackInput(name="Test Rack", height_u=12))
+        assert updated.height_u == 12
+
 
 class TestDeleteRack:
     def test_deletes_rack_and_items(self) -> None:
@@ -264,6 +276,34 @@ class TestMoveRackItem:
         with pytest.raises(ValueError, match="not found"):
             move_rack_item(rack_id, 9999, 1)
 
+    def test_item_deleted_between_fetches_raises(self) -> None:
+        """If item is deleted between overlap check and the second fetch, raise."""
+        rack_id = _create_test_rack()
+        item = add_rack_item(rack_id, RackItemInput(position_u=1, label="Device"))
+
+        original_get_session = __import__("app.database", fromlist=["get_session"]).get_session
+        call_count = 0
+
+        def mock_get_session():  # type: ignore[no-untyped-def]
+            nonlocal call_count
+            session = original_get_session()
+            call_count += 1
+            if call_count == 4:
+                # The 4th get_session call is the second fetch in move_rack_item.
+                # Make session.get return None to simulate race condition.
+                original_get = session.get
+                def patched_get(model, pk):  # type: ignore[no-untyped-def]
+                    from app.models_db import RackItemRow
+                    if model is RackItemRow and pk == item.id:
+                        return None
+                    return original_get(model, pk)
+                session.get = patched_get
+            return session
+
+        with patch("app.services.rack_planner.get_session", side_effect=mock_get_session):
+            with pytest.raises(ValueError, match="not found"):
+                move_rack_item(rack_id, item.id, 5)
+
 
 class TestGetBom:
     def test_empty_rack(self) -> None:
@@ -285,6 +325,13 @@ class TestGetBom:
         blanking = [e for e in bom.entries if e.item_type == "blanking-plate"]
         assert len(blanking) == 1
         assert blanking[0].quantity == 3  # 6 - 2 - 1 = 3 empty
+
+    def test_full_rack_no_blanking_plates(self) -> None:
+        rack_id = _create_test_rack(height_u=2)
+        add_rack_item(rack_id, RackItemInput(position_u=1, height_u=2, label="Full Device"))
+        bom = get_bom(rack_id)
+        blanking = [e for e in bom.entries if e.item_type == "blanking-plate"]
+        assert len(blanking) == 0
 
     def test_bom_includes_shelf_suggestion_for_aps(self) -> None:
         rack_id = _create_test_rack(height_u=4)

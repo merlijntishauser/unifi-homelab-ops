@@ -371,6 +371,20 @@ class TestParseFindingsMarkdownCodeBlocks:
         assert result[0]["recommended_action"] == ""
 
 
+class TestSaveCacheUpsert:
+    def test_upsert_overwrites_existing_entry(self) -> None:
+        """Saving to the same cache key should update the existing row."""
+        findings_v1 = [{"severity": "low", "title": "V1", "description": "First"}]
+        findings_v2 = [{"severity": "high", "title": "V2", "description": "Second"}]
+        _save_cache("upsert-key", "A->B", findings_v1)
+        _save_cache("upsert-key", "A->B", findings_v2)
+
+        cached = _get_cached("upsert-key")
+        assert cached is not None
+        assert len(cached) == 1
+        assert cached[0]["title"] == "V2"
+
+
 class TestBuildCacheKeyDeterministic:
     def test_same_rules_same_key(self) -> None:
         key1 = _build_cache_key(SAMPLE_RULES, "LAN", "WAN", "gpt-4o", "homelab", "v1")

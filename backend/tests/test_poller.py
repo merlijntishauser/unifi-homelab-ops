@@ -135,6 +135,21 @@ class TestCreateNotificationFromResult:
         notifications = get_notifications()
         assert len(notifications) == 1
 
+    def test_creates_when_different_notification_exists(self) -> None:
+        """Existing notification for a different device/check should not prevent creation."""
+        create_notification("other:mac", "other_check", "info", "Other", "Other msg")
+        from app.services.anomaly_checker import AnomalyResult
+        result = AnomalyResult(
+            check_id="new_check",
+            severity="warning",
+            title="New",
+            message="New message",
+            device_mac="new:mac",
+        )
+        _create_notification_from_result(result)
+        notifications = get_notifications()
+        assert len(notifications) == 2
+
 
 class TestMaybePrune:
     def setup_method(self) -> None:

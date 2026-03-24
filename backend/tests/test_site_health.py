@@ -464,6 +464,25 @@ class TestBuildFirewallDetail:
         assert "Uncovered zone pairs:" in detail
         assert "External->IoT" in detail
 
+    def test_skips_zone_pairs_without_analysis(self) -> None:
+        from app.models import Rule, ZonePair
+
+        pair_no_analysis = ZonePair(
+            source_zone_id="z1",
+            destination_zone_id="z2",
+            rules=[Rule(id="r1", name="R", enabled=True, action="ALLOW", source_zone_id="z1", destination_zone_id="z2", index=1)],
+            allow_count=1,
+            block_count=0,
+            analysis=None,
+        )
+        ctx = _HealthContext(
+            zone_pairs=[pair_no_analysis],
+            zone_name_lookup={"z1": "LAN", "z2": "WAN"},
+        )
+        detail = _build_firewall_detail(ctx)
+        # No findings should be extracted, but uncovered check should still work
+        assert "Top findings:" not in detail
+
     def test_empty_when_no_findings_or_uncovered(self) -> None:
         ctx = _HealthContext()
         detail = _build_firewall_detail(ctx)
@@ -551,6 +570,35 @@ class TestBuildHealthPrompt:
         assert "METRICS:" in prompt
         assert "high_resource_devices" not in prompt
         assert HEALTH_PROMPT_VERSION in prompt
+
+    def test_handles_empty_detail_strings_with_context(self) -> None:
+        """When context is provided but all detail builders return empty strings,
+        the prompt should not contain entity-level detail lines."""
+        # Use an empty context -- all detail functions will return ""
+        ctx = _HealthContext()
+        empty_summary = HealthSummaryResponse(
+            firewall=FirewallSummary(
+                zone_pair_count=0, grade_distribution={}, finding_count_by_severity={}, uncovered_pairs=0,
+            ),
+            topology=TopologySummary(
+                device_count_by_type={}, offline_count=0, firmware_mismatches=0,
+            ),
+            metrics=MetricsSummary(
+                active_notifications_by_severity={}, high_resource_devices=0, recent_reboots=0,
+            ),
+        )
+        prompt = _build_health_prompt(empty_summary, ctx)
+        # All aggregate sections should be present
+        assert "FIREWALL:" in prompt
+        assert "TOPOLOGY:" in prompt
+        assert "METRICS:" in prompt
+        assert HEALTH_PROMPT_VERSION in prompt
+        # Entity-level detail lines should NOT appear
+        assert "Top findings:" not in prompt
+        assert "Firmware versions:" not in prompt
+        assert "Single-uplink" not in prompt
+        assert "High-resource devices:" not in prompt
+        assert "PoE consumption:" not in prompt
 
     def test_includes_entity_details_with_context(self) -> None:
         ctx = _make_mock_context()

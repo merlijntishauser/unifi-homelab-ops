@@ -71,6 +71,15 @@ async def test_devices_requires_credentials(client: AsyncClient) -> None:
 
 
 @pytest.mark.anyio
+async def test_svg_value_error_returns_400(client: AsyncClient) -> None:
+    _login()
+    with patch("app.routers.topology.get_topology_svg", side_effect=ValueError("bad input")):
+        resp = await client.get("/api/topology/svg")
+    assert resp.status_code == 400
+    assert "bad input" in resp.json()["detail"]
+
+
+@pytest.mark.anyio
 async def test_devices_returns_response(client: AsyncClient) -> None:
     _login()
     with patch("app.routers.topology.get_topology_devices", return_value=STUB_DEVICES):

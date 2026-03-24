@@ -327,6 +327,76 @@ class TestBuildMetricsSection:
         assert "| 0 |" in section.content
 
 
+class TestResolveDeviceHostnames:
+    def test_returns_empty_when_url_has_no_hostname(self) -> None:
+        from app.services.documentation import _resolve_device_hostnames
+
+        creds = UnifiCredentials(url="file:///path", username="admin", password="secret")
+        result = _resolve_device_hostnames([], creds)
+        assert result == {}
+
+    def test_returns_empty_on_exception(self) -> None:
+        from app.services.documentation import _resolve_device_hostnames
+
+        device = _make_mock_device()
+        device.ip = "192.168.1.1"
+        with patch("app.services.documentation.resolve_hostnames", side_effect=RuntimeError("DNS fail")):
+            result = _resolve_device_hostnames([device], CREDENTIALS)
+        assert result == {}
+
+
+class TestBuildPortData:
+    def test_builds_port_rows(self) -> None:
+        from app.services.documentation import _build_port_data
+
+        device = _make_mock_device(name="Switch")
+        port = MagicMock()
+        port.port_idx = 1
+        port.name = "Port 1"
+        port.speed = 1000
+        port.up = True
+        port.poe_enable = True
+        port.poe_power = 15.0
+        port.native_vlan = 1
+        device.port_table = [port]
+
+        rows = _build_port_data([device])
+        assert len(rows) == 1
+        assert rows[0]["device"] == "Switch"
+        assert rows[0]["port"] == 1
+        assert rows[0]["speed"] == 1000
+
+
+class TestGetDocumentationSectionsStatsException:
+    def test_handles_stats_fetch_failure(self) -> None:
+        raw = [{"mac": "aa:bb:cc:dd:ee:ff"}]
+        devices = [_make_mock_device()]
+        devices[0].lldp_info = []
+        topology = _make_mock_topology()
+
+        with (
+            patch("app.services.documentation.to_topology_config"),
+            patch("app.services.documentation.fetch_devices", return_value=iter(raw)),
+            patch("app.services.documentation.normalize_devices", return_value=devices),
+            patch("app.services.documentation.build_topology", return_value=topology),
+            patch("app.services.documentation.render_mermaid", return_value="graph LR"),
+            patch("app.services.documentation.build_device_inventory", return_value=[]),
+            patch("app.services.documentation.render_device_inventory_table", return_value=""),
+            patch("app.services.documentation.build_port_map", return_value=MagicMock()),
+            patch("app.services.documentation.render_device_port_overview", return_value=""),
+            patch("app.services.documentation.render_lldp_md", return_value=""),
+            patch("app.services.documentation.get_zones", return_value=[]),
+            patch("app.services.documentation.get_zone_pairs", return_value=[]),
+            patch("app.services.documentation.fetch_device_stats", side_effect=RuntimeError("fail")),
+            patch("app.services.documentation.get_latest_snapshots", return_value=[]) as mock_snap,
+        ):
+            sections = get_documentation_sections(CREDENTIALS)
+
+        assert len(sections) == 6
+        # stats=None should be passed to get_latest_snapshots
+        mock_snap.assert_called_once_with(None)
+
+
 class TestGetDocumentationSections:
     def test_returns_all_sections(self) -> None:
         raw = [{"mac": "aa:bb:cc:dd:ee:ff"}]

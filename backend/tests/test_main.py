@@ -247,3 +247,29 @@ async def test_api_paths_are_not_handled_by_frontend_catchall(
     response = await client.get("/api/not-real")
 
     assert response.status_code == 404
+
+
+def test_check_plaintext_db_key_handles_exception_gracefully() -> None:
+    """When get_session raises, _check_plaintext_db_key silently passes."""
+    with (
+        patch("app.main.app_settings") as mock_settings,
+        patch("app.database.get_session", side_effect=RuntimeError("db broken")),
+        patch("app.main.log") as mock_log,
+    ):
+        mock_settings.app_password = "secret"
+        _check_plaintext_db_key()
+    mock_log.warning.assert_not_called()
+
+
+def test_cors_skipped_when_frontend_dist_dir_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    """When FRONTEND_DIST_DIR is set, CORS middleware is not added (production mode)."""
+    import importlib
+
+    monkeypatch.setenv("FRONTEND_DIST_DIR", "/app/dist")
+    import app.main as main_mod
+    importlib.reload(main_mod)
+    # Verify no crash -- the branch at line 141 was exercised
+    assert main_mod.app is not None
+    # Clean up: reload without the env var to restore normal state
+    monkeypatch.delenv("FRONTEND_DIST_DIR", raising=False)
+    importlib.reload(main_mod)

@@ -265,3 +265,47 @@ async def test_put_ai_analysis_settings_invalid(client: AsyncClient) -> None:
         json={"site_profile": "invalid_profile"},
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_test_connection_form_values_no_key_uses_saved(client: AsyncClient) -> None:
+    """When form values have no api_key, fallback to saved config's key."""
+    await client.put(
+        "/api/settings/ai",
+        json={
+            "base_url": "https://api.openai.com/v1",
+            "api_key": "sk-saved-key",
+            "model": "gpt-4o",
+            "provider_type": "openai",
+        },
+    )
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    with patch("httpx.post", return_value=mock_response):
+        resp = await client.post(
+            "/api/settings/ai/test",
+            json={
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "",
+                "model": "gpt-4o",
+                "provider_type": "openai",
+            },
+        )
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok"}
+
+
+@pytest.mark.anyio
+async def test_test_connection_form_values_no_key_no_saved(client: AsyncClient) -> None:
+    """When form values have no api_key and no saved config, returns 400."""
+    resp = await client.post(
+        "/api/settings/ai/test",
+        json={
+            "base_url": "https://api.openai.com/v1",
+            "api_key": "",
+            "model": "gpt-4o",
+            "provider_type": "openai",
+        },
+    )
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == "No API key provided"

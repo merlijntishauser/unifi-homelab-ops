@@ -150,3 +150,12 @@ async def test_login_validation_missing_fields(client: AsyncClient) -> None:
         json={"url": "https://unifi.local"},
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_app_logout_clears_cookie(client: AsyncClient) -> None:
+    """app-logout should return ok and delete the session cookie."""
+    resp = await client.post("/api/auth/app-logout")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "ok"

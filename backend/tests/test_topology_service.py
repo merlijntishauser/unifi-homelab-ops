@@ -252,6 +252,33 @@ class TestGetTopologyDevices:
         # The ambiguous edge should be skipped (not silently resolved to wrong device)
         assert len(result.edges) == 0
 
+    def test_port_with_no_lldp_match(self) -> None:
+        """A port with no matching LLDP entry should have no connected device/mac."""
+        mock_port = type("Port", (), {
+            "port_idx": 5, "name": "Port 5", "ifname": "eth4",
+            "speed": 1000, "up": True, "port_poe": False,
+            "poe_power": 0, "poe_good": False, "native_vlan": 1,
+        })()
+        device_with_port_no_lldp = type("Device", (), {
+            "mac": "aa:bb:cc:dd:ee:01", "name": "Gateway",
+            "model": "UDM-Pro", "model_name": "UniFi Dream Machine Pro",
+            "type": "gateway", "ip": "192.168.1.1", "version": "4.0.6",
+            "port_table": [mock_port], "poe_ports": {},
+            "lldp_info": [],
+            "uplink": None, "last_uplink": None,
+            "in_gateway_mode": None, "network_table": [],
+        })()
+        with (
+            patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES),
+            patch("app.services.topology.normalize_devices", return_value=[device_with_port_no_lldp, MOCK_DEVICES[1]]),
+            patch("app.services.topology.build_topology", return_value=MOCK_TOPOLOGY),
+        ):
+            result = get_topology_devices(MOCK_CONFIG)
+        gw = result.devices[0]
+        assert len(gw.ports) == 1
+        assert gw.ports[0].connected_mac is None
+        assert gw.ports[0].connected_device is None
+
     def test_returns_edges(self) -> None:
         mock_edge = type("Edge", (), {
             "left": "aa:bb:cc:dd:ee:01", "right": "aa:bb:cc:dd:ee:02",

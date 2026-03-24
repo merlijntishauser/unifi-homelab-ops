@@ -108,3 +108,33 @@ async def test_dismiss_notification(client: AsyncClient) -> None:
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
     mock.assert_called_once_with(1)
+
+
+@pytest.mark.anyio
+async def test_analyze_device_returns_insight(client: AsyncClient) -> None:
+    config = {"base_url": "http://x", "api_key": "k", "model": "m", "provider_type": "openai"}
+    with (
+        patch("app.routers.metrics.get_device_history", return_value=STUB_HISTORY),
+        patch("app.routers.metrics._fetch_live_stats", return_value=([], {})),
+        patch("app.routers.metrics.get_latest_snapshots", return_value=STUB_SNAPSHOTS),
+        patch("app.services.ai_settings.get_full_ai_config", return_value=config),
+        patch("app.services.metrics_analyzer.call_openai", return_value="Looking good."),
+    ):
+        resp = await client.post("/api/metrics/devices/aa:bb:cc:dd:ee:01/analyze")
+    assert resp.status_code == 200
+    assert resp.json()["insight"] == "Looking good."
+
+
+@pytest.mark.anyio
+async def test_analyze_device_not_found(client: AsyncClient) -> None:
+    """Device exists in history but not in snapshots -> 404."""
+    config = {"base_url": "http://x", "api_key": "k", "model": "m", "provider_type": "openai"}
+    with (
+        patch("app.routers.metrics.get_device_history", return_value=STUB_HISTORY),
+        patch("app.routers.metrics._fetch_live_stats", return_value=([], {})),
+        patch("app.routers.metrics.get_latest_snapshots", return_value=[]),
+        patch("app.services.ai_settings.get_full_ai_config", return_value=config),
+    ):
+        resp = await client.post("/api/metrics/devices/unknown:mac/analyze")
+    assert resp.status_code == 404
+    assert "Device not found" in resp.json()["detail"]

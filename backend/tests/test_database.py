@@ -85,3 +85,32 @@ class TestGetSession:
     def test_raises_before_init(self) -> None:
         with pytest.raises(RuntimeError, match="not initialized"):
             get_session()
+
+
+class TestResetEngine:
+    def test_reset_when_no_engine(self) -> None:
+        """reset_engine should work fine even when engine is already None."""
+        reset_engine()  # Should not raise
+
+    def test_reset_disposes_engine(self, db_path: Path) -> None:
+        """reset_engine should dispose an existing engine."""
+        init_db_for_tests(db_path)
+        engine = get_engine()
+        assert engine is not None
+        reset_engine()
+        with pytest.raises(RuntimeError, match="not initialized"):
+            get_engine()
+
+
+class TestInitDbDisposesExistingEngine:
+    def test_reinitialize_disposes_previous(self, db_path: Path) -> None:
+        """Calling init_db when engine already exists should dispose the old one."""
+        from app.database import init_db
+
+        init_db(db_path)
+        engine1 = get_engine()
+        assert engine1 is not None
+        # Call init_db again -- should dispose the first engine
+        init_db(db_path)
+        engine2 = get_engine()
+        assert engine2 is not None

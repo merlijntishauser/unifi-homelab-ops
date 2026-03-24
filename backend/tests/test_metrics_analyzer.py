@@ -80,6 +80,56 @@ class TestBuildUserPrompt:
         assert "Timeline samples" in prompt
 
 
+class TestBuildUserPromptEdgeCases:
+    def test_history_without_temperature(self) -> None:
+        """When history points have temperature=None, temp stats are skipped."""
+        history = [
+            MetricsHistoryPoint(
+                timestamp="2026-01-01T00:00:00Z",
+                cpu=20.0,
+                mem=50.0,
+                temperature=None,
+                uptime=86400,
+                tx_bytes=1000,
+                rx_bytes=2000,
+                num_sta=5,
+            ),
+            MetricsHistoryPoint(
+                timestamp="2026-01-01T01:00:00Z",
+                cpu=25.0,
+                mem=55.0,
+                temperature=None,
+                uptime=90000,
+                tx_bytes=2000,
+                rx_bytes=4000,
+                num_sta=6,
+            ),
+        ]
+        prompt = _build_user_prompt(_make_device(), history)
+        assert "24h CPU:" in prompt
+        assert "24h Temp:" not in prompt
+        assert "24h Traffic:" in prompt
+
+    def test_single_history_point_skips_traffic(self) -> None:
+        """With only 1 history point, traffic delta cannot be computed."""
+        history = [
+            MetricsHistoryPoint(
+                timestamp="2026-01-01T00:00:00Z",
+                cpu=20.0,
+                mem=50.0,
+                temperature=None,
+                uptime=86400,
+                tx_bytes=1000,
+                rx_bytes=2000,
+                num_sta=5,
+            ),
+        ]
+        prompt = _build_user_prompt(_make_device(), history)
+        assert "24h CPU:" in prompt
+        assert "24h Traffic:" not in prompt
+        assert "24h Clients:" in prompt
+
+
 class TestAnalyzeDevice:
     def test_calls_openai_provider(self) -> None:
         config = {"provider_type": "openai", "base_url": "https://api.openai.com/v1", "api_key": "sk-test", "model": "gpt-4o-mini"}

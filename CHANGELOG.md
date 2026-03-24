@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PoE utilization bar on device metric overview cards with color thresholds
 - Hover background effect on metrics device cards matching Health card pattern
 - "Uptime:" prefix on device card uptime display
+- NAS device type in Rack Planner with rose/red face color in light and dark modes
 
 ### Fixed
 - Chart axis labels unreadable in dark mode (replaced currentColor with theme CSS variables)
@@ -27,24 +28,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rack Planner: edit form shows "UniFi" badge and hides tab switcher for recognized devices
 - Rack Planner: edit form enriches values from device specs (fixes 0W power on older items)
 - Rack Planner: clicking a different item while editing auto-saves the current item
-- Rack Planner: width options renamed from "Full (1U)" to "Full width"
-- Rack Planner: form inputs and selects now use shared INPUT_CLASS/SELECT_CLASS for consistent styling
 - Rack Planner: edit form now updates when switching between items (key-based remount)
 - Rack Planner: toolbar buttons (Add Item, Add from Topology, BOM) now close the edit panel
+- Rack Planner: width options renamed from "Full (1U)" to "Full width"
+- Rack Planner: form inputs and selects now use shared INPUT_CLASS/SELECT_CLASS for consistent styling
 - Topology: selected node now visually highlighted with blue ring (uses React context for real-time updates)
 - Tooltip fly-in animation disabled on recharts for snappier interaction
-
-### Added (Rack Planner)
-- NAS device type with rose/red face color in light and dark modes
+- All frontend test stderr warnings resolved (jsdom navigation, React DOM SVG casing, React Query undefined data)
+- `make help` now includes e2e targets (grep pattern was missing digits)
 
 ### Changed
+- **Upgraded Vite from 7.3 to 8.0** with Rolldown bundler (migrated rollupOptions to rolldownOptions, manualChunks to function form)
+- **Upgraded @vitejs/plugin-react from 5.x to 6.x** for Vite 8 compatibility
 - **Upgraded unifi-topology from 1.3.2 to 2.0.0** (MAC-based node identification breaking change)
+- **Upgraded @dagrejs/dagre from 2.0.4 to 3.0.0** (drop-in, API unchanged)
+- Bumped npm dependencies: @tanstack/react-query 5.90->5.95, tailwindcss 4.2.1->4.2.2, vitest 4.0.18->4.1.0, typescript-eslint 8.56->8.57
+- Removed deprecated @types/dompurify (dompurify now ships own types)
 - Topology edge resolution simplified: edges now use MACs directly, removing the name-to-MAC mapping workaround and duplicate name detection
 - Pass `node_names` to SVG, isometric, and Mermaid renderers for display labels
 - Chart height increased from 120px to 160px with 12px top margin for label spacing
 - Recharts added as dependency (3.8.0, MIT) replacing custom inline SVG sparklines
 - MetricsDetailView lazy-loads MetricsChart to code-split recharts
-- Removed unused DualMetricsChart after TX/RX chart split
+
+### Quality
+- Python test coverage restored to 100% (0 missed statements, 0 partial branches)
+- Frontend test suite runs with zero stderr warnings
 
 ## [1.1.2] - 2026-03-22
 

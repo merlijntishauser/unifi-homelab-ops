@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NAS device type with rose/red face color in light and dark modes
 
 ### Changed
+- **Upgraded unifi-topology from 1.3.2 to 2.0.0** (MAC-based node identification breaking change)
+- Topology edge resolution simplified: edges now use MACs directly, removing the name-to-MAC mapping workaround and duplicate name detection
+- Pass `node_names` to SVG, isometric, and Mermaid renderers for display labels
 - Chart height increased from 120px to 160px with 12px top margin for label spacing
 - Recharts added as dependency (3.8.0, MIT) replacing custom inline SVG sparklines
 - MetricsDetailView lazy-loads MetricsChart to code-split recharts

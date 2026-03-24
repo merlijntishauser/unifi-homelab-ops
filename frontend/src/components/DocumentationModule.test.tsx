@@ -222,6 +222,15 @@ describe("DocumentationModule", () => {
     let resolveExport: (value: string) => void = () => {};
     mockGetDocExport.mockImplementation(() => new Promise<string>((resolve) => { resolveExport = resolve; }));
 
+    const clickSpy = vi.fn();
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "a") return { href: "", download: "", click: clickSpy } as unknown as HTMLAnchorElement;
+      return originalCreateElement(tag);
+    });
+    globalThis.URL.createObjectURL = vi.fn(() => "blob:test");
+    globalThis.URL.revokeObjectURL = vi.fn();
+
     renderModule();
     fireEvent.click(screen.getByText("Complete Markdown"));
 
@@ -232,6 +241,8 @@ describe("DocumentationModule", () => {
     await waitFor(() => {
       expect(screen.getByText("Complete Markdown")).toBeInTheDocument();
     });
+
+    vi.restoreAllMocks();
   });
 
   it("handles export failure gracefully", async () => {

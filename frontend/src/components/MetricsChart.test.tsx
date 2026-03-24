@@ -5,15 +5,18 @@ import MetricsChart from "./MetricsChart";
 // Store captured props from mock recharts components
 const capturedProps: Record<string, Record<string, unknown>> = {};
 
-function mockComponent(name: string) {
+function mockComponent(name: string, renderChildren = false) {
   return function MockComp(props: Record<string, unknown>) {
     capturedProps[name] = props;
-    return <div data-testid={`recharts-${name}`}>{props.children as React.ReactNode}</div>;
+    if (renderChildren) {
+      return <svg data-testid={`recharts-${name}`}>{props.children as React.ReactNode}</svg>;
+    }
+    return <div data-testid={`recharts-${name}`} />;
   };
 }
 
 vi.mock("recharts", () => ({
-  AreaChart: mockComponent("AreaChart"),
+  AreaChart: mockComponent("AreaChart", true),
   Area: mockComponent("Area"),
   XAxis: mockComponent("XAxis"),
   YAxis: mockComponent("YAxis"),

@@ -14,7 +14,7 @@
     "e2e:prod": "playwright test --config playwright.e2e-prod.config.ts"
   },
   "dependencies": {
-    "@dagrejs/dagre": "^2.0.4",
+    "@dagrejs/dagre": "^3.0.0",
     "@tanstack/react-query": "^5.95.2",
     "@tanstack/react-query-devtools": "^5.95.2",
     "@xyflow/react": "^12.10.1",

@@ -36,12 +36,12 @@ export default defineConfig({
   },
   plugins: [react(), tailwindcss(), startupBanner()],
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "xyflow": ["@xyflow/react"],
-          "mermaid": ["mermaid"],
+        manualChunks(id: string) {
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react-router")) return "react-vendor";
+          if (id.includes("node_modules/@xyflow/")) return "xyflow";
+          if (id.includes("node_modules/mermaid/") || id.includes("node_modules/d3") || id.includes("node_modules/elkjs") || id.includes("node_modules/cytoscape")) return "mermaid-vendor";
         },
       },
     },

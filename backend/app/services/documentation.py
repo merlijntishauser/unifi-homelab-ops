@@ -12,6 +12,7 @@ from typing import Any
 import structlog
 from unifi_topology import (
     build_device_inventory,
+    build_node_names,
     build_topology,
     fetch_device_stats,
     fetch_devices,
@@ -48,8 +49,9 @@ def _build_mermaid_section(devices: list[Any]) -> DocumentationSection:
     gateway_types = {"gateway", "udm", "ugw"}
     gateway_macs = [d.mac for d in devices if d.type in gateway_types]
     topology = build_topology(devices, include_ports=True, only_unifi=False, gateways=gateway_macs)
+    node_names = build_node_names(devices)
     edges = topology.tree_edges if topology.tree_edges else topology.raw_edges
-    mermaid_src = render_mermaid(edges)
+    mermaid_src = render_mermaid(edges, node_names=node_names)
     content = f"```mermaid\n{mermaid_src}\n```"
     return DocumentationSection(
         id="mermaid-topology",

@@ -235,7 +235,7 @@ class TestGetTopologyDevices:
             {"mac": "aa:bb:cc:dd:ee:03", "state": 1, "uptime": 100, "num_sta": 0},
         ]
         ambiguous_edge = type("Edge", (), {
-            "left": "Gateway", "right": "Switch",
+            "left": "aa:bb:cc:dd:ee:01", "right": "unknown:mac",
             "speed": 1000, "poe": False, "wireless": False,
             "label": None, "channel": None, "vlans": (), "active_vlans": (),
             "is_trunk": False, "connection": None,
@@ -254,7 +254,7 @@ class TestGetTopologyDevices:
 
     def test_returns_edges(self) -> None:
         mock_edge = type("Edge", (), {
-            "left": "Gateway", "right": "Switch",
+            "left": "aa:bb:cc:dd:ee:01", "right": "aa:bb:cc:dd:ee:02",
             "speed": 1000, "poe": True, "wireless": False,
             "label": None, "channel": None, "vlans": (), "active_vlans": (),
             "is_trunk": False, "connection": None,

@@ -11,6 +11,7 @@ from typing import Any
 
 import structlog
 from unifi_topology import (
+    build_node_names,
     fetch_clients,
     fetch_devices,
     lookup_model_name,
@@ -106,33 +107,23 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
     topo_edges = topology.tree_edges if topology.tree_edges else topology.raw_edges
 
     lldp_connected = {d.mac.lower(): d.name for d in devices}
-
-    # Build name -> mac mapping, detecting duplicate names
-    name_to_macs: dict[str, list[str]] = {}
-    for d in devices:
-        name_to_macs.setdefault(d.name, []).append(d.mac)
-    duplicates = {name for name, macs in name_to_macs.items() if len(macs) > 1}
-    if duplicates:
-        log.warning("topology_duplicate_names", names=sorted(duplicates))
+    device_mac_set = {d.mac.lower() for d in devices}
 
     device_models = []
     for device in devices:
         raw = raw_lookup.get(device.mac.lower(), {})
         device_models.append(_build_device_model(device, raw, lldp_connected))
 
+    # Edge.left / Edge.right are now MACs (v2.0.0)
     edge_models = []
     for edge in topo_edges:
-        from_macs = name_to_macs.get(edge.left)
-        to_macs = name_to_macs.get(edge.right)
-        if from_macs is None or to_macs is None:
-            continue
-        # Skip ambiguous edges where the name maps to multiple devices
-        if len(from_macs) > 1 or len(to_macs) > 1:
-            log.warning("topology_ambiguous_edge", left=edge.left, right=edge.right)
+        from_mac = edge.left.lower()
+        to_mac = edge.right.lower()
+        if from_mac not in device_mac_set or to_mac not in device_mac_set:
             continue
         edge_models.append(TopologyEdge(
-            from_mac=from_macs[0],
-            to_mac=to_macs[0],
+            from_mac=from_mac,
+            to_mac=to_mac,
             speed=edge.speed,
             poe=edge.poe,
             wireless=edge.wireless,
@@ -165,9 +156,10 @@ def get_topology_svg(
         devices, include_ports=True, only_unifi=True, gateways=gateway_macs,
     )
     device_index = build_device_index(devices)
+    node_names = build_node_names(devices, raw_clients, only_unifi=True)
     node_types = build_node_type_map(devices, raw_clients, only_unifi=True)
     client_edges = build_client_edges(
-        raw_clients, device_index, only_unifi=True,
+        raw_clients, device_index, only_unifi=True, node_names=node_names,
     )
     topo_edges = topology.tree_edges if topology.tree_edges else topology.raw_edges
     edges = topo_edges + client_edges
@@ -186,10 +178,10 @@ def get_topology_svg(
 
     if projection == "isometric":
         return render_svg_isometric(
-            edges=edges, node_types=node_types, theme=theme,
+            edges=edges, node_types=node_types, node_names=node_names, theme=theme,
             wan_info=wan_info, vpn_tunnels=vpn_tunnels,
         )
     return render_svg(
-        edges=edges, node_types=node_types, theme=theme,
+        edges=edges, node_types=node_types, node_names=node_names, theme=theme,
         wan_info=wan_info, vpn_tunnels=vpn_tunnels,
     )

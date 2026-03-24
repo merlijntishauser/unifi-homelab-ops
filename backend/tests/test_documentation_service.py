@@ -93,15 +93,17 @@ class TestBuildMermaidSection:
         topology.tree_edges = []
         topology.raw_edges = [mock_edge, mock_edge]
         devices = [_make_mock_device()]
+        mock_names = {"aa:bb:cc:dd:ee:ff": "TestDevice"}
 
         with (
             patch("app.services.documentation.build_topology", return_value=topology),
+            patch("app.services.documentation.build_node_names", return_value=mock_names),
             patch("app.services.documentation.render_mermaid", return_value="graph LR") as mock_render,
         ):
             section = _build_mermaid_section(devices)
 
         assert section.item_count == 2
-        mock_render.assert_called_once_with([mock_edge, mock_edge])
+        mock_render.assert_called_once_with([mock_edge, mock_edge], node_names=mock_names)
 
     def test_gateway_macs_passed_to_build_topology(self) -> None:
         gw = _make_mock_device(mac="gw:mac", device_type="gateway")

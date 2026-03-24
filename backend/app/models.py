@@ -334,3 +334,73 @@ class DocumentationSection(BaseModel):
 
 class DocumentationResponse(BaseModel):
     sections: list[DocumentationSection]
+
+
+class CableRun(BaseModel):
+    id: int
+    source_device_mac: str | None = None
+    source_port: int | None = None
+    dest_device_mac: str | None = None
+    dest_port: int | None = None
+    dest_label: str = ""
+    patch_panel_id: int | None = None
+    patch_panel_port: int | None = None
+    cable_type: str = "cat6"
+    length_m: float | None = None
+    color: str = ""
+    label: str = ""
+    speed: int | None = None
+    poe: bool = False
+    status: str = "active"
+    notes: str = ""
+    # Enriched fields (not stored, populated at read time)
+    source_device_name: str | None = None
+    dest_device_name: str | None = None
+    patch_panel_name: str | None = None
+
+
+class CableRunInput(BaseModel):
+    source_device_mac: str | None = None
+    source_port: int | None = None
+    dest_device_mac: str | None = None
+    dest_port: int | None = None
+    dest_label: str = ""
+    patch_panel_id: int | None = None
+    patch_panel_port: int | None = None
+    cable_type: str = "cat6"
+    length_m: float | None = None
+    color: str = ""
+    label: str = ""
+    speed: int | None = None
+    poe: bool = False
+    status: str = "active"
+    notes: str = ""
+
+
+class PatchPanel(BaseModel):
+    id: int
+    name: str
+    port_count: int = 24
+    panel_type: str = "keystone"
+    rack_mounted: bool = False
+    rack_item_id: int | None = None
+    location: str = ""
+    notes: str = ""
+    assigned_ports: int = 0  # Enriched: count of cables routing through this panel
+
+
+class PatchPanelInput(BaseModel):
+    name: str
+    port_count: int = 24
+    panel_type: str = "keystone"
+    rack_mounted: bool = False
+    rack_item_id: int | None = None
+    location: str = ""
+    notes: str = ""
+
+
+class CableLabelSettings(BaseModel):
+    mode: str = "sequential"
+    prefix: str = "C-"
+    next_number: int = 1
+    custom_pattern: str | None = None

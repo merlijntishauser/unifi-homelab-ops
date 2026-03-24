@@ -113,3 +113,52 @@ class NotificationRow(Base):
     created_at: Mapped[str] = mapped_column(Text, nullable=False)
     resolved_at: Mapped[str | None] = mapped_column(Text, nullable=True)
     dismissed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class PatchPanelRow(Base):
+    __tablename__ = "patch_panels"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    port_count: Mapped[int] = mapped_column(Integer, nullable=False, default=24)
+    panel_type: Mapped[str] = mapped_column(Text, nullable=False, default="keystone")
+    rack_mounted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    rack_item_id: Mapped[int | None] = mapped_column(
+        Integer, sa.ForeignKey("rack_items.id", ondelete="SET NULL"), nullable=True,
+    )
+    location: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+
+class CableRunRow(Base):
+    __tablename__ = "cable_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    source_device_mac: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    dest_device_mac: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dest_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    dest_label: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    patch_panel_id: Mapped[int | None] = mapped_column(
+        Integer, sa.ForeignKey("patch_panels.id", ondelete="SET NULL"), nullable=True,
+    )
+    patch_panel_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cable_type: Mapped[str] = mapped_column(Text, nullable=False, default="cat6")
+    length_m: Mapped[float | None] = mapped_column(sa.Float, nullable=True)
+    color: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    label: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    speed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    poe: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="active")
+    notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+
+class CableLabelSettingsRow(Base):
+    __tablename__ = "cable_label_settings"
+    __table_args__ = (CheckConstraint("id = 1", name="singleton_cable_label_settings"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    mode: Mapped[str] = mapped_column(Text, nullable=False, default="sequential")
+    prefix: Mapped[str] = mapped_column(Text, nullable=False, default="C-")
+    next_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    custom_pattern: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -18,6 +18,7 @@ from app.logging import configure_logging
 from app.middleware import AccessLogMiddleware, AppAuthMiddleware
 from app.routers.analyze import router as analyze_router
 from app.routers.auth import router as auth_router
+from app.routers.cable import cable_router, label_settings_router, panel_router
 from app.routers.documentation import router as documentation_router
 from app.routers.health import router as health_router
 from app.routers.metrics import router as metrics_router
@@ -177,6 +178,11 @@ app.include_router(metrics_router, prefix="/api/metrics")
 
 # Rack planner module
 app.include_router(rack_planner_router, prefix="/api/racks")
+
+# Cabling module
+app.include_router(cable_router, prefix="/api/cables")
+app.include_router(panel_router, prefix="/api/patch-panels")
+app.include_router(label_settings_router, prefix="/api/settings/cable-labels")
 
 # Health module
 app.include_router(health_router, prefix="/api/health")

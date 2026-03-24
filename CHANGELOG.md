@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-24
+
 ### Added
 - **Metrics detail page redesign**: device info card (model, MAC, IP, firmware, uptime), color-coded stat strip with health thresholds (CPU/memory/temperature/PoE), and conditional charts
 - **Separate TX/RX traffic charts** with delta-computed throughput, total and peak rate (/s) labels
@@ -221,7 +223,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.0.1...v1.1.0

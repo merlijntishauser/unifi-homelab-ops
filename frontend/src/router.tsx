@@ -11,6 +11,7 @@ const HealthModule = lazy(() => import("./components/HealthModule"));
 const DocumentationModule = lazy(() => import("./components/DocumentationModule"));
 const RackPlannerModule = lazy(() => import("./components/RackPlannerModule"));
 const HomeAssistantModule = lazy(() => import("./components/HomeAssistantModule"));
+const CablingModule = lazy(() => import("./components/CablingModule"));
 
 const routes: RouteObject[] = [
   {
@@ -23,6 +24,7 @@ const routes: RouteObject[] = [
       { path: "health", element: <SuspenseRoute><HealthModule /></SuspenseRoute> },
       { path: "docs", element: <SuspenseRoute><DocumentationModule /></SuspenseRoute> },
       { path: "rack-planner", element: <SuspenseRoute><RackPlannerModule /></SuspenseRoute> },
+      { path: "cabling", element: <SuspenseRoute><CablingModule /></SuspenseRoute> },
       { path: "home-assistant", element: <SuspenseRoute><HomeAssistantModule /></SuspenseRoute> },
     ],
   },

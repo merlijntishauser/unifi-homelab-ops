@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useVersionCheck } from "../hooks/useVersionCheck";
-import { shieldIcon, networkIcon, activityIcon, heartPulseIcon, docIcon, rackIcon, haIcon, settingsIcon } from "./icons";
+import { shieldIcon, networkIcon, activityIcon, heartPulseIcon, docIcon, rackIcon, cableIcon, haIcon, settingsIcon } from "./icons";
 
 interface ModuleSidebarProps {
   onOpenSettings: () => void;
@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { to: "/firewall", label: "Firewall", icon: shieldIcon },
   { to: "/docs", label: "Docs", icon: docIcon },
   { to: "/rack-planner", label: "Rack", icon: rackIcon },
+  { to: "/cabling", label: "Cabling", icon: cableIcon },
   { to: "/home-assistant", label: "Home Assistant", icon: haIcon },
 ];
 

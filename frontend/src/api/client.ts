@@ -3,6 +3,9 @@ import type {
   AiAnalyzeRequest,
   AiAnalyzeResponse,
   AiConfig,
+  CableLabelSettings,
+  CableRun,
+  CableRunInput,
   DeviceSpec,
   NodePosition,
   AiConfigInput,
@@ -16,6 +19,8 @@ import type {
   HealthSummaryResponse,
   MetricsDevicesResponse,
   MetricsHistoryResponse,
+  PatchPanel,
+  PatchPanelInput,
   Rack,
   RackInput,
   RackItem,
@@ -174,4 +179,29 @@ export const api = {
   importRackFromTopology: (id: number) =>
     fetchJson<RackItem[]>(`/racks/${id}/import`, { method: "POST" }),
   getDeviceSpecs: () => fetchJson<DeviceSpec[]>("/racks/device-specs"),
+
+  // Cabling
+  getCables: () => fetchJson<CableRun[]>("/cables"),
+  createCable: (data: CableRunInput) =>
+    fetchJson<CableRun>("/cables", { method: "POST", body: JSON.stringify(data) }),
+  updateCable: (id: number, data: CableRunInput) =>
+    fetchJson<CableRun>(`/cables/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteCable: (id: number) =>
+    fetchJson<void>(`/cables/${id}`, { method: "DELETE" }),
+  syncCables: () =>
+    fetchJson<CableRun[]>("/cables/sync", { method: "POST" }),
+
+  // Patch Panels
+  getPatchPanels: () => fetchJson<PatchPanel[]>("/patch-panels"),
+  createPatchPanel: (data: PatchPanelInput) =>
+    fetchJson<PatchPanel>("/patch-panels", { method: "POST", body: JSON.stringify(data) }),
+  updatePatchPanel: (id: number, data: PatchPanelInput) =>
+    fetchJson<PatchPanel>(`/patch-panels/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deletePatchPanel: (id: number) =>
+    fetchJson<void>(`/patch-panels/${id}`, { method: "DELETE" }),
+
+  // Cable Label Settings
+  getCableLabelSettings: () => fetchJson<CableLabelSettings>("/settings/cable-labels"),
+  saveCableLabelSettings: (data: CableLabelSettings) =>
+    fetchJson<CableLabelSettings>("/settings/cable-labels", { method: "PUT", body: JSON.stringify(data) }),
 };

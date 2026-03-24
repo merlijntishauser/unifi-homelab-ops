@@ -25,6 +25,9 @@ import {
   useDeleteRackItem,
   useMoveRackItem,
   useImportRackFromTopology,
+  useCables,
+  usePatchPanels,
+  useCableLabelSettings,
 } from "./queries";
 
 vi.mock("../api/client", () => ({
@@ -50,6 +53,9 @@ vi.mock("../api/client", () => ({
     deleteRackItem: vi.fn(),
     moveRackItem: vi.fn(),
     importRackFromTopology: vi.fn(),
+    getCables: vi.fn().mockResolvedValue([]),
+    getPatchPanels: vi.fn().mockResolvedValue([]),
+    getCableLabelSettings: vi.fn().mockResolvedValue({ mode: "sequential", prefix: "C-", next_number: 1, custom_pattern: null }),
   },
 }));
 
@@ -220,5 +226,22 @@ describe("rack query hooks", () => {
     const { result } = renderHook(() => useImportRackFromTopology(), { wrapper });
     await result.current.mutateAsync(1);
     expect(api.importRackFromTopology).toHaveBeenCalledWith(1);
+  });
+});
+
+describe("cabling query hooks", () => {
+  it("useCables returns query", () => {
+    const { result } = renderHook(() => useCables(), { wrapper });
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it("usePatchPanels returns query", () => {
+    const { result } = renderHook(() => usePatchPanels(), { wrapper });
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it("useCableLabelSettings returns query", () => {
+    const { result } = renderHook(() => useCableLabelSettings(), { wrapper });
+    expect(result.current.isLoading).toBe(true);
   });
 });

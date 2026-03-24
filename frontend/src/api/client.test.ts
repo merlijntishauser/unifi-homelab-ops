@@ -71,6 +71,16 @@ describe("api client", () => {
     });
   });
 
+  describe("appLogout", () => {
+    it("sends POST to app-logout endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ status: "ok" }));
+      await api.appLogout();
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/auth/app-logout");
+      expect(init.method).toBe("POST");
+    });
+  });
+
   describe("getAuthStatus", () => {
     it("calls the correct endpoint", async () => {
       const data = { configured: true, source: "env", url: "https://example.com" };
@@ -317,6 +327,44 @@ describe("api client", () => {
     });
   });
 
+  describe("getTopologyPositions", () => {
+    it("fetches positions from correct endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.getTopologyPositions();
+      expect(mockFetch).toHaveBeenCalledWith("/api/topology/positions", expect.objectContaining({}));
+    });
+  });
+
+  describe("saveTopologyPositions", () => {
+    it("sends PUT with positions", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({}));
+      await api.saveTopologyPositions([{ mac: "aa:bb", x: 100, y: 200 }]);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/topology/positions");
+      expect(init.method).toBe("PUT");
+    });
+  });
+
+  describe("deleteTopologyPositions", () => {
+    it("sends DELETE to positions endpoint", async () => {
+      mockFetch.mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve(undefined), text: () => Promise.resolve("") });
+      await api.deleteTopologyPositions();
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/topology/positions");
+      expect(init.method).toBe("DELETE");
+    });
+  });
+
+  describe("analyzeDeviceMetrics", () => {
+    it("sends POST to analyze endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ insight: "CPU is high" }));
+      await api.analyzeDeviceMetrics("aa:bb");
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/metrics/devices/aa%3Abb/analyze");
+      expect(init.method).toBe("POST");
+    });
+  });
+
   describe("getMetricsDevices", () => {
     it("fetches metrics devices from correct endpoint", async () => {
       const data = { devices: [] };
@@ -466,6 +514,18 @@ describe("api client", () => {
       expect(url).toBe("/api/racks/1/import");
       expect(init.method).toBe("POST");
     });
+
+    it("getAvailableDevices fetches from correct endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.getAvailableDevices(1);
+      expect(mockFetch).toHaveBeenCalledWith("/api/racks/1/available-devices", expect.objectContaining({}));
+    });
+
+    it("getDeviceSpecs fetches from correct endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.getDeviceSpecs();
+      expect(mockFetch).toHaveBeenCalledWith("/api/racks/device-specs", expect.objectContaining({}));
+    });
   });
 
   describe("docs endpoints", () => {
@@ -473,6 +533,108 @@ describe("api client", () => {
       mockFetch.mockResolvedValue(mockOkResponse({ sections: [] }));
       await api.getDocSections();
       expect(mockFetch).toHaveBeenCalledWith("/api/docs/sections", expect.objectContaining({}));
+    });
+
+    it("getDocExport returns markdown text", async () => {
+      mockFetch.mockResolvedValue({ ok: true, text: () => Promise.resolve("# Doc") });
+      const result = await api.getDocExport();
+      expect(result).toBe("# Doc");
+      expect(mockFetch).toHaveBeenCalledWith("/api/docs/export");
+    });
+
+    it("getDocExport throws on error", async () => {
+      mockFetch.mockResolvedValue({ ok: false });
+      await expect(api.getDocExport()).rejects.toThrow("Export failed");
+    });
+  });
+
+  describe("cable endpoints", () => {
+    it("getCables fetches from correct endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.getCables();
+      expect(mockFetch).toHaveBeenCalledWith("/api/cables", expect.objectContaining({}));
+    });
+
+    it("createCable sends POST with data", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.createCable({ label: "C-001", cable_type: "cat6" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/cables");
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(init.body)).toEqual({ label: "C-001", cable_type: "cat6" });
+    });
+
+    it("updateCable sends PUT with id and data", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.updateCable(1, { label: "C-002" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/cables/1");
+      expect(init.method).toBe("PUT");
+    });
+
+    it("deleteCable sends DELETE", async () => {
+      mockFetch.mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve(undefined), text: () => Promise.resolve("") });
+      await api.deleteCable(1);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/cables/1");
+      expect(init.method).toBe("DELETE");
+    });
+
+    it("syncCables sends POST to sync endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.syncCables();
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/cables/sync");
+      expect(init.method).toBe("POST");
+    });
+  });
+
+  describe("patch panel endpoints", () => {
+    it("getPatchPanels fetches from correct endpoint", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse([]));
+      await api.getPatchPanels();
+      expect(mockFetch).toHaveBeenCalledWith("/api/patch-panels", expect.objectContaining({}));
+    });
+
+    it("createPatchPanel sends POST", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.createPatchPanel({ name: "PP-01" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/patch-panels");
+      expect(init.method).toBe("POST");
+    });
+
+    it("updatePatchPanel sends PUT", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ id: 1 }));
+      await api.updatePatchPanel(1, { name: "PP-02" });
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/patch-panels/1");
+      expect(init.method).toBe("PUT");
+    });
+
+    it("deletePatchPanel sends DELETE", async () => {
+      mockFetch.mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve(undefined), text: () => Promise.resolve("") });
+      await api.deletePatchPanel(1);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/patch-panels/1");
+      expect(init.method).toBe("DELETE");
+    });
+  });
+
+  describe("cable label settings endpoints", () => {
+    it("getCableLabelSettings fetches settings", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ mode: "sequential", prefix: "C-", next_number: 1, custom_pattern: null }));
+      await api.getCableLabelSettings();
+      expect(mockFetch).toHaveBeenCalledWith("/api/settings/cable-labels", expect.objectContaining({}));
+    });
+
+    it("saveCableLabelSettings sends PUT", async () => {
+      const settings = { mode: "sequential", prefix: "C-", next_number: 5, custom_pattern: null };
+      mockFetch.mockResolvedValue(mockOkResponse(settings));
+      await api.saveCableLabelSettings(settings);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/settings/cable-labels");
+      expect(init.method).toBe("PUT");
     });
   });
 });

@@ -403,3 +403,72 @@ export interface DeviceSpec {
   weight_kg: number | null;
   product_url: string;
 }
+
+export interface CableRun {
+  id: number;
+  source_device_mac: string | null;
+  source_port: number | null;
+  dest_device_mac: string | null;
+  dest_port: number | null;
+  dest_label: string;
+  patch_panel_id: number | null;
+  patch_panel_port: number | null;
+  cable_type: string;
+  length_m: number | null;
+  color: string;
+  label: string;
+  speed: number | null;
+  poe: boolean;
+  status: string;
+  notes: string;
+  source_device_name: string | null;
+  dest_device_name: string | null;
+  patch_panel_name: string | null;
+}
+
+export interface CableRunInput {
+  source_device_mac?: string | null;
+  source_port?: number | null;
+  dest_device_mac?: string | null;
+  dest_port?: number | null;
+  dest_label?: string;
+  patch_panel_id?: number | null;
+  patch_panel_port?: number | null;
+  cable_type?: string;
+  length_m?: number | null;
+  color?: string;
+  label?: string;
+  speed?: number | null;
+  poe?: boolean;
+  status?: string;
+  notes?: string;
+}
+
+export interface PatchPanel {
+  id: number;
+  name: string;
+  port_count: number;
+  panel_type: string;
+  rack_mounted: boolean;
+  rack_item_id: number | null;
+  location: string;
+  notes: string;
+  assigned_ports: number;
+}
+
+export interface PatchPanelInput {
+  name: string;
+  port_count?: number;
+  panel_type?: string;
+  rack_mounted?: boolean;
+  rack_item_id?: number | null;
+  location?: string;
+  notes?: string;
+}
+
+export interface CableLabelSettings {
+  mode: string;
+  prefix: string;
+  next_number: number;
+  custom_pattern: string | null;
+}

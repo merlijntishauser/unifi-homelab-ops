@@ -112,7 +112,9 @@ beforeEach(() => {
   historyMock.data = { mac: "aa:01", history: [] };
   historyMock.isLoading = false;
   historyMock.error = null;
-  notificationsMock.data = [];
+  notificationsMock.data = [
+    { id: 1, device_mac: "aa:01", check_id: "cpu_high", severity: "warning", title: "High CPU", message: "CPU above 80%", created_at: "2026-01-01T00:00:00Z", resolved_at: null, dismissed: false },
+  ];
   notificationsMock.isLoading = false;
   notificationsMock.error = null;
 });

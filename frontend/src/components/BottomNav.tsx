@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { shieldIcon, networkIcon, activityIcon, heartPulseIcon, settingsIcon, docIcon, rackIcon, haIcon, moreIcon } from "./icons";
+import { shieldIcon, networkIcon, activityIcon, heartPulseIcon, settingsIcon, docIcon, rackIcon, cableIcon, haIcon, moreIcon } from "./icons";
 
 interface BottomNavProps {
   onOpenSettings: () => void;
@@ -22,6 +22,7 @@ const primaryItems: NavItem[] = [
 const overflowItems: NavItem[] = [
   { to: "/docs", label: "Docs", icon: docIcon },
   { to: "/rack-planner", label: "Rack Planner", icon: rackIcon },
+  { to: "/cabling", label: "Cabling", icon: cableIcon },
   { to: "/home-assistant", label: "Home Assistant", icon: haIcon },
 ];
 

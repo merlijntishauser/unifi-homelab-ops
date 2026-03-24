@@ -64,6 +64,14 @@ export const haIcon = (
   </svg>
 );
 
+export const cableIcon = (
+  <svg {...svgProps}>
+    <path d="M17 3v4m0 0H7a4 4 0 0 0-4 4v2a4 4 0 0 0 4 4h10m0-10V3m0 14v4m0-4H7" />
+    <circle cx="17" cy="3" r="1" fill="currentColor" />
+    <circle cx="17" cy="21" r="1" fill="currentColor" />
+  </svg>
+);
+
 export const moreIcon = (
   <svg {...svgProps}>
     <circle cx="12" cy="5" r="1" />

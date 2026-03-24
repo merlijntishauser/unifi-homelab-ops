@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
-import type { AiAnalyzeRequest, AiConfigInput, NodePosition, RackInput, RackItemInput, SimulateRequest } from "../api/types";
+import type { AiAnalyzeRequest, AiConfigInput, CableRunInput, NodePosition, PatchPanelInput, RackInput, RackItemInput, SimulateRequest } from "../api/types";
 
 export const queryKeys = {
   zones: ["zones"] as const,
@@ -19,6 +19,9 @@ export const queryKeys = {
   racks: ["racks"] as const,
   deviceSpecs: ["device-specs"] as const,
   topologyPositions: ["topology-positions"] as const,
+  cables: ["cables"] as const,
+  patchPanels: ["patch-panels"] as const,
+  cableLabelSettings: ["cable-label-settings"] as const,
 };
 
 // --- Queries ---
@@ -164,6 +167,27 @@ export function useRack(id: number | null) {
     queryKey: [...queryKeys.racks, id],
     queryFn: () => api.getRack(id!),
     enabled: id !== null,
+  });
+}
+
+export function useCables() {
+  return useQuery({
+    queryKey: queryKeys.cables,
+    queryFn: () => api.getCables(),
+  });
+}
+
+export function usePatchPanels() {
+  return useQuery({
+    queryKey: queryKeys.patchPanels,
+    queryFn: () => api.getPatchPanels(),
+  });
+}
+
+export function useCableLabelSettings() {
+  return useQuery({
+    queryKey: queryKeys.cableLabelSettings,
+    queryFn: () => api.getCableLabelSettings(),
   });
 }
 
@@ -347,4 +371,69 @@ export function useImportRackFromTopology() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.racks }),
   });
 }
+
+export function useCreateCable() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CableRunInput) => api.createCable(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cables }),
+  });
+}
+
+export function useUpdateCable() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: number; data: CableRunInput }) => api.updateCable(vars.id, vars.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cables }),
+  });
+}
+
+export function useDeleteCable() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteCable(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cables }),
+  });
+}
+
+export function useSyncCables() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.syncCables(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cables }),
+  });
+}
+
+export function useCreatePatchPanel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PatchPanelInput) => api.createPatchPanel(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.patchPanels }),
+  });
+}
+
+export function useUpdatePatchPanel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: number; data: PatchPanelInput }) => api.updatePatchPanel(vars.id, vars.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.patchPanels }),
+  });
+}
+
+export function useDeletePatchPanel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deletePatchPanel(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.patchPanels }),
+  });
+}
+
+// TODO: uncomment when label settings UI is built
+// export function useSaveCableLabelSettings() {
+//   const qc = useQueryClient();
+//   return useMutation({
+//     mutationFn: (data: CableLabelSettings) => api.saveCableLabelSettings(data),
+//     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cableLabelSettings }),
+//   });
+// }
 /* v8 ignore stop */

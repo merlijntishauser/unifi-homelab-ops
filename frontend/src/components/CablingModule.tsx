@@ -682,7 +682,20 @@ export default function CablingModule() {
     deletePanelMut.mutate(editPanel.id, { onSuccess: () => setEditPanel(null) });
   }, [editPanel, deletePanelMut]);
 
-  const handleSync = useCallback(() => syncCables.mutate(), [syncCables]);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const handleSync = useCallback(() => {
+    setSyncMessage(null);
+    syncCables.mutate(undefined, {
+      onSuccess: (data) => {
+        setSyncMessage(`Synced ${data.length} cable${data.length !== 1 ? "s" : ""} from topology`);
+        setTimeout(() => setSyncMessage(null), 5000);
+      },
+      onError: (err) => {
+        setSyncMessage(err instanceof Error ? err.message : "Sync failed");
+        setTimeout(() => setSyncMessage(null), 5000);
+      },
+    });
+  }, [syncCables]);
   const closeCablePanel = useCallback(() => { setEditCable(null); setShowAddCable(false); }, []);
   const closePanelPanel = useCallback(() => { setEditPanel(null); setShowAddPanel(false); }, []);
 
@@ -716,6 +729,12 @@ export default function CablingModule() {
           <button onClick={() => setSubView("panels")} className={segmentClass(subView === "panels", false)} data-testid="tab-panels">Patch Panels</button>
         </div>
       </div>
+
+      {syncMessage && (
+        <div className="mx-3 lg:mx-4 mt-2 rounded-lg bg-ub-blue-dim border border-ub-blue/20 px-3 py-2 text-sm text-ub-blue" data-testid="sync-message">
+          {syncMessage}
+        </div>
+      )}
 
       {subView === "cables" ? (
         <CableTable cables={cables} panels={panels} onEditCable={setEditCable} onAddCable={() => setShowAddCable(true)} onSync={handleSync} isSyncing={syncCables.isPending} />

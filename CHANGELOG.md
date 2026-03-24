@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rack Planner: form inputs and selects now use shared INPUT_CLASS/SELECT_CLASS for consistent styling
 - Rack Planner: edit form now updates when switching between items (key-based remount)
 - Rack Planner: toolbar buttons (Add Item, Add from Topology, BOM) now close the edit panel
+- Topology: selected node now visually highlighted with blue ring (uses React context for real-time updates)
 - Tooltip fly-in animation disabled on recharts for snappier interaction
 
 ### Added (Rack Planner)

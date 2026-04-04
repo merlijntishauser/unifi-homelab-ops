@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Upgraded ESLint from 9.x to 10.x** with @eslint/js 10.0, eslint-plugin-react-refresh 0.5, globals 17.x
+- **Upgraded TypeScript from 5.9 to 6.0** with typescript-eslint 8.58
+- **Upgraded jsdom from 28.x to 29.x**
+- Bumped npm patches: @xyflow/react 12.10.2, react-router-dom 7.13.2, recharts 3.8.1, vitest 4.1.2, @vitest/coverage-v8 4.1.2, vite 8.0.3
+- Pinned eslint-plugin-react-hooks to canary build for ESLint 10 compatibility (no stable release yet)
+- Split Dependabot groups into major vs minor/patch to isolate breaking upgrades
+
+### Fixed
+- Fixed moderate npm audit vulnerabilities (smol-toml, yaml)
+
 ## [1.2.0] - 2026-03-24
 
 ### Added

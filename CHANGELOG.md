@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.2.1] - 2026-04-04
+## [1.3.0] - 2026-04-04
 
 ### Added
 - **Cabling module**: cable run documentation and patch panel management with LLDP sync from topology
@@ -255,8 +255,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.1...HEAD
-[1.2.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...v1.2.1
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.0...v1.1.1

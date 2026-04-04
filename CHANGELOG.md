@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-04
+
 ### Changed
 - **Upgraded ESLint from 9.x to 10.x** with @eslint/js 10.0, eslint-plugin-react-refresh 0.5, globals 17.x
 - **Upgraded TypeScript from 5.9 to 6.0** with typescript-eslint 8.58
@@ -242,7 +244,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.0...v1.1.1

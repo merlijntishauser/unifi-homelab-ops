@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.1] - 2026-04-04
 
+### Added
+- **Cabling module**: cable run documentation and patch panel management with LLDP sync from topology
+  - Cable table with sortable/filterable columns (label, source, destination, patch panel, type, length, speed, status) and edit side panel
+  - Patch panel card grid with port utilization badges and expandable port assignment grid
+  - Auto-sync from topology: creates cables from LLDP, updates speed/PoE, marks disconnected, never overwrites user fields
+  - Cable type auto-inferred from speed (cat6 up to 2.5G, fiber-om3 for higher), configurable label scheme
+  - Enriched cable list with device names resolved from topology
+  - 11 backend endpoints under /api/cables, /api/patch-panels, /api/settings/cable-labels
+- **Upgraded unifi-topology from 2.0.0 to 2.1.0**
+
 ### Changed
 - **Upgraded ESLint from 9.x to 10.x** with @eslint/js 10.0, eslint-plugin-react-refresh 0.5, globals 17.x
 - **Upgraded TypeScript from 5.9 to 6.0** with typescript-eslint 8.58
@@ -18,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split Dependabot groups into major vs minor/patch to isolate breaking upgrades
 
 ### Fixed
+- Cable sync now matches by MAC pair instead of MAC+port, preventing duplicate entries
 - Fixed moderate npm audit vulnerabilities (smol-toml, yaml)
 
 ## [1.2.0] - 2026-03-24

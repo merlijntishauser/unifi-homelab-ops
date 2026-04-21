@@ -55,7 +55,7 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
       >
         <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-ub-blue/50 to-transparent" />
 
-        <h2 className="text-2xl font-sans font-semibold bg-gradient-to-r from-[#3b82f6] to-ub-blue bg-clip-text text-transparent text-center tracking-tight">
+        <h2 className="text-2xl font-sans font-semibold text-ub-blue text-center tracking-tight">
           UniFi Homelab Ops
         </h2>
         <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary text-center">

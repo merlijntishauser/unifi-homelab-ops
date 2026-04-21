@@ -74,7 +74,7 @@ export default function HomeAssistantModule() {
             </svg>
             <span className="text-xs font-semibold text-ub-blue uppercase tracking-wide">Home Assistant Integration</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-[#3b82f6] to-ub-blue bg-clip-text text-transparent mb-3">
+          <h1 className="text-2xl lg:text-3xl font-bold text-ub-blue mb-3">
             UniFi Network Map
           </h1>
           <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary mb-6 max-w-xl mx-auto">

@@ -38,6 +38,7 @@ import { api } from "./api/client";
 
 const mockGetAppAuthStatus = vi.mocked(api.getAppAuthStatus);
 const mockGetAuthStatus = vi.mocked(api.getAuthStatus);
+const mockAppLogout = vi.mocked(api.appLogout);
 const mockLogout = vi.mocked(api.logout);
 const mockGetZones = vi.mocked(api.getZones);
 const mockGetZonePairs = vi.mocked(api.getZonePairs);
@@ -97,14 +98,21 @@ vi.mock("@xyflow/react", () => ({
   getSmoothStepPath: () => ["", 0, 0],
 }));
 
-// Mock SettingsModal
-vi.mock("./components/SettingsModal", () => ({
-  default: ({ onClose }: { onClose: () => void }) => (
-    <div data-testid="settings-modal">
-      <button data-testid="close-settings" onClick={onClose}>Close</button>
-    </div>
-  ),
-}));
+// Mock SettingsModal -- expose disconnect button so tests can exercise handleLogout
+vi.mock("./components/SettingsModal", async () => {
+  const { useAppContext } = await vi.importActual<typeof import("./hooks/useAppContext")>("./hooks/useAppContext");
+  return {
+    default: function MockSettingsModal({ onClose }: { onClose: () => void }) {
+      const { onLogout } = useAppContext();
+      return (
+        <div data-testid="settings-modal">
+          <button data-testid="close-settings" onClick={onClose}>Close</button>
+          <button data-testid="disconnect" onClick={onLogout}>Disconnect</button>
+        </div>
+      );
+    },
+  };
+});
 
 // Mock ZoneMatrix
 vi.mock("./components/ZoneMatrix", () => ({
@@ -868,5 +876,171 @@ describe("App", () => {
     mockGetZonePairs.mockResolvedValue([]);
     renderApp();
     await waitFor(() => expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument());
+  });
+
+  it("calls appLogout and refetches when Log out is clicked", async () => {
+    mockGetAppAuthStatus.mockResolvedValue({ required: true, authenticated: true });
+    mockGetAuthStatus.mockResolvedValue({ configured: true, source: "env", url: "https://unifi.local", username: "admin" });
+    mockAppLogout.mockResolvedValue(undefined);
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Log out" }));
+    });
+
+    expect(mockAppLogout).toHaveBeenCalled();
+  });
+
+  it("calls controller logout when disconnect is clicked in settings", async () => {
+    authedDefaults();
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+    mockLogout.mockResolvedValue(undefined);
+
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("disconnect")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("disconnect"));
+    });
+
+    expect(mockLogout).toHaveBeenCalled();
+  });
+
+  it("shows passphrase screen when app auth is required but not authenticated", async () => {
+    mockGetAppAuthStatus
+      .mockResolvedValueOnce({ required: true, authenticated: false })
+      .mockResolvedValue({ required: true, authenticated: true });
+    mockGetAuthStatus.mockResolvedValue({ configured: true, source: "env", url: "https://unifi.local", username: "admin" });
+    vi.mocked(api.appLogin).mockResolvedValue(undefined);
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByText("Enter the application password to continue.")).toBeInTheDocument();
+    });
+
+    // Submit the passphrase to trigger onAuthenticated -> refetchAppAuth
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Unlock" }));
+    });
+
+    // After successful app login, the main UI should appear
+    await waitFor(() => {
+      expect(screen.getByText("UniFi Homelab Ops")).toBeInTheDocument();
+    });
+  });
+
+  it("debounces zone filter save to server after toggle", async () => {
+    vi.useFakeTimers();
+    authedDefaults();
+    mockGetZones.mockResolvedValue(testZones);
+    mockGetZonePairs.mockResolvedValue([]);
+    const mockSaveFilter = vi.mocked(api.saveZoneFilter);
+    mockSaveFilter.mockClear();
+
+    renderApp();
+
+    await vi.waitFor(() => {
+      expect(screen.getByLabelText("External")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText("External"));
+    });
+
+    // Not called yet (debounce 300ms)
+    expect(mockSaveFilter).not.toHaveBeenCalled();
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(mockSaveFilter).toHaveBeenCalledWith(["z1"]);
+
+    vi.useRealTimers();
+  });
+
+  it("responds to system color scheme changes", async () => {
+    let darkSchemeHandler: ((e: MediaQueryListEvent) => void) | null = null;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: (_event: string, handler: (e: MediaQueryListEvent) => void) => {
+        if (query === "(prefers-color-scheme: dark)") darkSchemeHandler = handler;
+      },
+      removeEventListener: vi.fn(),
+      dispatchEvent: () => false,
+    }) as unknown as MediaQueryList);
+
+    localStorage.setItem("themePreference", "system");
+    authedDefaults();
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Theme: System" })).toBeInTheDocument();
+    });
+
+    // System starts as light (matches: false), switch to dark
+    act(() => {
+      darkSchemeHandler!({ matches: true } as MediaQueryListEvent);
+    });
+
+    await waitFor(() => {
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+    });
+  });
+
+  it("opens notifications panel when bell is clicked", async () => {
+    authedDefaults();
+    mockGetZones.mockResolvedValue([]);
+    mockGetZonePairs.mockResolvedValue([]);
+
+    renderApp();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: "Notifications" }).length).toBeGreaterThan(0);
+    });
+
+    // Click the first Notifications button (Toolbar mobile bell)
+    fireEvent.click(screen.getAllByRole("button", { name: "Notifications" })[0]);
+
+    // NotificationDrawer should appear with a close button
+    await waitFor(() => {
+      expect(screen.getByLabelText("Close notifications")).toBeInTheDocument();
+    });
+
+    // Close it
+    fireEvent.click(screen.getByLabelText("Close notifications"));
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Close notifications")).not.toBeInTheDocument();
+    });
   });
 });

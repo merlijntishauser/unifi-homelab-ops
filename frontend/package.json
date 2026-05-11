@@ -19,7 +19,7 @@
     "@tanstack/react-query-devtools": "^5.99.2",
     "@xyflow/react": "^12.10.2",
     "dompurify": "^3.4.0",
-    "mermaid": "^11.13.0",
+    "mermaid": "^11.15.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-markdown": "^10.1.0",

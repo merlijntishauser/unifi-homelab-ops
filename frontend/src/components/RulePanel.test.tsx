@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, fireEvent, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import RulePanel from "./RulePanel";
 import type { ZonePair, Rule, SimulateResponse, ZonePairAnalysis } from "../api/types";
 import { renderWithQuery } from "../test-utils";
@@ -19,14 +20,16 @@ vi.mock("./ConfirmDialog", () => ({
     if (!open) return null;
     return (
       <div data-testid="confirm-backdrop" role="presentation" onClick={onCancel} onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}>
-        <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-          <h3>{title}</h3>
-          <p>{message}</p>
-          <div>
-            <button onClick={onCancel}>Cancel</button>
-            <button onClick={onConfirm}>{confirmLabel ?? "Confirm"}</button>
+        <dialog open aria-modal="true">
+          <div role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+            <h3>{title}</h3>
+            <p>{message}</p>
+            <div>
+              <button type="button" onClick={onCancel}>Cancel</button>
+              <button type="button" onClick={onConfirm}>{confirmLabel ?? "Confirm"}</button>
+            </div>
           </div>
-        </div>
+        </dialog>
       </div>
     );
   },
@@ -461,22 +464,26 @@ describe("RulePanel", () => {
       expect(screen.queryByText("IPSec")).not.toBeInTheDocument();
     });
 
-    it("expands rule details on Enter key", () => {
+    it("expands rule details on Enter key", async () => {
+      const user = userEvent.setup();
       renderPanel(makePair([makeRule({ description: "Key desc" })]));
       const ruleBtn = screen.getByRole("button", { name: /1\. Test Rule/ });
 
-      fireEvent.keyDown(ruleBtn, { key: "Enter" });
+      ruleBtn.focus();
+      await user.keyboard("{Enter}");
       expect(screen.getByText("Key desc")).toBeInTheDocument();
 
-      fireEvent.keyDown(ruleBtn, { key: "Enter" });
+      await user.keyboard("{Enter}");
       expect(screen.queryByText("Description:")).not.toBeInTheDocument();
     });
 
-    it("expands rule details on Space key", () => {
+    it("expands rule details on Space key", async () => {
+      const user = userEvent.setup();
       renderPanel(makePair([makeRule({ description: "Space desc" })]));
       const ruleBtn = screen.getByRole("button", { name: /1\. Test Rule/ });
 
-      fireEvent.keyDown(ruleBtn, { key: " " });
+      ruleBtn.focus();
+      await user.keyboard(" ");
       expect(screen.getByText("Space desc")).toBeInTheDocument();
     });
 

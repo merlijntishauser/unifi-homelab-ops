@@ -22,7 +22,7 @@ function readStorage<T extends string>(key: string, fallback: T, valid: readonly
 function LoadingSpinner({ message }: { message: string }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3">
-      <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+      <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
       <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">{message}</p>
     </div>
   );
@@ -54,7 +54,7 @@ function MapContent({
   onNodeDragEnd: (mac: string, x: number, y: number) => void;
 }) {
   const positionsQuery = useTopologyPositions();
-  if (query.isLoading || positionsQuery.isLoading) return <LoadingSpinner message="Loading devices..." />;
+  if (query.isLoading || positionsQuery.isLoading) return <LoadingSpinner message="Loading devices…" />;
   if (query.error) return <ErrorMessage error={query.error as Error} fallback="Failed to load devices" />;
   const devices = query.data?.devices ?? [];
   const edges = query.data?.edges ?? [];
@@ -86,7 +86,7 @@ function DiagramContent({ query }: { query: UseQueryResult<TopologySvgResponse> 
 }
 
 const dlIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4 shrink-0">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
     <polyline points="7 10 12 15 17 10" />
     <line x1="12" y1="15" x2="12" y2="3" />
@@ -140,7 +140,8 @@ export default function TopologyModule() {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    return () => clearTimeout(debounceTimer.current);
+    const ref = debounceTimer;
+    return () => clearTimeout(ref.current);
   }, []);
 
   const handleNodeDragEnd = useCallback((mac: string, x: number, y: number) => {
@@ -164,11 +165,11 @@ export default function TopologyModule() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <div className="flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
-          <button onClick={() => handleSubViewChange("map")} className={segmentClass(subView === "map", true)}>Map</button>
-          <button onClick={() => handleSubViewChange("diagram")} className={segmentClass(subView === "diagram", false)}>Diagram</button>
+          <button type="button" onClick={() => handleSubViewChange("map")} className={segmentClass(subView === "map", true)}>Map</button>
+          <button type="button" onClick={() => handleSubViewChange("diagram")} className={segmentClass(subView === "diagram", false)}>Diagram</button>
         </div>
         {subView === "map" && (
-          <button
+          <button type="button"
             onClick={() => resetPositionsMutation.mutate(undefined)}
             disabled={resetPositionsMutation.isPending}
             className={BTN}
@@ -178,11 +179,11 @@ export default function TopologyModule() {
         )}
         {subView === "diagram" && (
           <>
-            <button onClick={handleProjectionChange} className={projection === "isometric" ? BTN_ACTIVE : BTN}>Isometric</button>
+            <button type="button" onClick={handleProjectionChange} className={projection === "isometric" ? BTN_ACTIVE : BTN}>Isometric</button>
             {svgQuery.data && (
               <>
-                <button onClick={() => downloadSvg(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download SVG">{dlIcon} SVG</button>
-                <button onClick={() => downloadPng(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download PNG">{dlIcon} PNG</button>
+                <button type="button" onClick={() => downloadSvg(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download SVG">{dlIcon} SVG</button>
+                <button type="button" onClick={() => downloadPng(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download PNG">{dlIcon} PNG</button>
               </>
             )}
           </>

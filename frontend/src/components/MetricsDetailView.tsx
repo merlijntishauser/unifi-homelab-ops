@@ -75,7 +75,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface px-3 py-2.5 min-w-[80px]">
       <span className="text-[10px] text-ui-text-dim dark:text-noc-text-dim uppercase tracking-wide">{label}</span>
       <div className="flex items-center gap-2 mt-0.5">
-        <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${dotColors[color]}`} />
+        <span className={`inline-block size-2 rounded-full shrink-0 ${dotColors[color]}`} />
         <span className="text-base font-mono font-semibold text-ui-text dark:text-noc-text">{value}</span>
       </div>
     </div>
@@ -86,7 +86,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 
 function StatusDot({ status }: { status: string }) {
   const color = status === "online" ? "bg-status-success" : status === "offline" ? "bg-status-danger" : "bg-ui-text-dim dark:bg-noc-text-dim";
-  return <span className={`inline-block w-2.5 h-2.5 rounded-full ${color}`} />;
+  return <span className={`inline-block size-2.5 rounded-full ${color}`} />;
 }
 
 function SeverityDot({ severity }: { severity: string }) {
@@ -96,7 +96,7 @@ function SeverityDot({ severity }: { severity: string }) {
       : severity === "warning" || severity === "medium"
         ? "bg-status-warning"
         : "bg-ui-text-dim dark:bg-noc-text-dim";
-  return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${color}`} />;
+  return <span className={`inline-block size-2 rounded-full shrink-0 ${color}`} />;
 }
 
 // --- Delta computation for traffic ---
@@ -157,7 +157,7 @@ function AiInsightsCard({ aiConfigured, aiInsight, aiLoading, onAnalyze }: {
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4 flex flex-col">
       <div className="flex items-baseline justify-between mb-3">
         <span className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary">AI Insights</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-ui-text-dim dark:text-noc-text-dim">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-ui-text-dim dark:text-noc-text-dim">
           <path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22" />
           <path d="M12 2a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93" />
           <circle cx="12" cy="14" r="1" />
@@ -166,19 +166,19 @@ function AiInsightsCard({ aiConfigured, aiInsight, aiLoading, onAnalyze }: {
       <div className="flex-1 flex flex-col justify-center">
         {aiLoading ? (
           <div className="flex items-center gap-3">
-            <div className="h-5 w-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin shrink-0" />
-            <p className="text-xs text-ui-text-secondary dark:text-noc-text-secondary">Analyzing 24h metrics...</p>
+            <div className="size-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin shrink-0" />
+            <p className="text-xs text-ui-text-secondary dark:text-noc-text-secondary">Analyzing 24h metrics…</p>
           </div>
         ) : aiInsight ? (
           <p className="text-xs text-ui-text dark:text-noc-text-secondary leading-relaxed whitespace-pre-line">{aiInsight}</p>
         ) : !aiConfigured ? (
           <p className="text-xs text-ui-text-dim dark:text-noc-text-dim">Configure an AI provider in Settings to enable device insights.</p>
         ) : (
-          <button
+          <button type="button"
             onClick={onAnalyze}
             className="inline-flex items-center gap-1.5 self-start rounded-lg bg-ub-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4">
               <path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22" />
               <path d="M12 2a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93" />
               <circle cx="12" cy="14" r="1" />
@@ -223,11 +223,11 @@ export default function MetricsDetailView({
   return (
     <div className="flex-1 overflow-y-auto p-4 lg:p-6" data-testid="detail-view">
       {/* Back button */}
-      <button
+      <button type="button"
         onClick={onBack}
         className="inline-flex items-center gap-1.5 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised shadow-sm cursor-pointer transition-all mb-4"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4">
           <polyline points="15 18 9 12 15 6" />
         </svg>
         Back to overview

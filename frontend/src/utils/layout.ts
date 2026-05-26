@@ -47,7 +47,7 @@ function computeEdgeOffsets(
   }
 
   for (const [, nodeEdges] of outgoing) {
-    const sorted = [...nodeEdges].sort(
+    const sorted = nodeEdges.toSorted(
       (a, b) => posMap.get(a.target)!.x - posMap.get(b.target)!.x,
     );
     const n = sorted.length;
@@ -59,7 +59,7 @@ function computeEdgeOffsets(
   }
 
   for (const [, nodeEdges] of incoming) {
-    const sorted = [...nodeEdges].sort(
+    const sorted = nodeEdges.toSorted(
       (a, b) => posMap.get(a.source)!.x - posMap.get(b.source)!.x,
     );
     const n = sorted.length;

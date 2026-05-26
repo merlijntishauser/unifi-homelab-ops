@@ -77,7 +77,7 @@ export default function BottomNav({ onOpenSettings }: BottomNavProps) {
         </NavLink>
       ))}
       <div ref={menuRef} className="relative flex items-center justify-center">
-        <button
+        <button type="button"
           onClick={() => setMoreOpen((prev) => !prev)}
           className={linkClass(isOverflowRouteActive || moreOpen)}
           aria-label="More"
@@ -104,7 +104,7 @@ export default function BottomNav({ onOpenSettings }: BottomNavProps) {
               </NavLink>
             ))}
             <div className="border-t border-ui-border dark:border-noc-border" />
-            <button
+            <button type="button"
               onClick={() => { closeMenu(); onOpenSettings(); }}
               role="menuitem"
               className={menuItemClass(false) + " cursor-pointer"}

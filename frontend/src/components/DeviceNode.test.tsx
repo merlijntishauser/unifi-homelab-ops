@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import DeviceNode from "./DeviceNode";
 
 vi.mock("@xyflow/react", () => ({
@@ -67,27 +68,30 @@ describe("DeviceNode", () => {
     expect(screen.getAllByTestId("handle").length).toBeGreaterThanOrEqual(2);
   });
 
-  it("calls onSelect on Enter keydown", () => {
+  it("calls onSelect on Enter keydown", async () => {
+    const user = userEvent.setup();
     const handler = vi.fn();
-    const { container } = render(<DeviceNode data={{ ...defaultData, onSelect: handler }} />);
-    const node = container.querySelector("[role='button']")!;
-    fireEvent.keyDown(node, { key: "Enter" });
+    render(<DeviceNode data={{ ...defaultData, onSelect: handler }} />);
+    screen.getByRole("button").focus();
+    await user.keyboard("{Enter}");
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it("calls onSelect on Space keydown", () => {
+  it("calls onSelect on Space keydown", async () => {
+    const user = userEvent.setup();
     const handler = vi.fn();
-    const { container } = render(<DeviceNode data={{ ...defaultData, onSelect: handler }} />);
-    const node = container.querySelector("[role='button']")!;
-    fireEvent.keyDown(node, { key: " " });
+    render(<DeviceNode data={{ ...defaultData, onSelect: handler }} />);
+    screen.getByRole("button").focus();
+    await user.keyboard(" ");
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it("does not call onSelect on other keys", () => {
+  it("does not call onSelect on other keys", async () => {
+    const user = userEvent.setup();
     const handler = vi.fn();
-    const { container } = render(<DeviceNode data={{ ...defaultData, onSelect: handler }} />);
-    const node = container.querySelector("[role='button']")!;
-    fireEvent.keyDown(node, { key: "Tab" });
+    render(<DeviceNode data={{ ...defaultData, onSelect: handler }} />);
+    screen.getByRole("button").focus();
+    await user.keyboard("{Tab}");
     expect(handler).not.toHaveBeenCalled();
   });
 

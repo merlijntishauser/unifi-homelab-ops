@@ -27,34 +27,38 @@ export default function ConfirmDialog({
       onClick={onCancel}
       onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
     >
-      <div
-        role="dialog"
+      <dialog
+        open
         aria-modal="true"
-        className="bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-xl p-5 max-w-sm w-full mx-4"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
+        className="static bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-xl p-5 max-w-sm w-full mx-4"
       >
-        <h3 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text">
-          {title}
-        </h3>
-        <p className="mt-2 text-xs text-ui-text-secondary dark:text-noc-text-secondary">
-          {message}
-        </p>
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            onClick={onCancel}
-            className="px-3 py-1.5 min-h-[44px] text-xs font-medium rounded-lg border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-lg bg-ub-blue text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
-          >
-            {confirmLabel}
-          </button>
+        <div
+          role="presentation"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text">
+            {title}
+          </h3>
+          <p className="mt-2 text-xs text-ui-text-secondary dark:text-noc-text-secondary">
+            {message}
+          </p>
+          <div className="mt-4 flex justify-end gap-2">
+            <button type="button"
+              onClick={onCancel}
+              className="px-3 py-1.5 min-h-[44px] text-xs font-medium rounded-lg border border-ui-border dark:border-noc-border text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors"
+            >
+              Cancel
+            </button>
+            <button type="button"
+              onClick={onConfirm}
+              className="px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-lg bg-ub-blue text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
+            >
+              {confirmLabel}
+            </button>
+          </div>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }

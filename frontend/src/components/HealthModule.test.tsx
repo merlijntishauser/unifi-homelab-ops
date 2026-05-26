@@ -149,7 +149,7 @@ describe("HealthModule", () => {
     summaryMock.data = undefined;
     summaryMock.isLoading = true;
     renderModule();
-    expect(screen.getByText("Loading summary...")).toBeInTheDocument();
+    expect(screen.getByText("Loading summary…")).toBeInTheDocument();
   });
 
   it("shows error state when summary fails", () => {
@@ -185,7 +185,7 @@ describe("HealthModule", () => {
   it("shows analyzing spinner when mutation is pending", () => {
     analyzeMock.isPending = true;
     renderModule();
-    expect(screen.getByText("Running cross-domain analysis...")).toBeInTheDocument();
+    expect(screen.getByText("Running cross-domain analysis…")).toBeInTheDocument();
     expect(screen.getByText("Analyzing...")).toBeInTheDocument();
   });
 
@@ -491,6 +491,6 @@ describe("HealthModule", () => {
     renderModule();
     // Should not show summary cards or loading
     expect(screen.queryByText("Firewall")).not.toBeInTheDocument();
-    expect(screen.queryByText("Loading summary...")).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading summary…")).not.toBeInTheDocument();
   });
 });

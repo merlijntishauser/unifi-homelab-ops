@@ -43,9 +43,9 @@ export default function MetricsModule() {
       <div className="flex-1 flex overflow-hidden relative">
         {devicesQuery.isLoading && devices.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
-            <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+            <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
             <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">
-              Loading devices...
+              Loading devices…
             </p>
           </div>
         ) : devicesQuery.error ? (
@@ -59,7 +59,7 @@ export default function MetricsModule() {
         ) : selectedDevice ? (
           <Suspense fallback={
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
-              <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+              <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
             </div>
           }>
             <MetricsDetailView

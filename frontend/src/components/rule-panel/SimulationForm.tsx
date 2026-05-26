@@ -21,6 +21,7 @@ export default function SimulationForm({
       </h3>
       <input
         type="text"
+        aria-label="Source IP"
         placeholder="Source IP"
         value={form.srcIp}
         onChange={(e) => onFormChange({ srcIp: e.target.value })}
@@ -29,6 +30,7 @@ export default function SimulationForm({
       />
       <input
         type="text"
+        aria-label="Destination IP"
         placeholder="Destination IP"
         value={form.dstIp}
         onChange={(e) => onFormChange({ dstIp: e.target.value })}
@@ -37,6 +39,7 @@ export default function SimulationForm({
       />
       <div className="flex gap-2">
         <select
+          aria-label="Protocol"
           value={form.protocol}
           onChange={(e) => onFormChange({ protocol: e.target.value })}
           className={inputClass}
@@ -48,6 +51,7 @@ export default function SimulationForm({
         </select>
         <input
           type="number"
+          aria-label="Destination port"
           placeholder="Port"
           value={form.port}
           onChange={(e) => onFormChange({ port: e.target.value })}
@@ -57,6 +61,7 @@ export default function SimulationForm({
         />
         <input
           type="number"
+          aria-label="Source port"
           placeholder="Src Port"
           value={form.sourcePort}
           onChange={(e) => onFormChange({ sourcePort: e.target.value })}

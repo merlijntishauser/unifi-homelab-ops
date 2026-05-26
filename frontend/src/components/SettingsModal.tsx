@@ -24,7 +24,7 @@ interface TabButtonProps {
 
 function TabButton({ icon, label, active, onClick }: TabButtonProps) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       className={`flex items-center gap-1 md:gap-2 flex-col md:flex-row w-full md:w-full px-2 md:px-3 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium cursor-pointer transition-colors ${
         active
@@ -42,7 +42,7 @@ function TabButton({ icon, label, active, onClick }: TabButtonProps) {
 
 function LinkIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
       <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z" />
       <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z" />
     </svg>
@@ -51,7 +51,7 @@ function LinkIcon() {
 
 function CpuIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
       <path d="M14 6H6v8h8V6z" />
       <path fillRule="evenodd" d="M9.25 3V1.75a.75.75 0 011.5 0V3h1.5V1.75a.75.75 0 011.5 0V3h.5A2.75 2.75 0 0117 5.75v.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v1.5h1.25a.75.75 0 010 1.5H17v.5A2.75 2.75 0 0114.25 17h-.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-1.5v1.25a.75.75 0 01-1.5 0V17h-.5A2.75 2.75 0 013 14.25v-.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-1.5H1.75a.75.75 0 010-1.5H3v-.5A2.75 2.75 0 015.75 3h.5V1.75a.75.75 0 011.5 0V3h1.5zM4.5 5.75c0-.69.56-1.25 1.25-1.25h8.5c.69 0 1.25.56 1.25 1.25v8.5c0 .69-.56 1.25-1.25 1.25h-8.5c-.69 0-1.25-.56-1.25-1.25v-8.5z" clipRule="evenodd" />
     </svg>
@@ -60,7 +60,7 @@ function CpuIcon() {
 
 function UserIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
       <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
     </svg>
   );
@@ -111,7 +111,7 @@ function ConnectionPane() {
     <div className="space-y-4">
       {connectionInfo && (
         <div className="flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-status-success-dim border border-emerald-200 dark:border-status-success/20 p-3 text-sm text-emerald-700 dark:text-status-success">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 dark:bg-status-success" />
+          <span className="inline-block size-2 rounded-full bg-emerald-500 dark:bg-status-success" />
           Connected to {connectionInfo.url}
         </div>
       )}
@@ -124,12 +124,12 @@ function ConnectionPane() {
 
       <div>
         <label htmlFor="conn-url" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Controller URL</label>
-        <input id="conn-url" type="url" autoComplete="url" value={form.url} onChange={e => dispatch({ url: e.target.value })} placeholder="https://192.168.1.1" className={INPUT_CLASS} />
+        <input id="conn-url" type="url" autoComplete="url" value={form.url} onChange={e => dispatch({ url: e.target.value })} placeholder="https://192.168.1.1" aria-label="Controller URL" className={INPUT_CLASS} />
       </div>
 
       <div>
         <label htmlFor="conn-username" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Username</label>
-        <input id="conn-username" type="text" autoComplete="username" value={form.username} onChange={e => dispatch({ username: e.target.value })} className={INPUT_CLASS} />
+        <input id="conn-username" type="text" autoComplete="username" value={form.username} onChange={e => dispatch({ username: e.target.value })} aria-label="Username" className={INPUT_CLASS} />
       </div>
 
       <div>
@@ -139,7 +139,7 @@ function ConnectionPane() {
 
       <div>
         <label htmlFor="conn-site" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Site</label>
-        <input id="conn-site" type="text" value={form.site} onChange={e => dispatch({ site: e.target.value })} className={INPUT_CLASS} />
+        <input id="conn-site" type="text" value={form.site} onChange={e => dispatch({ site: e.target.value })} aria-label="Site" className={INPUT_CLASS} />
       </div>
 
       <div className="flex items-center gap-2">
@@ -148,13 +148,14 @@ function ConnectionPane() {
           type="checkbox"
           checked={form.verifySsl}
           onChange={e => dispatch({ verifySsl: e.target.checked })}
-          className="h-4 w-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
+          aria-label="Verify SSL"
+          className="size-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
         />
         <label htmlFor="conn-verify-ssl" className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Verify SSL</label>
       </div>
 
       <div className="flex gap-2 pt-2">
-        <button
+        <button type="button"
           onClick={handleConnect}
           disabled={loginMutation.isPending}
           className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
@@ -162,7 +163,7 @@ function ConnectionPane() {
           {loginMutation.isPending ? "Connecting..." : "Connect"}
         </button>
         {connectionInfo && (
-          <button
+          <button type="button"
             onClick={onLogout}
             className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all"
           >
@@ -250,6 +251,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
             onChange={e => dispatch({ baseUrl: e.target.value })}
             disabled={isEnvSourced}
             placeholder="https://api.example.com/v1"
+            aria-label="Base URL"
             className={INPUT_CLASS}
           />
         </div>
@@ -269,6 +271,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
             value={apiKey}
             onChange={e => dispatch({ apiKey: e.target.value })}
             placeholder={keySource === "env" ? "Loaded from environment" : hasKey ? "Key configured \u2014 leave blank to keep" : "Enter your API key"}
+            aria-label="API Key"
             className={INPUT_CLASS}
             data-1p-ignore
           />
@@ -280,6 +283,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
         {models.length > 0 ? (
           <select
             id="settings-model"
+            aria-label="Model"
             value={model}
             onChange={e => dispatch({ model: e.target.value })}
             disabled={isEnvSourced}
@@ -297,6 +301,7 @@ function ProviderFields({ selectedPresetId, presets, baseUrl, apiKey, model, pro
             onChange={e => dispatch({ model: e.target.value })}
             disabled={isEnvSourced}
             placeholder="Model name"
+            aria-label="Model"
             className={INPUT_CLASS}
           />
         )}
@@ -407,7 +412,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
   }, [onClose, deleteAiConfigMutation]);
 
   if (loading) {
-    return <div className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading...</div>;
+    return <div className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading…</div>;
   }
 
   return (
@@ -427,7 +432,7 @@ function AiPane({ onClose }: { onClose: () => void }) {
           disabled={isEnvSourced}
           className={SELECT_CLASS}
         >
-          <option value="">Select a provider...</option>
+          <option value="">Select a provider…</option>
           {presets.map(p => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
@@ -474,14 +479,14 @@ function AiPane({ onClose }: { onClose: () => void }) {
       )}
 
       <div className="flex gap-2 pt-2">
-        <button onClick={handleSave} disabled={saving || (!isEnvSourced && !selectedPresetId)} className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
+        <button type="button" onClick={handleSave} disabled={saving || (!isEnvSourced && !selectedPresetId)} className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
           {saving ? "Saving..." : "Save"}
         </button>
-        <button onClick={handleTest} disabled={testing} className="rounded-lg border border-ui-border dark:border-noc-border min-h-[40px] px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
+        <button type="button" onClick={handleTest} disabled={testing} className="rounded-lg border border-ui-border dark:border-noc-border min-h-[40px] px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
           {testing ? "Testing..." : "Test Connection"}
         </button>
         {configSource === "db" && (
-          <button onClick={handleDelete} className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all">
+          <button type="button" onClick={handleDelete} className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all">
             Delete
           </button>
         )}
@@ -507,7 +512,7 @@ function UserPane() {
         <h3 className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-2">Appearance</h3>
         <div className="inline-flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
           {THEME_OPTIONS.map(opt => (
-            <button
+            <button type="button"
               key={opt.value}
               onClick={() => onThemePreferenceChange(opt.value)}
               className={`px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
@@ -539,13 +544,17 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       role="presentation"
       data-testid="settings-backdrop"
     >
-      <div
-        className="relative bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border md:rounded-xl shadow-xl w-full h-full md:w-[700px] md:h-[80vh] flex flex-col md:flex-row md:mx-4 animate-fade-in"
-        onClick={e => e.stopPropagation()}
-        onKeyDown={e => e.stopPropagation()}
-        role="dialog"
+      <dialog
+        open
+        className="static block bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border md:rounded-xl shadow-xl size-full md:w-[700px] md:h-[80vh] p-0 flex flex-col md:flex-row md:mx-4 animate-fade-in"
         aria-label="Settings"
       >
+        <div
+          role="presentation"
+          className="flex flex-col md:flex-row size-full"
+          onClick={e => e.stopPropagation()}
+          onKeyDown={e => e.stopPropagation()}
+        >
         {/* Tab sidebar */}
         <div className="md:w-[160px] border-b md:border-b-0 md:border-r border-ui-border dark:border-noc-border flex flex-row md:flex-col gap-1 py-2 md:py-4 px-2 shrink-0 overflow-x-auto md:overflow-x-visible">
           <TabButton icon={<LinkIcon />} label="Connection" active={tab === "connection"} onClick={() => setTab("connection")} />
@@ -561,7 +570,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               {tab === "ai" && "AI Provider Settings"}
               {tab === "user" && "User Settings"}
             </h2>
-            <button onClick={onClose} className={CLOSE_BUTTON_CLASS} aria-label="Close settings">
+            <button type="button" onClick={onClose} className={CLOSE_BUTTON_CLASS} aria-label="Close settings">
               &times;
             </button>
           </div>
@@ -571,7 +580,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             {tab === "user" && <UserPane />}
           </div>
         </div>
-      </div>
+        </div>
+      </dialog>
     </div>
   );
 }

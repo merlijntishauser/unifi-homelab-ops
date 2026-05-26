@@ -28,7 +28,7 @@ vi.mock("./MatrixCell", () => ({
     onClick: () => void;
     isSelfPair: boolean;
   }) => (
-    <button
+    <button type="button"
       data-testid="matrix-cell"
       data-action={actionLabel ?? ""}
       data-user-rules={userRuleCount}

@@ -24,7 +24,7 @@ vi.mock("@xyflow/react", () => {
           <div data-testid="nodes-count">{Array.isArray(nodes) ? nodes.length : 0}</div>
           <div data-testid="edges-count">{Array.isArray(edges) ? edges.length : 0}</div>
           {Array.isArray(edges) && edges.map((edge) => (
-            <button
+            <button type="button"
               key={edge.id}
               data-testid={`edge-${edge.id}`}
               onClick={(e) => onEdgeClick?.(e, edge)}
@@ -34,7 +34,7 @@ vi.mock("@xyflow/react", () => {
           ))}
           {Array.isArray(edges) && edges.map((edge) => (
             edge.data?.onLabelClick ? (
-              <button
+              <button type="button"
                 key={`label-${edge.id}`}
                 data-testid={`edge-label-${edge.id}`}
                 onClick={() => edge.data?.onLabelClick?.()}

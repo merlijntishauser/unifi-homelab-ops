@@ -14,9 +14,9 @@ vi.mock("./DeviceMap", () => ({
   default: ({ devices, onDeviceSelect, onNodeDragEnd }: { devices: Array<{ mac: string; name: string }>; onDeviceSelect: (d: unknown) => void; onNodeDragEnd: (mac: string, x: number, y: number) => void }) => (
     <div data-testid="device-map">
       {devices.map((d) => (
-        <button key={d.mac} data-testid={`device-${d.mac}`} onClick={() => onDeviceSelect(d)}>{d.name}</button>
+        <button type="button" key={d.mac} data-testid={`device-${d.mac}`} onClick={() => onDeviceSelect(d)}>{d.name}</button>
       ))}
-      <button data-testid="trigger-drag" onClick={() => onNodeDragEnd("aa:bb:cc:dd:ee:01", 100, 200)}>Drag</button>
+      <button type="button" data-testid="trigger-drag" onClick={() => onNodeDragEnd("aa:bb:cc:dd:ee:01", 100, 200)}>Drag</button>
     </div>
   ),
 }));
@@ -25,7 +25,7 @@ vi.mock("./DevicePanel", () => ({
   default: ({ device, onClose }: { device: { name: string }; onClose: () => void }) => (
     <div data-testid="device-panel">
       <span>{device.name}</span>
-      <button onClick={onClose}>Close</button>
+      <button type="button" onClick={onClose}>Close</button>
     </div>
   ),
 }));
@@ -171,7 +171,7 @@ describe("TopologyModule", () => {
     devicesMock.data = undefined;
     devicesMock.isLoading = true;
     renderModule();
-    expect(screen.getByText("Loading devices...")).toBeInTheDocument();
+    expect(screen.getByText("Loading devices…")).toBeInTheDocument();
   });
 
   it("shows error state for map", () => {

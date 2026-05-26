@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CablingModule from "./CablingModule";
@@ -199,7 +200,7 @@ describe("CablingModule", () => {
       panelsMock.data = undefined;
       panelsMock.isLoading = true;
       renderModule();
-      expect(screen.getByText("Loading cabling data...")).toBeInTheDocument();
+      expect(screen.getByText("Loading cabling data…")).toBeInTheDocument();
     });
 
     it("shows error state for Error objects", () => {
@@ -438,7 +439,7 @@ describe("CablingModule", () => {
       switchToPanels();
       // Click the card header to expand
       const card = screen.getByTestId("panel-card-1");
-      const header = card.querySelector("[role='button']")!;
+      const header = card.querySelector("button")!;
       fireEvent.click(header);
       expect(screen.getByTestId("panel-ports-1")).toBeInTheDocument();
     });
@@ -806,21 +807,23 @@ describe("CablingModule", () => {
       expect(screen.getByText("Panel 99 #3")).toBeInTheDocument();
     });
 
-    it("handles panel card expand via keyboard Enter", () => {
+    it("handles panel card expand via keyboard Enter", async () => {
+      const user = userEvent.setup();
       renderModule();
       fireEvent.click(screen.getByTestId("tab-panels"));
-      const card = screen.getByTestId("panel-card-1");
-      const header = card.querySelector("[role='button']")!;
-      fireEvent.keyDown(header, { key: "Enter" });
+      const header = screen.getByTestId("panel-card-1").querySelector("button")!;
+      header.focus();
+      await user.keyboard("{Enter}");
       expect(screen.getByTestId("panel-ports-1")).toBeInTheDocument();
     });
 
-    it("handles panel card expand via keyboard Space", () => {
+    it("handles panel card expand via keyboard Space", async () => {
+      const user = userEvent.setup();
       renderModule();
       fireEvent.click(screen.getByTestId("tab-panels"));
-      const card = screen.getByTestId("panel-card-2");
-      const header = card.querySelector("[role='button']")!;
-      fireEvent.keyDown(header, { key: " " });
+      const header = screen.getByTestId("panel-card-2").querySelector("button")!;
+      header.focus();
+      await user.keyboard(" ");
       expect(screen.getByTestId("panel-ports-2")).toBeInTheDocument();
     });
 

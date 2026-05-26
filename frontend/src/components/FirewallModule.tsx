@@ -106,13 +106,14 @@ export default function FirewallModule() {
               type="checkbox"
               checked={showHidden}
               onChange={(e) => onShowHiddenChange(e.target.checked)}
-              className="h-4 w-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
+              aria-label={toggleLabel}
+              className="size-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
             />
             {toggleLabel}
           </label>
         )}
         <div className="ml-auto" />
-        <button
+        <button type="button"
           onClick={onRefresh}
           disabled={dataLoading}
           className={`${btnClass} disabled:opacity-40 disabled:cursor-not-allowed`}
@@ -128,14 +129,14 @@ export default function FirewallModule() {
         )}
         {showLoadingOverlay ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
-            <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+            <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
             <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary animate-pulse">
-              Connecting to controller...
+              Connecting to controller…
             </p>
           </div>
         ) : focusZoneIds ? (
           <div className="flex-1 relative">
-            <button
+            <button type="button"
               onClick={() => history.back()}
               className="absolute top-3 left-3 z-10 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:dark:text-noc-text shadow-sm cursor-pointer transition-all"
             >

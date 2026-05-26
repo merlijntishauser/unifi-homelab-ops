@@ -34,7 +34,7 @@ type RechartsModule = typeof import("recharts");
 function ChartLoading() {
   return (
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4 h-[210px] flex items-center justify-center">
-      <div className="h-5 w-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+      <div className="size-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
     </div>
   );
 }

@@ -51,7 +51,7 @@ export default function MatrixSidebar({ zones, hiddenZoneIds, onToggleZone }: Ma
         <div className="flex flex-col gap-1">
           {GRADES.map(({ grade, range, hint, color }) => (
             <div key={grade} className="flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-sm shrink-0 ${color}`} />
+              <span className={`size-3 rounded-sm shrink-0 ${color}`} />
               <span className="text-xs font-semibold text-ui-text dark:text-noc-text w-4">{grade}</span>
               <div className="flex flex-col min-w-0">
                 <span className="text-[11px] text-ui-text-dim dark:text-noc-text-dim">{range}</span>
@@ -67,7 +67,7 @@ export default function MatrixSidebar({ zones, hiddenZoneIds, onToggleZone }: Ma
         <div className="flex flex-col gap-1.5">
           {CELL_COLORS.map(({ label, hint, bg }) => (
             <div key={label} className="flex items-start gap-2">
-              <span className={`w-4 h-4 rounded border shrink-0 mt-0.5 ${bg}`} />
+              <span className={`size-4 rounded border shrink-0 mt-0.5 ${bg}`} />
               <div className="flex flex-col min-w-0">
                 <span className="text-[11px] text-ui-text-secondary dark:text-noc-text-secondary">{label}</span>
                 <span className="text-[10px] text-ui-text-dim dark:text-noc-text-dim/70">{hint}</span>
@@ -90,7 +90,7 @@ export default function MatrixSidebar({ zones, hiddenZoneIds, onToggleZone }: Ma
                 aria-label={zone.name}
                 checked={!hiddenZoneIds.has(zone.id)}
                 onChange={() => onToggleZone(zone.id)}
-                className="h-3.5 w-3.5 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
+                className="size-3.5 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
               />
               <div className="min-w-0 flex items-center gap-1.5">
                 <span className="text-xs text-ui-text-secondary dark:text-noc-text-secondary group-hover:text-ui-text dark:group-hover:text-noc-text transition-colors">

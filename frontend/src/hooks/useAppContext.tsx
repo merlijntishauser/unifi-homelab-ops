@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import type { ColorMode } from "@xyflow/react";
 import type { Zone, ZonePair } from "../api/types";
 import type { NotificationState } from "./useNotifications";
@@ -52,7 +52,7 @@ export interface AppContextValue {
 export const AppContext = createContext<AppContextValue | null>(null);
 
 export function useAppContext(): AppContextValue {
-  const ctx = useContext(AppContext);
+  const ctx = use(AppContext);
   if (!ctx) {
     throw new Error("useAppContext must be used within AppContext.Provider");
   }

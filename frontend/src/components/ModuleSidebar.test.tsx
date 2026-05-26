@@ -5,7 +5,7 @@ import ModuleSidebar from "./ModuleSidebar";
 
 const mockVersionCheck = vi.hoisted(() => ({
   build: { version: "dev", commit: "", date: "", isDev: true, label: "dev" },
-  updateAvailable: null as string | null,
+  updateAvailable: undefined as string | undefined,
 }));
 
 vi.mock("../hooks/useVersionCheck", () => ({
@@ -163,7 +163,7 @@ describe("ModuleSidebar", () => {
 
   it("shows version label in expanded state", () => {
     mockVersionCheck.build = { version: "1.1.0", commit: "abc1234", date: "2026-03-21", isDev: false, label: "v1.1.0 (abc1234, Mar 21, 2026)" };
-    mockVersionCheck.updateAvailable = null;
+    mockVersionCheck.updateAvailable = undefined;
     renderSidebar();
     expect(screen.getByText("v1.1.0 (abc1234, Mar 21, 2026)")).toBeInTheDocument();
   });

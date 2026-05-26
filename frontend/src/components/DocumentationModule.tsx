@@ -78,7 +78,7 @@ const BTN =
 function LoadingSpinner({ message }: { message: string }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3">
-      <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+      <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
       <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">{message}</p>
     </div>
   );
@@ -112,14 +112,14 @@ function copyToClipboard(text: string): void {
 
 
 const copyIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 shrink-0">
     <rect x="9" y="9" width="13" height="13" rx="2" />
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
   </svg>
 );
 
 const downloadIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 shrink-0">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
     <polyline points="7 10 12 15 17 10" />
     <line x1="12" y1="15" x2="12" y2="3" />
@@ -127,7 +127,7 @@ const downloadIcon = (
 );
 
 const checkIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 shrink-0">
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
@@ -140,7 +140,7 @@ function CopyButton({ label, text, ariaLabel }: { label: string; text: string; a
     setTimeout(() => setCopied(false), 1500);
   };
   return (
-    <button
+    <button type="button"
       className={copied ? ACTION_BTN.replace("text-ub-blue", "text-status-success").replace("border-ub-blue", "border-status-success").replace("hover:bg-ub-blue", "hover:bg-status-success") : ACTION_BTN}
       aria-label={ariaLabel}
       onClick={handleCopy}
@@ -158,22 +158,22 @@ function SectionActions({ section, diagramRef }: { section: DocumentationSection
   return (
     <div className="flex items-center gap-1.5 flex-wrap mt-3 mb-2">
       <CopyButton label="MD" text={section.content} ariaLabel="Copy MD" />
-      <button className={ACTION_BTN} aria-label="Download MD" onClick={() => downloadFile(section.content, `${slug}.md`, "text/markdown")}>{downloadIcon} MD</button>
+      <button type="button" className={ACTION_BTN} aria-label="Download MD" onClick={() => downloadFile(section.content, `${slug}.md`, "text/markdown")}>{downloadIcon} MD</button>
       {jsonStr && (
         <>
           <span className="w-px h-4 bg-ui-border dark:bg-noc-border" />
           <CopyButton label="JSON" text={jsonStr} ariaLabel="Copy JSON" />
-          <button className={ACTION_BTN} aria-label="Download JSON" onClick={() => downloadFile(jsonStr, `${slug}.json`, "application/json")}>{downloadIcon} JSON</button>
+          <button type="button" className={ACTION_BTN} aria-label="Download JSON" onClick={() => downloadFile(jsonStr, `${slug}.json`, "application/json")}>{downloadIcon} JSON</button>
         </>
       )}
       {isMermaid && diagramRef && (
         <>
-          <button className={ACTION_BTN} aria-label="Download SVG" onClick={() => {
+          <button type="button" className={ACTION_BTN} aria-label="Download SVG" onClick={() => {
             const svg = diagramRef.current?.querySelector("svg");
             if (!svg) return;
             downloadSvg(new XMLSerializer().serializeToString(svg), "network-topology.svg");
           }}>{downloadIcon} SVG</button>
-          <button className={ACTION_BTN} aria-label="Download PNG" onClick={() => {
+          <button type="button" className={ACTION_BTN} aria-label="Download PNG" onClick={() => {
             const svg = diagramRef.current?.querySelector("svg");
             if (!svg) return;
             downloadPng(new XMLSerializer().serializeToString(svg), "network-topology.png").catch(() => {});
@@ -195,7 +195,7 @@ function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) 
   const contentRef = useRef<HTMLDivElement>(null);
   return (
     <div className="bg-ui-surface dark:bg-noc-surface rounded-lg overflow-hidden">
-      <button
+      <button type="button"
         onClick={onToggle}
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors cursor-pointer"
       >
@@ -207,7 +207,7 @@ function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) 
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`w-4 h-4 shrink-0 text-ui-text-dim dark:text-noc-text-dim transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
+            className={`size-4 shrink-0 text-ui-text-dim dark:text-noc-text-dim transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
           >
             <polyline points="9 18 15 12 9 6" />
           </svg>
@@ -311,10 +311,10 @@ export default function DocumentationModule() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
-        <button onClick={handleExport} disabled={exporting} className={BTN} aria-label="Download complete markdown">
+        <button type="button" onClick={handleExport} disabled={exporting} className={BTN} aria-label="Download complete markdown">
           {downloadIcon} {exporting ? "Downloading..." : "Complete Markdown"}
         </button>
-        <button onClick={handleRefresh} disabled={sectionsQuery.isLoading} className={BTN}>
+        <button type="button" onClick={handleRefresh} disabled={sectionsQuery.isLoading} className={BTN}>
           Refresh
         </button>
       </div>

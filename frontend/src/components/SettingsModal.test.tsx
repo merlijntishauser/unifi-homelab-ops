@@ -162,7 +162,7 @@ describe("SettingsModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "AI Provider" }));
 
     expect(screen.getByText("AI Provider Settings")).toBeInTheDocument();
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
   });
 
   it("switches to User Settings tab", () => {
@@ -283,7 +283,7 @@ describe("SettingsModal", () => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument();
     });
 
-    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
   });
 
   it("auto-fills fields when preset is selected", async () => {
@@ -594,7 +594,8 @@ describe("SettingsModal", () => {
   it("stops keyboard event propagation on dialog content", () => {
     const onClose = vi.fn();
     renderModal(onClose);
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    // Keydown on dialog content (Connection heading) must not bubble to backdrop Escape handler
+    fireEvent.keyDown(screen.getByRole("heading", { name: "Connection" }), { key: "Escape" });
     expect(onClose).not.toHaveBeenCalled();
   });
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import NotificationDrawer from "./NotificationDrawer";
 import type { AppNotification } from "../api/types";
 
@@ -121,11 +122,12 @@ describe("NotificationDrawer", () => {
         onNavigateToDevice={onNavigateToDevice}
       />,
     );
-    fireEvent.click(screen.getByText("High CPU Usage").closest("[role=button]")!);
+    fireEvent.click(screen.getByText("High CPU Usage").closest("button")!);
     expect(onNavigateToDevice).toHaveBeenCalledWith("aa:01");
   });
 
-  it("calls onNavigateToDevice on Enter key", () => {
+  it("calls onNavigateToDevice on Enter key", async () => {
+    const user = userEvent.setup();
     const onNavigateToDevice = vi.fn();
     render(
       <NotificationDrawer
@@ -134,11 +136,13 @@ describe("NotificationDrawer", () => {
         onNavigateToDevice={onNavigateToDevice}
       />,
     );
-    fireEvent.keyDown(screen.getByText("High CPU Usage").closest("[role=button]")!, { key: "Enter" });
+    screen.getByText("High CPU Usage").closest("button")!.focus();
+    await user.keyboard("{Enter}");
     expect(onNavigateToDevice).toHaveBeenCalledWith("aa:01");
   });
 
-  it("calls onNavigateToDevice on Space key", () => {
+  it("calls onNavigateToDevice on Space key", async () => {
+    const user = userEvent.setup();
     const onNavigateToDevice = vi.fn();
     render(
       <NotificationDrawer
@@ -147,11 +151,13 @@ describe("NotificationDrawer", () => {
         onNavigateToDevice={onNavigateToDevice}
       />,
     );
-    fireEvent.keyDown(screen.getByText("High CPU Usage").closest("[role=button]")!, { key: " " });
+    screen.getByText("High CPU Usage").closest("button")!.focus();
+    await user.keyboard(" ");
     expect(onNavigateToDevice).toHaveBeenCalledWith("aa:01");
   });
 
-  it("does not navigate on other keys", () => {
+  it("does not navigate on other keys", async () => {
+    const user = userEvent.setup();
     const onNavigateToDevice = vi.fn();
     render(
       <NotificationDrawer
@@ -160,14 +166,16 @@ describe("NotificationDrawer", () => {
         onNavigateToDevice={onNavigateToDevice}
       />,
     );
-    fireEvent.keyDown(screen.getByText("High CPU Usage").closest("[role=button]")!, { key: "Tab" });
+    screen.getByText("High CPU Usage").closest("button")!.focus();
+    await user.keyboard("{Tab}");
     expect(onNavigateToDevice).not.toHaveBeenCalled();
   });
 
   it("shows resolved label for resolved notifications", () => {
+    const resolvedAt = new Date().toISOString();
     render(
       <NotificationDrawer
-        notifications={[makeNotification({ resolved_at: new Date().toISOString() })]}
+        notifications={[makeNotification({ resolved_at: resolvedAt })]}
         {...defaultProps}
       />,
     );
@@ -175,19 +183,21 @@ describe("NotificationDrawer", () => {
   });
 
   it("dims resolved notifications", () => {
+    const resolvedAt = new Date().toISOString();
     render(
       <NotificationDrawer
-        notifications={[makeNotification({ resolved_at: new Date().toISOString() })]}
+        notifications={[makeNotification({ resolved_at: resolvedAt })]}
         {...defaultProps}
       />,
     );
-    const card = screen.getByText("High CPU Usage").closest("[role=button]");
+    const card = screen.getByText("High CPU Usage").closest("button")?.parentElement;
     expect(card?.className).toContain("opacity-50");
   });
 
   it("sorts notifications by created_at descending", () => {
-    const older = makeNotification({ id: 1, title: "Older", created_at: new Date(Date.now() - 3600000).toISOString() });
-    const newer = makeNotification({ id: 2, title: "Newer", created_at: new Date(Date.now() - 60000).toISOString() });
+    const now = Date.now();
+    const older = makeNotification({ id: 1, title: "Older", created_at: new Date(now - 3600000).toISOString() });
+    const newer = makeNotification({ id: 2, title: "Newer", created_at: new Date(now - 60000).toISOString() });
     render(
       <NotificationDrawer
         notifications={[older, newer]}
@@ -200,9 +210,10 @@ describe("NotificationDrawer", () => {
   });
 
   it("formats relative time for recent notifications", () => {
+    const createdAt = new Date(Date.now() - 120000).toISOString();
     render(
       <NotificationDrawer
-        notifications={[makeNotification({ created_at: new Date(Date.now() - 120000).toISOString() })]}
+        notifications={[makeNotification({ created_at: createdAt })]}
         {...defaultProps}
       />,
     );
@@ -210,9 +221,10 @@ describe("NotificationDrawer", () => {
   });
 
   it("formats relative time for hour-old notifications", () => {
+    const createdAt = new Date(Date.now() - 3600000).toISOString();
     render(
       <NotificationDrawer
-        notifications={[makeNotification({ created_at: new Date(Date.now() - 3600000).toISOString() })]}
+        notifications={[makeNotification({ created_at: createdAt })]}
         {...defaultProps}
       />,
     );
@@ -220,9 +232,10 @@ describe("NotificationDrawer", () => {
   });
 
   it("formats relative time for day-old notifications", () => {
+    const createdAt = new Date(Date.now() - 86400000).toISOString();
     render(
       <NotificationDrawer
-        notifications={[makeNotification({ created_at: new Date(Date.now() - 86400000).toISOString() })]}
+        notifications={[makeNotification({ created_at: createdAt })]}
         {...defaultProps}
       />,
     );
@@ -230,9 +243,10 @@ describe("NotificationDrawer", () => {
   });
 
   it("formats relative time for very recent notifications", () => {
+    const createdAt = new Date().toISOString();
     render(
       <NotificationDrawer
-        notifications={[makeNotification({ created_at: new Date().toISOString() })]}
+        notifications={[makeNotification({ created_at: createdAt })]}
         {...defaultProps}
       />,
     );

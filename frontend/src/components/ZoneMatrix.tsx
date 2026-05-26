@@ -21,7 +21,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
   const cellMin = isMobile ? "100px" : "130px";
 
   return (
-    <div className="h-full w-full overflow-hidden flex flex-col bg-ui-bg dark:bg-noc-bg">
+    <div className="size-full overflow-hidden flex flex-col bg-ui-bg dark:bg-noc-bg">
       {/* Destination header -- full-width bar across the top */}
       {size > 0 && (
         <div className="shrink-0 flex items-center justify-center py-2 border-b border-ui-border dark:border-noc-border bg-ui-surface/50 dark:bg-noc-surface/50">
@@ -62,7 +62,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             {/* Row 1: corner spacer + column headers */}
             <div className="sticky top-0 left-0 z-20 bg-ui-bg dark:bg-noc-bg" />
             {zones.map((zone) => (
-              <button
+              <button type="button"
                 key={`col-${zone.id}`}
                 data-testid={`col-header-${zone.id}`}
                 onClick={() => onZoneClick(zone.id)}
@@ -75,7 +75,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
             {/* Data rows */}
             {zones.map((srcZone) => (
               <Fragment key={srcZone.id}>
-                <button
+                <button type="button"
                   data-testid={`row-header-${srcZone.id}`}
                   onClick={() => onZoneClick(srcZone.id)}
                   className="sticky left-0 z-10 bg-ui-bg dark:bg-noc-bg text-xs font-sans font-medium text-ui-text-secondary dark:text-noc-text-secondary whitespace-nowrap px-3 flex items-center justify-end hover:text-ub-blue cursor-pointer transition-colors"

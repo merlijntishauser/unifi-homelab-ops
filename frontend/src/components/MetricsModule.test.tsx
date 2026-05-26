@@ -8,7 +8,7 @@ import MetricsModule from "./MetricsModule";
 vi.mock("./DeviceMetricCard", () => ({
   default: ({ device, onClick }: { device: { mac: string; name: string }; onClick: () => void }) => (
     <div data-testid={`device-card-${device.mac}`}>
-      <button onClick={onClick}>{device.name}</button>
+      <button type="button" onClick={onClick}>{device.name}</button>
     </div>
   ),
 }));
@@ -17,7 +17,7 @@ vi.mock("./MetricsDetailView", () => ({
   default: ({ device, onBack }: { device: { name: string }; onBack: () => void }) => (
     <div data-testid="detail-view">
       <span>{device.name}</span>
-      <button onClick={onBack}>Back to overview</button>
+      <button type="button" onClick={onBack}>Back to overview</button>
     </div>
   ),
 }));
@@ -135,7 +135,7 @@ describe("MetricsModule", () => {
     devicesMock.data = undefined;
     devicesMock.isLoading = true;
     renderModule();
-    expect(screen.getByText("Loading devices...")).toBeInTheDocument();
+    expect(screen.getByText("Loading devices…")).toBeInTheDocument();
   });
 
   it("shows error state when devices query fails", () => {

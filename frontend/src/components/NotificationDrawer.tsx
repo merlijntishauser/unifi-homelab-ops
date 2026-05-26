@@ -18,7 +18,7 @@ function SeverityDot({ severity }: { severity: string }) {
       : severity === "warning" || severity === "medium"
         ? "bg-status-warning"
         : "bg-ui-text-dim dark:bg-noc-text-dim";
-  return <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${color}`} />;
+  return <span className={`inline-block size-2 rounded-full shrink-0 ${color}`} />;
 }
 
 
@@ -32,7 +32,7 @@ export default function NotificationDrawer({
 }: NotificationDrawerProps) {
   if (!open) return null;
 
-  const sorted = [...notifications].sort(
+  const sorted = notifications.toSorted(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
@@ -59,19 +59,19 @@ export default function NotificationDrawer({
             </span>
           )}
           {notifications.length > 0 && (
-            <button
+            <button type="button"
               onClick={onDismissAll}
               className="min-h-[44px] text-xs text-ui-text-secondary dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text cursor-pointer transition-colors"
             >
               Dismiss all
             </button>
           )}
-          <button
+          <button type="button"
             onClick={onClose}
             aria-label="Close notifications"
             className={CLOSE_BUTTON_CLASS}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-5">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -88,37 +88,35 @@ export default function NotificationDrawer({
               {sorted.map((n) => (
                 <div
                   key={n.id}
-                  className={`rounded-lg border border-ui-border dark:border-noc-border p-3 cursor-pointer hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors ${
+                  className={`relative rounded-lg border border-ui-border dark:border-noc-border hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors ${
                     n.resolved_at ? "opacity-50" : ""
                   }`}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onNavigateToDevice(n.device_mac)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") onNavigateToDevice(n.device_mac);
-                  }}
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <SeverityDot severity={n.severity} />
-                    <span className="text-sm font-medium text-ui-text dark:text-noc-text flex-1 truncate">
-                      {n.title}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDismiss(n.id);
-                      }}
-                      className="min-h-[44px] text-xs text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text cursor-pointer transition-colors"
-                      aria-label={`Dismiss ${n.title}`}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                  <p className="text-xs text-ui-text-secondary dark:text-noc-text-dim mb-1">{n.message}</p>
-                  <div className="flex items-center gap-2 text-xs text-ui-text-dim dark:text-noc-text-dim">
-                    <span>{formatRelativeTime(n.created_at)}</span>
-                    {n.resolved_at && <span className="text-status-success">Resolved</span>}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToDevice(n.device_mac)}
+                    className="block w-full text-left p-3 pr-20 cursor-pointer bg-transparent"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <SeverityDot severity={n.severity} />
+                      <span className="text-sm font-medium text-ui-text dark:text-noc-text flex-1 truncate">
+                        {n.title}
+                      </span>
+                    </div>
+                    <p className="text-xs text-ui-text-secondary dark:text-noc-text-dim mb-1">{n.message}</p>
+                    <div className="flex items-center gap-2 text-xs text-ui-text-dim dark:text-noc-text-dim">
+                      <span>{formatRelativeTime(n.created_at)}</span>
+                      {n.resolved_at && <span className="text-status-success">Resolved</span>}
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDismiss(n.id)}
+                    className="absolute top-2 right-2 min-h-[44px] px-2 text-xs text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text cursor-pointer transition-colors"
+                    aria-label={`Dismiss ${n.title}`}
+                  >
+                    Dismiss
+                  </button>
                 </div>
               ))}
             </div>

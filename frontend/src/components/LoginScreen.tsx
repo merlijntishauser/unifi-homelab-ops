@@ -80,6 +80,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             value={url}
             onChange={(e) => dispatch({ url: e.target.value })}
             placeholder="https://192.168.1.1"
+            aria-label="Controller URL"
             className={INPUT_CLASS}
           />
         </div>
@@ -98,6 +99,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             autoComplete="username"
             value={username}
             onChange={(e) => dispatch({ username: e.target.value })}
+            aria-label="Username"
             className={INPUT_CLASS}
           />
         </div>
@@ -130,6 +132,7 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             required
             value={site}
             onChange={(e) => dispatch({ site: e.target.value })}
+            aria-label="Site"
             className={INPUT_CLASS}
           />
         </div>
@@ -140,7 +143,8 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             type="checkbox"
             checked={verifySsl}
             onChange={(e) => dispatch({ verifySsl: e.target.checked })}
-            className="h-4 w-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
+            aria-label="Verify SSL certificate"
+            className="size-4 rounded border-ui-border dark:border-noc-border text-ub-blue focus:ring-ub-blue bg-ui-input dark:bg-noc-input accent-ub-blue"
           />
           <label
             htmlFor="verifySsl"

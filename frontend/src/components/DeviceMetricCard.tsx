@@ -12,7 +12,7 @@ function StatusDot({ status }: { status: string }) {
       : status === "offline"
         ? "bg-status-danger"
         : "bg-ui-text-dim dark:bg-noc-text-dim";
-  return <span className={`inline-block h-2 w-2 rounded-full ${color}`} />;
+  return <span className={`inline-block size-2 rounded-full ${color}`} />;
 }
 
 function formatUptime(seconds: number): string {
@@ -37,14 +37,10 @@ function tempColor(temp: number): string {
 
 export default function DeviceMetricCard({ device, onClick }: DeviceMetricCardProps) {
   return (
-    <div
-      className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shadow-sm p-4 cursor-pointer hover:bg-ui-raised dark:hover:bg-noc-raised hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
+      className="text-left block w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shadow-sm p-4 cursor-pointer hover:bg-ui-raised dark:hover:bg-noc-raised hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClick();
-      }}
     >
       <div className="flex items-center gap-2 mb-1">
         <span className="font-sans font-semibold text-sm text-ui-text dark:text-noc-text truncate flex-1">
@@ -125,6 +121,6 @@ export default function DeviceMetricCard({ device, onClick }: DeviceMetricCardPr
       <div className="mt-3 pt-2 border-t border-ui-border dark:border-noc-border text-xs text-ui-text-dim dark:text-noc-text-dim font-mono">
         Uptime: {formatUptime(device.uptime)}
       </div>
-    </div>
+    </button>
   );
 }

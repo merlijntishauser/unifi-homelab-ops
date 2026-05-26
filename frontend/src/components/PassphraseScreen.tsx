@@ -37,8 +37,8 @@ export default function PassphraseScreen({ onAuthenticated }: PassphraseScreenPr
       {/* Radial glow */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.12)_0%,_transparent_60%)] dark:bg-[radial-gradient(ellipse_at_50%_30%,_rgba(0,111,255,0.15)_0%,_transparent_60%)]" />
       {/* Corner accents */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-[radial-gradient(circle_at_0%_0%,_rgba(0,111,255,0.08)_0%,_transparent_70%)]" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-[radial-gradient(circle_at_100%_100%,_rgba(0,111,255,0.06)_0%,_transparent_70%)]" />
+      <div className="absolute top-0 left-0 size-64 bg-[radial-gradient(circle_at_0%_0%,_rgba(0,111,255,0.08)_0%,_transparent_70%)]" />
+      <div className="absolute bottom-0 right-0 size-96 bg-[radial-gradient(circle_at_100%_100%,_rgba(0,111,255,0.06)_0%,_transparent_70%)]" />
       {/* Floating dots */}
       <div
         className="absolute inset-0 opacity-[0.15] dark:opacity-[0.25]"

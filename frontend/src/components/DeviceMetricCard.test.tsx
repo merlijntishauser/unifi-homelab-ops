@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import DeviceMetricCard from "./DeviceMetricCard";
 import type { MetricsSnapshot } from "../api/types";
 
@@ -78,24 +79,30 @@ describe("DeviceMetricCard", () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it("calls onClick on Enter key", () => {
+  it("calls onClick on Enter key", async () => {
+    const user = userEvent.setup();
     const handler = vi.fn();
     render(<DeviceMetricCard device={makeDevice()} onClick={handler} />);
-    fireEvent.keyDown(screen.getByRole("button"), { key: "Enter" });
+    screen.getByRole("button").focus();
+    await user.keyboard("{Enter}");
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it("calls onClick on Space key", () => {
+  it("calls onClick on Space key", async () => {
+    const user = userEvent.setup();
     const handler = vi.fn();
     render(<DeviceMetricCard device={makeDevice()} onClick={handler} />);
-    fireEvent.keyDown(screen.getByRole("button"), { key: " " });
+    screen.getByRole("button").focus();
+    await user.keyboard(" ");
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it("does not call onClick on other keys", () => {
+  it("does not call onClick on other keys", async () => {
+    const user = userEvent.setup();
     const handler = vi.fn();
     render(<DeviceMetricCard device={makeDevice()} onClick={handler} />);
-    fireEvent.keyDown(screen.getByRole("button"), { key: "Tab" });
+    screen.getByRole("button").focus();
+    await user.keyboard("{Tab}");
     expect(handler).not.toHaveBeenCalled();
   });
 
@@ -133,6 +140,14 @@ describe("DeviceMetricCard", () => {
     expect(screen.queryByText("PoE")).not.toBeInTheDocument();
   });
 
+  it("is keyboard-focusable as a native button", () => {
+    render(<DeviceMetricCard device={makeDevice()} onClick={vi.fn()} />);
+    const card = screen.getByRole("button");
+    expect(card.tagName).toBe("BUTTON");
+    card.focus();
+    expect(card).toHaveFocus();
+  });
+
   it("shows blue PoE bar when usage is below 70%", () => {
     const { container } = render(<DeviceMetricCard device={makeDevice({ poe_consumption: 30, poe_budget: 100 })} onClick={vi.fn()} />);
     const bar = container.querySelector(".bg-ub-blue:not(.h-1\\.5)");
@@ -154,9 +169,4 @@ describe("DeviceMetricCard", () => {
     expect(container.querySelector(".bg-status-warning")).toBeInTheDocument();
   });
 
-  it("has role=button and tabIndex", () => {
-    render(<DeviceMetricCard device={makeDevice()} onClick={vi.fn()} />);
-    const card = screen.getByRole("button");
-    expect(card).toHaveAttribute("tabindex", "0");
-  });
 });

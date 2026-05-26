@@ -71,7 +71,7 @@ export default function SvgViewer({ svgContent }: SvgViewerProps) {
     <div className="relative flex-1 overflow-hidden bg-ui-bg dark:bg-noc-bg">
       <div
         ref={containerRef}
-        className={`w-full h-full ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+        className={`size-full ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -87,11 +87,11 @@ export default function SvgViewer({ svgContent }: SvgViewerProps) {
         />
       </div>
       <div className="absolute bottom-3 left-3 flex items-center gap-1 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border shadow-sm overflow-hidden">
-        <button onClick={zoomOut} className="px-2 py-1 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors" aria-label="Zoom out">-</button>
-        <button onClick={resetView} className="px-2 py-1 text-xs text-ui-text-secondary dark:text-noc-text-dim hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors min-w-[3rem] text-center" aria-label="Reset zoom">
+        <button type="button" onClick={zoomOut} className="px-2 py-1 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors" aria-label="Zoom out">-</button>
+        <button type="button" onClick={resetView} className="px-2 py-1 text-xs text-ui-text-secondary dark:text-noc-text-dim hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors min-w-[3rem] text-center" aria-label="Reset zoom">
           {Math.round(zoom * 100)}%
         </button>
-        <button onClick={zoomIn} className="px-2 py-1 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors" aria-label="Zoom in">+</button>
+        <button type="button" onClick={zoomIn} className="px-2 py-1 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors" aria-label="Zoom in">+</button>
       </div>
     </div>
   );

@@ -67,7 +67,7 @@ interface SummaryCardProps {
 
 function SummaryCard({ title, status, onClick, children }: SummaryCardProps) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       className="flex overflow-hidden border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface rounded-lg shadow-sm text-left hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors cursor-pointer w-full"
     >
@@ -146,12 +146,12 @@ const moduleBadge: Record<string, string> = {
 
 function FindingCard({ finding, onNavigate }: { finding: HealthFinding; onNavigate: (module: string, entityId: string) => void }) {
   return (
-    <button
+    <button type="button"
       onClick={() => onNavigate(finding.affected_module, finding.affected_entity_id)}
       className="w-full text-left bg-ui-surface dark:bg-noc-surface rounded-lg p-4 hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors cursor-pointer"
     >
       <div className="flex items-center gap-2 mb-1.5">
-        <div className={`w-2 h-2 rounded-full shrink-0 ${severityDot[finding.severity] ?? "bg-ui-text-dim"}`} />
+        <div className={`size-2 rounded-full shrink-0 ${severityDot[finding.severity] ?? "bg-ui-text-dim"}`} />
         <span className="font-semibold text-sm text-ui-text dark:text-noc-text">{finding.title}</span>
         {finding.affected_module && (
           <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${moduleBadge[finding.affected_module] ?? "bg-ui-raised dark:bg-noc-raised text-ui-text-secondary dark:text-noc-text-dim"}`}>
@@ -245,7 +245,7 @@ function AnalysisSection({ aiConfigured, analysis, isPending, onAnalyze, onNavig
       )}
 
       {aiConfigured && (
-        <button
+        <button type="button"
           onClick={onAnalyze}
           disabled={isPending}
           className="px-4 py-2 text-sm font-medium rounded-lg bg-ub-blue text-white hover:bg-ub-blue-light disabled:opacity-50 transition-colors"
@@ -256,9 +256,9 @@ function AnalysisSection({ aiConfigured, analysis, isPending, onAnalyze, onNavig
 
       {isPending && (
         <div className="flex items-center gap-3 py-4">
-          <div className="h-5 w-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+          <div className="size-5 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
           <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">
-            Running cross-domain analysis...
+            Running cross-domain analysis…
           </p>
         </div>
       )}
@@ -272,8 +272,8 @@ function SummarySection({ summary, isLoading, error }: { summary: HealthSummaryR
   if (isLoading && !summary) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
-        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary ml-3">Loading summary...</p>
+        <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary ml-3">Loading summary…</p>
       </div>
     );
   }

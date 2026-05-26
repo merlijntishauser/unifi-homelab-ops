@@ -39,7 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 function StatusDot({ status }: { status: string }) {
   const color = STATUS_COLORS[status] ?? "bg-gray-400";
-  return <span className={`inline-block w-2 h-2 rounded-full ${color}`} title={status} />;
+  return <span className={`inline-block size-2 rounded-full ${color}`} title={status} />;
 }
 
 // --- Cable type / sort helpers ---
@@ -124,7 +124,7 @@ function SlidePanel({ title, testId, onClose, footer, children }: SlidePanelProp
       >
         <div className="flex items-center gap-2 px-4 py-3 border-b border-ui-border dark:border-noc-border shrink-0">
           <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text flex-1">{title}</h3>
-          <button onClick={onClose} className={CLOSE_BUTTON_CLASS} aria-label="Close">&times;</button>
+          <button type="button" onClick={onClose} className={CLOSE_BUTTON_CLASS} aria-label="Close">&times;</button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">{children}</div>
         <div className="flex items-center gap-2 px-4 py-3 border-t border-ui-border dark:border-noc-border shrink-0">
@@ -151,57 +151,57 @@ function CableFormFields({ form, update, panels }: CableFormFieldsProps) {
     <div className="grid grid-cols-2 gap-3">
       <div className="col-span-2">
         <label htmlFor="cable-label" className={labelClass}>Label</label>
-        <input id="cable-label" type="text" value={form.label} onChange={(e) => update({ label: e.target.value })} placeholder="e.g. C-001" className={INPUT_CLASS} />
+        <input id="cable-label" type="text" value={form.label} onChange={(e) => update({ label: e.target.value })} placeholder="e.g. C-001" className={INPUT_CLASS} aria-label="Label" />
       </div>
       <div>
         <label htmlFor="cable-type" className={labelClass}>Cable Type</label>
-        <select id="cable-type" value={form.cable_type} onChange={(e) => update({ cable_type: e.target.value })} className={SELECT_CLASS}>
+        <select id="cable-type" value={form.cable_type} onChange={(e) => update({ cable_type: e.target.value })} className={SELECT_CLASS} aria-label="Cable Type">
           {CABLE_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
       <div>
         <label htmlFor="cable-status" className={labelClass}>Status</label>
-        <select id="cable-status" value={form.status} onChange={(e) => update({ status: e.target.value })} className={SELECT_CLASS}>
+        <select id="cable-status" value={form.status} onChange={(e) => update({ status: e.target.value })} className={SELECT_CLASS} aria-label="Status">
           {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
       <div>
         <label htmlFor="cable-length" className={labelClass}>Length (m)</label>
-        <input id="cable-length" type="number" value={form.length_m ?? ""} onChange={(e) => update({ length_m: parseOptionalFloat(e.target.value) })} min={0} step={0.1} className={INPUT_CLASS} />
+        <input id="cable-length" type="number" value={form.length_m ?? ""} onChange={(e) => update({ length_m: parseOptionalFloat(e.target.value) })} min={0} step={0.1} className={INPUT_CLASS} aria-label="Length (m)" />
       </div>
       <div>
         <label htmlFor="cable-speed" className={labelClass}>Speed (Mbps)</label>
-        <input id="cable-speed" type="number" value={form.speed ?? ""} onChange={(e) => update({ speed: parseOptionalInt(e.target.value) })} min={0} className={INPUT_CLASS} />
+        <input id="cable-speed" type="number" value={form.speed ?? ""} onChange={(e) => update({ speed: parseOptionalInt(e.target.value) })} min={0} className={INPUT_CLASS} aria-label="Speed (Mbps)" />
       </div>
       <div>
         <label htmlFor="cable-color" className={labelClass}>Color</label>
-        <input id="cable-color" type="text" value={form.color} onChange={(e) => update({ color: e.target.value })} placeholder="e.g. blue" className={INPUT_CLASS} />
+        <input id="cable-color" type="text" value={form.color} onChange={(e) => update({ color: e.target.value })} placeholder="e.g. blue" className={INPUT_CLASS} aria-label="Color" />
       </div>
       <div>
         <label htmlFor="cable-poe" className={labelClass}>PoE</label>
-        <select id="cable-poe" value={form.poe ? "true" : "false"} onChange={(e) => update({ poe: e.target.value === "true" })} className={SELECT_CLASS}>
+        <select id="cable-poe" value={form.poe ? "true" : "false"} onChange={(e) => update({ poe: e.target.value === "true" })} className={SELECT_CLASS} aria-label="PoE">
           <option value="false">No</option>
           <option value="true">Yes</option>
         </select>
       </div>
       <div>
         <label htmlFor="cable-dest-label" className={labelClass}>Dest Label</label>
-        <input id="cable-dest-label" type="text" value={form.dest_label} onChange={(e) => update({ dest_label: e.target.value })} placeholder="e.g. Office 201-A" className={INPUT_CLASS} />
+        <input id="cable-dest-label" type="text" value={form.dest_label} onChange={(e) => update({ dest_label: e.target.value })} placeholder="e.g. Office 201-A" className={INPUT_CLASS} aria-label="Dest Label" />
       </div>
       <div>
         <label htmlFor="cable-panel" className={labelClass}>Patch Panel</label>
-        <select id="cable-panel" value={form.patch_panel_id ?? ""} onChange={(e) => update({ patch_panel_id: parseOptionalInt(e.target.value) })} className={SELECT_CLASS}>
+        <select id="cable-panel" value={form.patch_panel_id ?? ""} onChange={(e) => update({ patch_panel_id: parseOptionalInt(e.target.value) })} className={SELECT_CLASS} aria-label="Patch Panel">
           <option value="">None</option>
           {panels.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
       </div>
       <div>
         <label htmlFor="cable-panel-port" className={labelClass}>Panel Port</label>
-        <input id="cable-panel-port" type="number" value={form.patch_panel_port ?? ""} onChange={(e) => update({ patch_panel_port: parseOptionalInt(e.target.value) })} min={1} className={INPUT_CLASS} />
+        <input id="cable-panel-port" type="number" value={form.patch_panel_port ?? ""} onChange={(e) => update({ patch_panel_port: parseOptionalInt(e.target.value) })} min={1} className={INPUT_CLASS} aria-label="Panel Port" />
       </div>
       <div className="col-span-2">
         <label htmlFor="cable-notes" className={labelClass}>Notes</label>
-        <input id="cable-notes" type="text" value={form.notes} onChange={(e) => update({ notes: e.target.value })} className={INPUT_CLASS} />
+        <input id="cable-notes" type="text" value={form.notes} onChange={(e) => update({ notes: e.target.value })} className={INPUT_CLASS} aria-label="Notes" />
       </div>
     </div>
   );
@@ -225,9 +225,9 @@ function CableEditPanel({ cable, panels, onSave, onDelete, onClose, title }: Cab
   return (
     <SlidePanel title={title} testId="cable-edit-panel" onClose={onClose} footer={
       <>
-        <button onClick={() => onSave(form)} className={btnPrimaryClass} data-testid="cable-save-button">Save</button>
-        {onDelete && <button onClick={onDelete} className={btnDangerClass} data-testid="cable-delete-button">Delete</button>}
-        <button onClick={onClose} className={btnClass}>Cancel</button>
+        <button type="button" onClick={() => onSave(form)} className={btnPrimaryClass} data-testid="cable-save-button">Save</button>
+        {onDelete && <button type="button" onClick={onDelete} className={btnDangerClass} data-testid="cable-delete-button">Delete</button>}
+        <button type="button" onClick={onClose} className={btnClass}>Cancel</button>
       </>
     }>
       <CableFormFields form={form} update={update} panels={panels} />
@@ -247,15 +247,15 @@ function PanelFormFields({ form, update }: PanelFormFieldsProps) {
     <div className="grid grid-cols-2 gap-3">
       <div className="col-span-2">
         <label htmlFor="panel-name" className={labelClass}>Name</label>
-        <input id="panel-name" type="text" value={form.name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. PP-01 Meterkast" className={INPUT_CLASS} />
+        <input id="panel-name" type="text" value={form.name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. PP-01 Meterkast" className={INPUT_CLASS} aria-label="Name" />
       </div>
       <div>
         <label htmlFor="panel-port-count" className={labelClass}>Port Count</label>
-        <input id="panel-port-count" type="number" value={form.port_count ?? 24} onChange={(e) => update({ port_count: parseInt(e.target.value) || 24 })} min={1} className={INPUT_CLASS} />
+        <input id="panel-port-count" type="number" value={form.port_count ?? 24} onChange={(e) => update({ port_count: parseInt(e.target.value) || 24 })} min={1} className={INPUT_CLASS} aria-label="Port Count" />
       </div>
       <div>
         <label htmlFor="panel-type" className={labelClass}>Type</label>
-        <select id="panel-type" value={form.panel_type} onChange={(e) => update({ panel_type: e.target.value })} className={SELECT_CLASS}>
+        <select id="panel-type" value={form.panel_type} onChange={(e) => update({ panel_type: e.target.value })} className={SELECT_CLASS} aria-label="Type">
           <option value="keystone">Keystone</option>
           <option value="fixed">Fixed</option>
           <option value="fiber">Fiber</option>
@@ -263,11 +263,11 @@ function PanelFormFields({ form, update }: PanelFormFieldsProps) {
       </div>
       <div className="col-span-2">
         <label htmlFor="panel-location" className={labelClass}>Location</label>
-        <input id="panel-location" type="text" value={form.location} onChange={(e) => update({ location: e.target.value })} placeholder="e.g. Server room" className={INPUT_CLASS} />
+        <input id="panel-location" type="text" value={form.location} onChange={(e) => update({ location: e.target.value })} placeholder="e.g. Server room" className={INPUT_CLASS} aria-label="Location" />
       </div>
       <div className="col-span-2">
         <label htmlFor="panel-notes" className={labelClass}>Notes</label>
-        <input id="panel-notes" type="text" value={form.notes} onChange={(e) => update({ notes: e.target.value })} className={INPUT_CLASS} />
+        <input id="panel-notes" type="text" value={form.notes} onChange={(e) => update({ notes: e.target.value })} className={INPUT_CLASS} aria-label="Notes" />
       </div>
     </div>
   );
@@ -290,9 +290,9 @@ function PanelEditPanel({ panel, onSave, onDelete, onClose, title }: PanelEditPa
   return (
     <SlidePanel title={title} testId="panel-edit-panel" onClose={onClose} footer={
       <>
-        <button onClick={() => onSave(form)} disabled={!form.name.trim()} className={`${btnPrimaryClass} disabled:opacity-40 disabled:cursor-not-allowed`} data-testid="panel-save-button">Save</button>
-        {onDelete && <button onClick={onDelete} className={btnDangerClass} data-testid="panel-delete-button">Delete</button>}
-        <button onClick={onClose} className={btnClass}>Cancel</button>
+        <button type="button" onClick={() => onSave(form)} disabled={!form.name.trim()} className={`${btnPrimaryClass} disabled:opacity-40 disabled:cursor-not-allowed`} data-testid="panel-save-button">Save</button>
+        {onDelete && <button type="button" onClick={onDelete} className={btnDangerClass} data-testid="panel-delete-button">Delete</button>}
+        <button type="button" onClick={onClose} className={btnClass}>Cancel</button>
       </>
     }>
       <PanelFormFields form={form} update={update} />
@@ -360,16 +360,15 @@ function PatchPanelCard({ panel, cables, onEdit }: PatchPanelCardProps) {
       className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
       data-testid={`panel-card-${panel.id}`}
     >
-      <div
-        className="flex items-center gap-2 mb-1"
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
+        className="flex items-center gap-2 mb-1 w-full text-left bg-transparent cursor-pointer"
+        aria-expanded={expanded}
         onClick={() => setExpanded((v) => !v)}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v); }}
       >
         <span className="font-sans font-semibold text-sm text-ui-text dark:text-noc-text truncate flex-1">{panel.name}</span>
         <span className="text-xs font-mono text-ui-text-secondary dark:text-noc-text-secondary">{panel.assigned_ports}/{panel.port_count}</span>
-      </div>
+      </button>
 
       <p className="text-xs text-ui-text-dim dark:text-noc-text-dim mb-2">
         {panel.panel_type}
@@ -382,7 +381,7 @@ function PatchPanelCard({ panel, cables, onEdit }: PatchPanelCardProps) {
         </div>
       </div>
 
-      <button onClick={onEdit} className={`${btnClass} text-xs mb-2`} data-testid={`panel-edit-${panel.id}`}>Edit</button>
+      <button type="button" onClick={onEdit} className={`${btnClass} text-xs mb-2`} data-testid={`panel-edit-${panel.id}`}>Edit</button>
 
       {expanded && <PortGrid panel={panel} portMap={portMap} />}
     </div>
@@ -459,7 +458,7 @@ function CableTable({ cables, panels, onEditCable, onAddCable, onSync, isSyncing
     if (statusFilter !== "all") {
       result = result.filter((c) => c.status === statusFilter);
     }
-    return [...result].sort((a, b) => {
+    return result.toSorted((a, b) => {
       const va = getCableSortValue(a, sortField);
       const vb = getCableSortValue(b, sortField);
       const cmp = va < vb ? -1 : va > vb ? 1 : 0;
@@ -488,10 +487,10 @@ function CableTable({ cables, panels, onEditCable, onAddCable, onSync, isSyncing
           {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <div className="ml-auto" />
-        <button onClick={onSync} disabled={isSyncing} className={btnClass} data-testid="sync-button">
+        <button type="button" onClick={onSync} disabled={isSyncing} className={btnClass} data-testid="sync-button">
           {isSyncing ? "Syncing..." : "Sync from Topology"}
         </button>
-        <button onClick={onAddCable} className={btnClass} data-testid="add-cable-button">Add Cable</button>
+        <button type="button" onClick={onAddCable} className={btnClass} data-testid="add-cable-button">Add Cable</button>
       </div>
       <div className="flex-1 overflow-auto">
         {filtered.length === 0 ? (
@@ -539,13 +538,13 @@ function PatchPanelsView({ panels, cables, onAddPanel, onEditPanel }: PatchPanel
       <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <span className="text-sm text-ui-text-dim dark:text-noc-text-dim">Patch Panels</span>
         <div className="ml-auto" />
-        <button onClick={onAddPanel} className={btnClass} data-testid="add-panel-button">New Panel</button>
+        <button type="button" onClick={onAddPanel} className={btnClass} data-testid="add-panel-button">New Panel</button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 lg:p-6">
         {panels.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">No patch panels yet</p>
-            <button onClick={onAddPanel} className={btnPrimaryClass}>Create Your First Panel</button>
+            <button type="button" onClick={onAddPanel} className={btnPrimaryClass}>Create Your First Panel</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -705,8 +704,8 @@ export default function CablingModule() {
   if (isLoading && cables.length === 0 && panels.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
-        <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
-        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading cabling data...</p>
+        <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading cabling data…</p>
       </div>
     );
   }
@@ -725,8 +724,8 @@ export default function CablingModule() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <div className="flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
-          <button onClick={() => setSubView("cables")} className={segmentClass(subView === "cables", true)} data-testid="tab-cables">Cables</button>
-          <button onClick={() => setSubView("panels")} className={segmentClass(subView === "panels", false)} data-testid="tab-panels">Patch Panels</button>
+          <button type="button" onClick={() => setSubView("cables")} className={segmentClass(subView === "cables", true)} data-testid="tab-cables">Cables</button>
+          <button type="button" onClick={() => setSubView("panels")} className={segmentClass(subView === "panels", false)} data-testid="tab-panels">Patch Panels</button>
         </div>
       </div>
 

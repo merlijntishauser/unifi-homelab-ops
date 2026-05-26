@@ -200,10 +200,11 @@ function ZoneGraphInner({
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
   const containerRef = useCrispZoom();
   const [pinnedId, setPinnedId] = useState<string | null>(null);
+  const pinnedEdgeValue = useMemo(() => ({ pinnedId, setPinnedId }), [pinnedId]);
 
   return (
-    <PinnedEdgeContext.Provider value={{ pinnedId, setPinnedId }}>
-      <div ref={containerRef} className="w-full h-full">
+    <PinnedEdgeContext.Provider value={pinnedEdgeValue}>
+      <div ref={containerRef} className="size-full">
         <ReactFlow
           id="firewall-graph"
           nodes={nodes}

@@ -51,7 +51,7 @@ export default function ZoneNodeComponent({ data }: NodeProps<ZoneNode>) {
         </div>
 
         {networks.length > 0 && (
-          <button
+          <button type="button"
             onClick={() => setExpanded(!expanded)}
             className="mt-1 text-xs text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary cursor-pointer transition-colors"
           >

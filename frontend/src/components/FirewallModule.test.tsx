@@ -17,7 +17,7 @@ vi.mock("@xyflow/react", () => ({
     <div data-testid="react-flow">
       {children}
       {Array.isArray(edges) && edges.map((edge) => (
-        <button key={edge.id} data-testid={`edge-${edge.id}`} onClick={(e) => onEdgeClick?.(e, edge)}>
+        <button type="button" key={edge.id} data-testid={`edge-${edge.id}`} onClick={(e) => onEdgeClick?.(e, edge)}>
           {edge.id}
         </button>
       ))}
@@ -43,7 +43,7 @@ vi.mock("./ZoneMatrix", () => ({
   }) => (
     <div data-testid="zone-matrix">
       {zones.map((z) => (
-        <button key={z.id} data-testid={`matrix-zone-${z.id}`} onClick={() => onZoneClick(z.id)}>
+        <button type="button" key={z.id} data-testid={`matrix-zone-${z.id}`} onClick={() => onZoneClick(z.id)}>
           {z.name}
         </button>
       ))}
@@ -129,7 +129,7 @@ describe("FirewallModule", () => {
 
   it("shows loading overlay when data is loading and zones are empty", () => {
     renderModule({ dataLoading: true, zones: [], zonePairs: [] });
-    expect(screen.getByText("Connecting to controller...")).toBeInTheDocument();
+    expect(screen.getByText("Connecting to controller…")).toBeInTheDocument();
   });
 
   it("shows error message when dataError is set", () => {

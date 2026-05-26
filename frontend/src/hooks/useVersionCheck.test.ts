@@ -10,6 +10,6 @@ describe("useVersionCheck", () => {
     expect(result.current.build.version).toBe("dev");
     expect(result.current.build.commit).toBe("");
     expect(result.current.build.date).toBe("");
-    expect(result.current.updateAvailable).toBeNull();
+    expect(result.current.updateAvailable).toBeUndefined();
   });
 });

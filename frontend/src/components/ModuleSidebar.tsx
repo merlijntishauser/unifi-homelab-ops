@@ -16,7 +16,7 @@ interface NavItem {
 }
 
 const chevronIcon = (expanded: boolean) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 shrink-0 transition-transform duration-200 ${expanded ? "" : "rotate-180"}`}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={`size-4 shrink-0 transition-transform duration-200 ${expanded ? "" : "rotate-180"}`}>
     <polyline points="11 17 6 12 11 7" />
   </svg>
 );
@@ -48,7 +48,7 @@ function readExpanded(): boolean {
 }
 
 const bellIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-5 shrink-0">
     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
   </svg>
@@ -87,7 +87,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
         ))}
       </div>
       <div className="border-t border-ui-border dark:border-noc-border py-2 px-1.5 flex flex-col gap-1">
-        <button
+        <button type="button"
           onClick={onOpenSettings}
           className={navLinkClass(false) + " w-full"}
           aria-label="Settings"
@@ -97,7 +97,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
           {expanded && <span>Settings</span>}
         </button>
         {onOpenNotifications && (
-          <button
+          <button type="button"
             onClick={onOpenNotifications}
             className={navLinkClass(false) + " w-full relative"}
             aria-label="Notifications"
@@ -124,7 +124,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 mt-0.5 text-[10px] font-semibold text-status-warning hover:text-status-warning/80 transition-colors"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 shrink-0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3 shrink-0">
                   <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
                 {updateAvailable} available
@@ -132,7 +132,7 @@ export default function ModuleSidebar({ onOpenSettings, notificationCount = 0, o
             )}
           </div>
         )}
-        <button
+        <button type="button"
           onClick={toggle}
           className="flex items-center justify-center px-2.5 py-1.5 rounded-lg text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text-secondary dark:hover:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors"
           aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}

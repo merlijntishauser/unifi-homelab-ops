@@ -57,7 +57,7 @@ function resolveColorMode(preference: ThemePreference, systemDark: boolean): Col
 function LoadingOverlay({ message }: { message: string | null }) {
   return (
     <div className="h-screen flex flex-col items-center justify-center gap-3 bg-ui-bg dark:bg-noc-bg">
-      <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+      <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
       {message && (
         <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary animate-pulse">{message}</p>
       )}
@@ -145,9 +145,11 @@ function App() {
 
   const saveTimerRef = useRef<number | undefined>(undefined);
 
-  // Clean up debounced save on unmount
+  // Cancel any pending debounced save on unmount so the server never receives
+  // stale toggle state against an invalidated session.
   useEffect(() => {
-    return () => clearTimeout(saveTimerRef.current);
+    const ref = saveTimerRef;
+    return () => clearTimeout(ref.current);
   }, []);
 
   const handleToggleZone = useCallback((zoneId: string) => {

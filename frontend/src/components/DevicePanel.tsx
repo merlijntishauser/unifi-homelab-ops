@@ -13,7 +13,7 @@ function StatusDot({ status }: { status: string }) {
       : status === "offline"
         ? "bg-status-danger"
         : "bg-ui-text-dim dark:bg-noc-text-dim";
-  return <span className={`inline-block h-2 w-2 rounded-full ${color}`} />;
+  return <span className={`inline-block size-2 rounded-full ${color}`} />;
 }
 
 function formatUptime(seconds: number): string {
@@ -55,7 +55,7 @@ function PortRow({ port }: { port: TopologyPort }) {
 }
 
 export default function DevicePanel({ device, onClose }: DevicePanelProps) {
-  const sortedPorts = [...device.ports].sort((a, b) => a.idx - b.idx);
+  const sortedPorts = device.ports.toSorted((a, b) => a.idx - b.idx);
   const poeBudget = sortedPorts
     .filter((p) => p.poe && p.poe_power !== null && p.poe_power > 0)
     .reduce((sum, p) => sum + (p.poe_power ?? 0), 0);
@@ -67,7 +67,7 @@ export default function DevicePanel({ device, onClose }: DevicePanelProps) {
         <h2 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text truncate">
           {device.name}
         </h2>
-        <button
+        <button type="button"
           onClick={onClose}
           className={CLOSE_BUTTON_CLASS}
           aria-label="Close panel"

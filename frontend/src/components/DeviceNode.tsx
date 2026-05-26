@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { use } from "react";
 import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
 import { SelectedMacContext } from "./SelectedNodeContext";
 
@@ -22,11 +22,11 @@ function StatusDot({ status }: { status: string }) {
       : status === "offline"
         ? "bg-status-danger"
         : "bg-ui-text-dim dark:bg-noc-text-dim";
-  return <span className={`inline-block h-2 w-2 rounded-full ${color}`} />;
+  return <span className={`inline-block size-2 rounded-full ${color}`} />;
 }
 
 function DeviceIcon({ deviceType }: { deviceType: string }) {
-  const cls = "h-5 w-5 text-ui-text-secondary dark:text-noc-text-secondary shrink-0";
+  const cls = "size-5 text-ui-text-secondary dark:text-noc-text-secondary shrink-0";
   switch (deviceType) {
     case "gateway":
       return (
@@ -72,7 +72,7 @@ function DeviceIcon({ deviceType }: { deviceType: string }) {
 }
 
 export default function DeviceNodeComponent({ data, id }: NodeProps<DeviceNode>) {
-  const selectedMac = useContext(SelectedMacContext);
+  const selectedMac = use(SelectedMacContext);
   const isSelected = id === selectedMac;
   const isGateway = data.deviceType === "gateway";
   const borderColor = isSelected
@@ -82,16 +82,14 @@ export default function DeviceNodeComponent({ data, id }: NodeProps<DeviceNode>)
       : "border-ui-border dark:border-noc-border";
 
   return (
-    <div
-      className={`rounded-lg border ${borderColor} bg-ui-surface dark:bg-noc-raised shadow-md w-[200px] cursor-pointer transition-all`}
-      onClick={data.onSelect}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") data.onSelect(); }}
-      role="button"
-      tabIndex={0}
-    >
+    <div className={`relative rounded-lg border ${borderColor} bg-ui-surface dark:bg-noc-raised shadow-md w-[200px] transition-all`}>
       <Handle type="target" position={Position.Top} className="!bg-ui-text-dim dark:!bg-noc-text-dim" />
 
-      <div className="px-3 py-2">
+      <button
+        type="button"
+        onClick={data.onSelect}
+        className="block w-full text-left px-3 py-2 cursor-pointer bg-transparent"
+      >
         <div className="flex items-center gap-2">
           <DeviceIcon deviceType={data.deviceType} />
           <span className="font-sans font-semibold text-sm text-ui-text dark:text-noc-text truncate flex-1">
@@ -111,7 +109,7 @@ export default function DeviceNodeComponent({ data, id }: NodeProps<DeviceNode>)
             {data.clientCount} client{data.clientCount !== 1 ? "s" : ""}
           </span>
         </div>
-      </div>
+      </button>
 
       <Handle type="source" position={Position.Bottom} className="!bg-ui-text-dim dark:!bg-noc-text-dim" />
     </div>

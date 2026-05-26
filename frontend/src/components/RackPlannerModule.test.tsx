@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import RackPlannerModule from "./RackPlannerModule";
@@ -235,7 +236,7 @@ describe("RackPlannerModule", () => {
       racksMock.data = undefined;
       racksMock.isLoading = true;
       renderModule();
-      expect(screen.getByText("Loading racks...")).toBeInTheDocument();
+      expect(screen.getByText("Loading racks…")).toBeInTheDocument();
     });
 
     it("shows error state when racks query fails", () => {
@@ -481,7 +482,7 @@ describe("RackPlannerModule", () => {
       racksMock.data = [...sampleRacks];
       renderModule();
       fireEvent.click(screen.getByTestId("rack-card-1"));
-      expect(screen.getByText("Loading rack...")).toBeInTheDocument();
+      expect(screen.getByText("Loading rack…")).toBeInTheDocument();
     });
 
     it("BOM view can be closed", async () => {
@@ -798,14 +799,14 @@ describe("RackPlannerModule", () => {
       fireEvent.click(screen.getByTestId("add-item-button"));
       // Default tab is UniFi Device
       expect(screen.getByText("UniFi Device")).toBeInTheDocument();
-      expect(screen.getByPlaceholderText("Search devices...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Search devices…")).toBeInTheDocument();
       expect(screen.getByText("Cloud Gateway Fiber")).toBeInTheDocument();
     });
 
     it("UniFi Device search filters the list", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
-      fireEvent.change(screen.getByPlaceholderText("Search devices..."), { target: { value: "lite 8" } });
+      fireEvent.change(screen.getByPlaceholderText("Search devices…"), { target: { value: "lite 8" } });
       expect(screen.getByText("Switch Lite 8 PoE")).toBeInTheDocument();
       expect(screen.queryByText("Cloud Gateway Fiber")).not.toBeInTheDocument();
     });
@@ -813,7 +814,7 @@ describe("RackPlannerModule", () => {
     it("UniFi Device search shows empty state", () => {
       openEditor();
       fireEvent.click(screen.getByTestId("add-item-button"));
-      fireEvent.change(screen.getByPlaceholderText("Search devices..."), { target: { value: "zzzznonexistent" } });
+      fireEvent.change(screen.getByPlaceholderText("Search devices…"), { target: { value: "zzzznonexistent" } });
       expect(screen.getByText("No matching devices")).toBeInTheDocument();
     });
 
@@ -833,7 +834,7 @@ describe("RackPlannerModule", () => {
       expect(screen.getByDisplayValue("Cloud Gateway Fiber")).toBeInTheDocument();
       // Switch back to UniFi Device tab
       fireEvent.click(screen.getByText("UniFi Device"));
-      expect(screen.getByPlaceholderText("Search devices...")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Search devices…")).toBeInTheDocument();
     });
 
     it("clicking item label opens edit form in side panel", () => {
@@ -1028,7 +1029,7 @@ describe("RackPlannerModule", () => {
         vi.mocked(api.getAvailableDevices).mockReturnValueOnce(new Promise(() => {}));
         openEditor();
         fireEvent.click(screen.getByTestId("import-button"));
-        expect(screen.getByText("Loading devices...")).toBeInTheDocument();
+        expect(screen.getByText("Loading devices…")).toBeInTheDocument();
       });
 
       it("shows available devices after loading", async () => {
@@ -1366,27 +1367,30 @@ describe("RackPlannerModule", () => {
   });
 
   describe("RackCard", () => {
-    it("opens editor on keyboard Enter", () => {
+    it("opens editor on keyboard Enter", async () => {
+      const user = userEvent.setup();
       rackMock.data = { ...sampleRack };
       renderModule();
-      const card = screen.getByTestId("rack-card-1");
-      fireEvent.keyDown(card, { key: "Enter" });
+      screen.getByTestId("rack-card-1").focus();
+      await user.keyboard("{Enter}");
       expect(screen.getByTestId("back-button")).toBeInTheDocument();
     });
 
-    it("opens editor on keyboard Space", () => {
+    it("opens editor on keyboard Space", async () => {
+      const user = userEvent.setup();
       rackMock.data = { ...sampleRack };
       renderModule();
-      const card = screen.getByTestId("rack-card-1");
-      fireEvent.keyDown(card, { key: " " });
+      screen.getByTestId("rack-card-1").focus();
+      await user.keyboard(" ");
       expect(screen.getByTestId("back-button")).toBeInTheDocument();
     });
 
-    it("does not open editor on other keys", () => {
+    it("does not open editor on other keys", async () => {
+      const user = userEvent.setup();
       rackMock.data = { ...sampleRack };
       renderModule();
-      const card = screen.getByTestId("rack-card-1");
-      fireEvent.keyDown(card, { key: "Tab" });
+      screen.getByTestId("rack-card-1").focus();
+      await user.keyboard("{Tab}");
       expect(screen.queryByTestId("back-button")).not.toBeInTheDocument();
     });
 

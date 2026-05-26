@@ -4,10 +4,14 @@ import type { ZonePair, Rule, Finding } from "../api/types";
 import { useSimulate, useAnalyzeWithAi, useToggleRule, useSwapRuleOrder } from "../hooks/queries";
 import ConfirmDialog from "./ConfirmDialog";
 import { INPUT_COMPACT_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
+import RuleCard from "./rule-panel/RuleCard";
+import SimulationForm from "./rule-panel/SimulationForm";
+import SimulationResult from "./rule-panel/SimulationResult";
+import FindingsList from "./rule-panel/FindingsList";
+import AiAnalysisStatus from "./rule-panel/AiAnalysisStatus";
 import {
-  RuleCard, SimulationForm, SimulationResult, FindingsList, AiAnalysisStatus,
   gradeColor, initialFormState, formReducer, buildSimulateRequest, deriveAiError, deriveMutationError,
-} from "./rule-panel";
+} from "./rule-panel/utils";
 
 interface RulePanelProps {
   pair: ZonePair;
@@ -60,7 +64,7 @@ export default function RulePanel({
   const toggleMutation = useToggleRule();
   const swapMutation = useSwapRuleOrder();
 
-  const sortedRules = useMemo(() => [...pair.rules].sort((a, b) => a.index - b.index), [pair.rules]);
+  const sortedRules = useMemo(() => pair.rules.toSorted((a, b) => a.index - b.index), [pair.rules]);
 
   const aiData = analyzeMutation.data;
   const aiError = deriveAiError(analyzeMutation.error as Error | null, aiData);
@@ -137,7 +141,7 @@ export default function RulePanel({
         <h2 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text truncate">
           {sourceZoneName} &rarr; {destZoneName}
         </h2>
-        <button
+        <button type="button"
           onClick={onClose}
           className={CLOSE_BUTTON_CLASS}
           aria-label="Close panel"

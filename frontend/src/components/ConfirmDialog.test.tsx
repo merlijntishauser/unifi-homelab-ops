@@ -65,7 +65,8 @@ describe("ConfirmDialog", () => {
   it("stops key event propagation from dialog content", () => {
     const onCancel = vi.fn();
     render(<ConfirmDialog {...defaultProps} onCancel={onCancel} />);
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    // Pressing Escape inside dialog content must not bubble up to the backdrop handler
+    fireEvent.keyDown(screen.getByText("Confirm Action"), { key: "Escape" });
     expect(onCancel).not.toHaveBeenCalled();
   });
 });

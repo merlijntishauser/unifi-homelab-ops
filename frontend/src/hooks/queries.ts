@@ -22,6 +22,7 @@ export const queryKeys = {
   cables: ["cables"] as const,
   patchPanels: ["patch-panels"] as const,
   cableLabelSettings: ["cable-label-settings"] as const,
+  simulate: ["simulate"] as const,
 };
 
 // --- Queries ---
@@ -281,20 +282,26 @@ export function useSaveZoneFilter() {
 }
 
 export function useSimulate() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (req: SimulateRequest) => api.simulate(req),
+    onSuccess: (data, vars) => qc.setQueryData([...queryKeys.simulate, vars], data),
   });
 }
 
 export function useAnalyzeWithAi() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (req: AiAnalyzeRequest) => api.analyzeWithAi(req),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.zonePairs }),
   });
 }
 
 export function useHealthAnalysis() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.analyzeHealth(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.healthSummary }),
   });
 }
 

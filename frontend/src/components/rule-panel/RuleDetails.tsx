@@ -83,7 +83,7 @@ function DetailRowView({ row }: { row: DetailRow }) {
       <dt className={LABEL_CLASS}>{row.label}</dt>
       {row.type === "status" ? (
         <dd className="flex items-center gap-1.5">
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.active ? "bg-status-success" : "bg-ui-border dark:bg-noc-text-dim"}`} />
+          <span className={`size-1.5 rounded-full shrink-0 ${row.active ? "bg-status-success" : "bg-ui-border dark:bg-noc-text-dim"}`} />
           <span className={`text-[11px] ${row.active ? "text-status-success" : "text-ui-text-dim dark:text-noc-text-dim"}`}>
             {row.value}
           </span>

@@ -62,7 +62,7 @@ vi.mock("@xyflow/react", () => ({
     <div data-testid="react-flow" data-color-mode={colorMode}>
       {children}
       {Array.isArray(edges) && edges.map((edge) => (
-        <button
+        <button type="button"
           key={edge.id}
           data-testid={`edge-${edge.id}`}
           onClick={(e) => {
@@ -74,7 +74,7 @@ vi.mock("@xyflow/react", () => ({
       ))}
       {Array.isArray(edges) && edges.map((edge) => (
         edge.data?.onLabelClick && (
-          <button
+          <button type="button"
             key={`label-${edge.id}`}
             data-testid={`edge-label-${edge.id}`}
             onClick={() => edge.data?.onLabelClick?.()}
@@ -106,8 +106,8 @@ vi.mock("./components/SettingsModal", async () => {
       const { onLogout } = useAppContext();
       return (
         <div data-testid="settings-modal">
-          <button data-testid="close-settings" onClick={onClose}>Close</button>
-          <button data-testid="disconnect" onClick={onLogout}>Disconnect</button>
+          <button type="button" data-testid="close-settings" onClick={onClose}>Close</button>
+          <button type="button" data-testid="disconnect" onClick={onLogout}>Disconnect</button>
         </div>
       );
     },
@@ -124,12 +124,12 @@ vi.mock("./components/ZoneMatrix", () => ({
   }) => (
     <div data-testid="zone-matrix">
       {zones.map((z) => (
-        <button key={z.id} data-testid={`matrix-zone-${z.id}`} onClick={() => onZoneClick(z.id)}>
+        <button type="button" key={z.id} data-testid={`matrix-zone-${z.id}`} onClick={() => onZoneClick(z.id)}>
           {z.name}
         </button>
       ))}
       {zonePairs.map((p) => (
-        <button
+        <button type="button"
           key={`${p.source_zone_id}-${p.destination_zone_id}`}
           data-testid={`matrix-cell-${p.source_zone_id}-${p.destination_zone_id}`}
           onClick={() => onCellClick(p)}

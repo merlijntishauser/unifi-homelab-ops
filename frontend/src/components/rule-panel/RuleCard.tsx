@@ -17,33 +17,33 @@ function RuleWriteControls({
   return (
     <>
       {idx > 0 && (
-        <button
+        <button type="button"
           aria-label={`Move ${rule.name} up`}
           onClick={(e) => { e.stopPropagation(); onSwap(sortedRules[idx - 1], rule, "up"); }}
           disabled={writeDisabled}
           className="p-0.5 text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text disabled:opacity-30 cursor-pointer transition-colors"
         >
-          <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.5 7.5l3.5-3.5 3.5 3.5" /></svg>
+          <svg className="size-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.5 7.5l3.5-3.5 3.5 3.5" /></svg>
         </button>
       )}
       {idx < totalRules - 1 && (
-        <button
+        <button type="button"
           aria-label={`Move ${rule.name} down`}
           onClick={(e) => { e.stopPropagation(); onSwap(rule, sortedRules[idx + 1], "down"); }}
           disabled={writeDisabled}
           className="p-0.5 text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text disabled:opacity-30 cursor-pointer transition-colors"
         >
-          <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" /></svg>
+          <svg className="size-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" /></svg>
         </button>
       )}
-      <button
+      <button type="button"
         aria-label={`${rule.enabled ? "Disable" : "Enable"} ${rule.name}`}
         onClick={(e) => { e.stopPropagation(); onToggle(rule); }}
         disabled={writeDisabled}
         className="relative w-7 h-4 rounded-full cursor-pointer transition-colors disabled:opacity-30"
         style={{ backgroundColor: rule.enabled ? "var(--color-status-success)" : "var(--color-noc-text-dim, #9ca3af)" }}
       >
-        <span className={`absolute top-0.5 ${rule.enabled ? "left-3.5" : "left-0.5"} w-3 h-3 rounded-full bg-ui-surface shadow transition-all`} />
+        <span className={`absolute top-0.5 ${rule.enabled ? "left-3.5" : "left-0.5"} size-3 rounded-full bg-ui-surface shadow transition-all`} />
       </button>
     </>
   );
@@ -71,23 +71,19 @@ export default function RuleCard({
 }: RuleCardProps) {
   return (
     <div
-      className={`rounded-lg border p-2.5 text-xs cursor-pointer transition-colors ${actionColor(rule.action, rule.enabled)} ${
+      className={`rounded-lg border p-2.5 text-xs transition-colors ${actionColor(rule.action, rule.enabled)} ${
         isMatchedRule ? "ring-2 ring-ub-blue" : ""
       } ${isWriteLoading ? "opacity-60 pointer-events-none animate-pulse" : ""}`}
-      onClick={onToggleExpand}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onToggleExpand();
-        }
-      }}
     >
       <div className="flex items-center justify-between gap-1">
-        <div className="flex items-center gap-1.5 min-w-0">
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          aria-expanded={isExpanded}
+          className="flex items-center gap-1.5 min-w-0 flex-1 text-left bg-transparent cursor-pointer"
+        >
           <svg
-            className={`w-3 h-3 shrink-0 text-ui-text-dim dark:text-noc-text-dim transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
+            className={`size-3 shrink-0 text-ui-text-dim dark:text-noc-text-dim transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
             viewBox="0 0 12 12"
             fill="none"
             stroke="currentColor"
@@ -101,7 +97,7 @@ export default function RuleCard({
           <span className="font-medium text-ui-text dark:text-noc-text truncate">
             {idx + 1}. {rule.name}
           </span>
-        </div>
+        </button>
         <div className="flex items-center gap-1 shrink-0">
           <RuleWriteControls
             rule={rule}

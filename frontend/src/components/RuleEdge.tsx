@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { use } from "react";
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -70,7 +70,7 @@ export function RuleCardContent({
   const overflow = Math.max(0, rules.length - MAX_VISIBLE);
 
   return (
-    <button
+    <button type="button"
       onClick={(e) => {
         e.stopPropagation();
         onLabelClick?.();
@@ -91,7 +91,7 @@ export function RuleCardContent({
             className={`flex items-center gap-1.5 py-0.5 ${rule.enabled ? "" : "opacity-40"}`}
           >
             <span
-              className="w-1.5 h-1.5 rounded-full shrink-0"
+              className="size-1.5 rounded-full shrink-0"
               style={{ background: getActionColor(rule.action) }}
             />
             <span className="text-[10px] font-medium text-ui-text-secondary dark:text-noc-text-secondary truncate flex-1 text-left">
@@ -189,12 +189,12 @@ function CompactPill({
   cardSide: string;
   children: React.ReactNode;
 }) {
-  const { pinnedId, setPinnedId } = useContext(PinnedEdgeContext);
+  const { pinnedId, setPinnedId } = use(PinnedEdgeContext);
   const isPinned = pinnedId === edgeId;
 
   return (
     <>
-      <button
+      <button type="button"
         onClick={(e) => {
           e.stopPropagation();
           setPinnedId(isPinned ? null : edgeId);
@@ -202,7 +202,7 @@ function CompactPill({
         className="flex items-center gap-1 rounded-full px-1.5 py-0.5 bg-ui-surface/80 dark:bg-noc-bg/80 border border-ui-border dark:border-noc-border/20 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border/40 transition-colors"
       >
         <span
-          className="w-1.5 h-1.5 rounded-full shrink-0"
+          className="size-1.5 rounded-full shrink-0"
           style={{ background: color }}
         />
         <span className="text-[8px] font-medium text-ui-text-secondary dark:text-noc-text-dim">

@@ -40,7 +40,7 @@ function FindingCard({ finding }: { finding: Finding }) {
       <p className="mt-1 text-ui-text-secondary dark:text-noc-text-secondary">{finding.description}</p>
       {hasDetails && (
         <>
-          <button
+          <button type="button"
             onClick={() => setShowDetails(!showDetails)}
             className="mt-1 text-[10px] font-medium text-ub-blue hover:text-ub-blue-light cursor-pointer transition-colors"
           >
@@ -66,7 +66,7 @@ function FindingCard({ finding }: { finding: Finding }) {
 
 export default function FindingsList({ findings }: { findings: Finding[] }) {
   const sorted = useMemo(() => {
-    return [...findings].sort(
+    return findings.toSorted(
       (a, b) => (SEVERITY_ORDER[a.severity] ?? 3) - (SEVERITY_ORDER[b.severity] ?? 3)
     );
   }, [findings]);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react";
 import type { BomResponse, DeviceSpec, Rack, RackItem, RackItemInput, RackSummary } from "../api/types";
 import { api } from "../api/client";
 import { INPUT_CLASS, SELECT_CLASS } from "./ui";
@@ -67,15 +67,11 @@ function RackCard({ rack, onClick }: RackCardProps) {
   const fillPercent = rack.height_u > 0 ? Math.round((rack.used_u / rack.height_u) * 100) : 0;
 
   return (
-    <div
-      className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
+      className="text-left block w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
       data-testid={`rack-card-${rack.id}`}
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClick();
-      }}
     >
       <div className="flex items-center gap-2 mb-1">
         <span className="font-sans font-semibold text-sm text-ui-text dark:text-noc-text truncate flex-1">
@@ -115,7 +111,7 @@ function RackCard({ rack, onClick }: RackCardProps) {
           </p>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -144,8 +140,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Main Rack"
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Name" />
         </div>
         <div>
           <label htmlFor="new-rack-size" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Size</label>
@@ -153,8 +148,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             id="new-rack-size"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            className={SELECT_CLASS}
-          >
+            className={SELECT_CLASS} aria-label="Size">
             <option value="10-inch">10-inch</option>
             <option value="19-inch">19-inch</option>
           </select>
@@ -168,8 +162,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             onChange={(e) => setHeightU(parseInt(e.target.value) || 6)}
             min={6}
             max={48}
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Height (U)" />
         </div>
         <div className="col-span-2">
           <label htmlFor="new-rack-location" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Location (optional)</label>
@@ -179,12 +172,11 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Office closet"
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Location (optional)" />
         </div>
       </div>
       <div className="flex items-center gap-2 mt-3">
-        <button
+        <button type="button"
           onClick={() => {
             if (name.trim()) onSubmit(name.trim(), size, heightU, location.trim());
           }}
@@ -193,7 +185,7 @@ function NewRackForm({ onSubmit, onCancel }: NewRackFormProps) {
         >
           Create
         </button>
-        <button onClick={onCancel} className={btnClass}>
+        <button type="button" onClick={onCancel} className={btnClass}>
           Cancel
         </button>
       </div>
@@ -226,7 +218,7 @@ function RackOverview({ onSelectRack }: RackOverviewProps) {
       <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
         <span className="text-sm text-ui-text-dim dark:text-noc-text-dim">Rack Planner</span>
         <div className="ml-auto" />
-        <button
+        <button type="button"
           onClick={() => setShowNewForm((v) => !v)}
           className={btnClass}
           data-testid="new-rack-button"
@@ -242,8 +234,8 @@ function RackOverview({ onSelectRack }: RackOverviewProps) {
         )}
         {racksQuery.isLoading && racks.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
-            <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
-            <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading racks...</p>
+            <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+            <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading racks…</p>
           </div>
         ) : racksQuery.error ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
@@ -253,7 +245,7 @@ function RackOverview({ onSelectRack }: RackOverviewProps) {
           </div>
         ) : racks.length === 0 && !showNewForm ? (
           <div className="flex flex-col items-center justify-center h-full gap-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16 text-ui-text-dim dark:text-noc-text-dim">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="size-16 text-ui-text-dim dark:text-noc-text-dim">
               <rect x="4" y="2" width="16" height="20" rx="2" />
               <line x1="4" y1="7" x2="20" y2="7" />
               <line x1="4" y1="12" x2="20" y2="12" />
@@ -267,7 +259,7 @@ function RackOverview({ onSelectRack }: RackOverviewProps) {
               <p className="text-base font-semibold text-ui-text dark:text-noc-text">No racks yet</p>
               <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary mt-1">Design your homelab rack layout with drag-and-drop device placement.</p>
             </div>
-            <button
+            <button type="button"
               onClick={() => setShowNewForm(true)}
               className="rounded-lg bg-ub-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-ub-blue-light cursor-pointer transition-colors"
             >
@@ -392,13 +384,13 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
         )}
         {!isEditMode && (
           <div className="ml-auto flex rounded-lg border border-ui-border dark:border-noc-border overflow-hidden">
-            <button
+            <button type="button"
               onClick={() => setTab("unifi")}
               className={`px-3 py-1 text-xs font-medium transition-colors ${tab === "unifi" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
             >
               UniFi Device
             </button>
-            <button
+            <button type="button"
               onClick={() => setTab("custom")}
               className={`px-3 py-1 text-xs font-medium transition-colors border-l border-ui-border dark:border-noc-border ${tab === "custom" ? "bg-ub-blue text-white" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-input"}`}
             >
@@ -414,12 +406,13 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search devices..."
+            placeholder="Search devices…"
+            aria-label="Search UniFi devices"
             className="w-full rounded border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1.5 text-sm text-ui-text dark:text-noc-text mb-2"
           />
           <div className="max-h-48 overflow-y-auto divide-y divide-ui-border/50 dark:divide-noc-border/50 border border-ui-border dark:border-noc-border rounded">
             {filteredDevices.map((device) => (
-              <button
+              <button type="button"
                 key={device.model}
                 onClick={() => handleSelectDevice(device)}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-ui-raised dark:hover:bg-noc-input transition-colors cursor-pointer"
@@ -448,8 +441,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             value={label}
             onChange={(e) => dispatch({ label: e.target.value })}
             placeholder="e.g. USW-24-PoE"
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Label" />
         </div>
         <div>
           <label htmlFor="add-item-type" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Type</label>
@@ -457,8 +449,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             id="add-item-type"
             value={deviceType}
             onChange={(e) => dispatch({ deviceType: e.target.value })}
-            className={SELECT_CLASS}
-          >
+            className={SELECT_CLASS} aria-label="Type">
             {DEVICE_TYPE_OPTIONS.map((t) => (
               <option key={t} value={t}>{getDeviceTypeMeta(t).label}</option>
             ))}
@@ -474,8 +465,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             min={0}
             max={5}
             step={0.5}
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Height (U)" />
           {heightU === 0 && (
             <p className="text-[10px] text-ui-text-dim dark:text-noc-text-dim mt-0.5">0U items mount on side rails</p>
           )}
@@ -492,8 +482,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
               dispatch({ widthFraction: newWidth, positionX: currentXStillValid ? positionX : 0.0 });
             }}
             className={SELECT_CLASS}
-            data-testid="add-item-width"
-          >
+            data-testid="add-item-width" aria-label="Width">
             {WIDTH_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
@@ -507,8 +496,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
               value={positionX}
               onChange={(e) => dispatch({ positionX: parseFloat(e.target.value) })}
               className={SELECT_CLASS}
-              data-testid="add-item-position-x"
-            >
+              data-testid="add-item-position-x" aria-label="Position X">
               {validPositionXOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
@@ -525,8 +513,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             min={1}
             max={maxPositionU}
             step={0.5}
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Position (U)" />
         </div>
         <div>
           <label htmlFor="add-item-power" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Power (W)</label>
@@ -537,8 +524,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             onChange={(e) => dispatch({ powerWatts: parseFloat(e.target.value) || 0 })}
             min={0}
             step={0.1}
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Power (W)" />
         </div>
         <div className="col-span-2">
           <label htmlFor="add-item-notes" className="block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1">Notes (optional)</label>
@@ -547,12 +533,11 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             type="text"
             value={notes}
             onChange={(e) => dispatch({ notes: e.target.value })}
-            className={INPUT_CLASS}
-          />
+            className={INPUT_CLASS} aria-label="Notes (optional)" />
         </div>
       </div>
       <div className="flex items-center gap-2 mt-3">
-        <button
+        <button type="button"
           onClick={() => {
             if (label.trim()) {
               onSubmit({
@@ -572,7 +557,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
         >
           {submitLabel}
         </button>
-        <button onClick={onCancel} className={btnClass}>Cancel</button>
+        <button type="button" onClick={onCancel} className={btnClass}>Cancel</button>
       </div>
     </div>
   );
@@ -592,7 +577,7 @@ function BomView({ bom, onClose }: BomViewProps) {
         <h3 className="text-sm font-semibold text-ui-text dark:text-noc-text">
           Bill of Materials: {bom.rack_name}
         </h3>
-        <button onClick={onClose} className={btnClass}>Close</button>
+        <button type="button" onClick={onClose} className={btnClass}>Close</button>
       </div>
       {bom.entries.length === 0 ? (
         <p className="text-sm text-ui-text-dim dark:text-noc-text-dim">No items in rack.</p>
@@ -668,14 +653,14 @@ function RackSlotItem({ item, onDragStart, onDelete, onEdit }: RackSlotItemProps
       data-testid={`rack-item-${item.id}`}
     >
       {/* Status LED */}
-      <div className="w-1.5 h-1.5 rounded-full bg-status-success shrink-0 shadow-[0_0_4px_rgba(0,214,143,0.5)]" />
+      <div className="size-1.5 rounded-full bg-status-success shrink-0 shadow-[0_0_4px_rgba(0,214,143,0.5)]" />
       {/* Drag handle */}
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 shrink-0 opacity-30" style={{ color: "var(--rack-device-text-dim)" }}>
+      <svg viewBox="0 0 24 24" fill="currentColor" className="size-3 shrink-0 opacity-30" style={{ color: "var(--rack-device-text-dim)" }}>
         <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
         <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
         <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
       </svg>
-      <button
+      <button type="button"
         draggable={false}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => { e.stopPropagation(); onEdit?.(item); }}
@@ -690,7 +675,7 @@ function RackSlotItem({ item, onDragStart, onDelete, onEdit }: RackSlotItemProps
           {item.power_watts.toFixed(1)}W
         </span>
       )}
-      <button
+      <button type="button"
         draggable={false}
         onMouseDown={(e) => e.stopPropagation()}
         onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -703,7 +688,7 @@ function RackSlotItem({ item, onDragStart, onDelete, onEdit }: RackSlotItemProps
         style={{ color: "var(--rack-device-text-dim)" }}
         aria-label={`Delete ${item.label}`}
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
@@ -733,7 +718,7 @@ function DevicePicker({ rackId, onAdd }: DevicePickerProps) {
   };
 
   if (loading) {
-    return <p className="text-xs text-ui-text-dim dark:text-noc-text-dim p-3">Loading devices...</p>;
+    return <p className="text-xs text-ui-text-dim dark:text-noc-text-dim p-3">Loading devices…</p>;
   }
 
   if (devices.length === 0) {
@@ -755,7 +740,7 @@ function DevicePicker({ rackId, onAdd }: DevicePickerProps) {
                   <div className="text-sm text-ui-text dark:text-noc-text truncate">{device.name}</div>
                   <div className="text-xs text-ui-text-dim dark:text-noc-text-dim truncate">{meta.label} -- {device.model}</div>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => handleAdd(device)}
                   className="shrink-0 rounded border border-ub-blue/20 px-2 py-1 text-xs text-ub-blue hover:bg-ub-blue/10 cursor-pointer transition-colors"
                 >
@@ -1045,8 +1030,8 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   if (rackQuery.isLoading || !rack) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
-        <div className="h-6 w-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
-        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading rack...</p>
+        <div className="size-6 rounded-full border-2 border-ui-border dark:border-noc-border border-t-ub-blue animate-spin" />
+        <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">Loading rack…</p>
       </div>
     );
   }
@@ -1058,7 +1043,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
-        <button onClick={onBack} className={btnClass} data-testid="back-button">
+        <button type="button" onClick={onBack} className={btnClass} data-testid="back-button">
           Back
         </button>
         <span className="text-sm font-semibold text-ui-text dark:text-noc-text truncate">
@@ -1068,16 +1053,16 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
           {rack.size} / {rack.height_u}U / {rack.total_power.toFixed(1)}W
         </span>
         <div className="ml-auto" />
-        <button onClick={() => setEditorState({ showAddForm: !showAddForm, editingItem: null, showDevicePicker: false, bom: null })} className={btnClass} data-testid="add-item-button">
+        <button type="button" onClick={() => setEditorState({ showAddForm: !showAddForm, editingItem: null, showDevicePicker: false, bom: null })} className={btnClass} data-testid="add-item-button">
           Add Item
         </button>
-        <button onClick={() => setEditorState({ showDevicePicker: !showDevicePicker, editingItem: null, showAddForm: false, bom: null })} className={btnClass} data-testid="import-button">
+        <button type="button" onClick={() => setEditorState({ showDevicePicker: !showDevicePicker, editingItem: null, showAddForm: false, bom: null })} className={btnClass} data-testid="import-button">
           {showDevicePicker ? "Hide Devices" : "Add from Topology"}
         </button>
-        <button onClick={() => { setEditorState({ editingItem: null, showAddForm: false, showDevicePicker: false }); handleShowBom(); }} className={btnClass} data-testid="bom-button">
+        <button type="button" onClick={() => { setEditorState({ editingItem: null, showAddForm: false, showDevicePicker: false }); handleShowBom(); }} className={btnClass} data-testid="bom-button">
           Bill of Materials
         </button>
-        <button onClick={handleDeleteRack} className={`${btnClass} hover:!text-status-danger hover:!border-status-danger`} data-testid="delete-rack-button">
+        <button type="button" onClick={handleDeleteRack} className={`${btnClass} hover:!text-status-danger hover:!border-status-danger`} data-testid="delete-rack-button">
           Delete Rack
         </button>
       </div>
@@ -1101,7 +1086,7 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             <div className="shrink-0 w-3 rounded-l grid" style={{ background: "var(--rack-rail)", borderTop: "2px solid var(--rack-border)", borderBottom: "2px solid var(--rack-border)", gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
               {Array.from({ length: rack.height_u }, (_, uIdx) => (
                 <div key={`rail-${uIdx}`} className="flex items-center justify-center" style={{ gridRow: "span 2" }}>
-                  <div className="w-1 h-1 rounded-full" style={{ background: "var(--rack-rail-screw)" }} />
+                  <div className="size-1 rounded-full" style={{ background: "var(--rack-rail-screw)" }} />
                 </div>
               ))}
             </div>
@@ -1113,20 +1098,20 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
             <div className="shrink-0 w-3 rounded-r grid" style={{ background: "var(--rack-rail)", borderTop: "2px solid var(--rack-border)", borderBottom: "2px solid var(--rack-border)", gridTemplateRows: `repeat(${rack.height_u * 2}, 1rem)` }}>
               {Array.from({ length: rack.height_u }, (_, uIdx) => (
                 <div key={`rail-${uIdx}`} className="flex items-center justify-center" style={{ gridRow: "span 2" }}>
-                  <div className="w-1 h-1 rounded-full" style={{ background: "var(--rack-rail-screw)" }} />
+                  <div className="size-1 rounded-full" style={{ background: "var(--rack-rail-screw)" }} />
                 </div>
               ))}
             </div>
           </div>
           {/* Width indicator */}
           <div className="flex items-center mt-2 ml-8">
-            <svg viewBox="0 0 8 8" className="w-2 h-2 shrink-0 text-ui-text-dim/40 dark:text-noc-text-dim/40" fill="currentColor"><polygon points="0,4 8,0 8,8" /></svg>
+            <svg viewBox="0 0 8 8" className="size-2 shrink-0 text-ui-text-dim/40 dark:text-noc-text-dim/40" fill="currentColor"><polygon points="0,4 8,0 8,8" /></svg>
             <div className="flex-1 h-px bg-ui-text-dim/40 dark:bg-noc-text-dim/40" />
             <span className="px-2 text-[10px] font-mono text-ui-text-dim dark:text-noc-text-dim select-none whitespace-nowrap">
               {rack.size === "10-inch" ? "10\"" : "19\""}
             </span>
             <div className="flex-1 h-px bg-ui-text-dim/40 dark:bg-noc-text-dim/40" />
-            <svg viewBox="0 0 8 8" className="w-2 h-2 shrink-0 text-ui-text-dim/40 dark:text-noc-text-dim/40" fill="currentColor"><polygon points="8,4 0,0 0,8" /></svg>
+            <svg viewBox="0 0 8 8" className="size-2 shrink-0 text-ui-text-dim/40 dark:text-noc-text-dim/40" fill="currentColor"><polygon points="8,4 0,0 0,8" /></svg>
           </div>
           {zeroUItems.length > 0 && (
             <div className="mt-4" data-testid="zero-u-section">
@@ -1181,23 +1166,48 @@ function RackEditor({ rackId, onBack }: RackEditorProps) {
 
 // --- RackPlannerModule ---
 
-export default function RackPlannerModule() {
-  const [selectedRackId, setSelectedRackId] = useState<number | null>(null);
+interface RackIdStore {
+  subscribe: (cb: () => void) => () => void;
+  getSnapshot: () => number | null;
+  set: (id: number | null) => void;
+}
 
-  useEffect(() => {
-    const onPopState = () => setSelectedRackId(null);
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+function createRackIdStore(): RackIdStore {
+  let snapshot: number | null = null;
+  const listeners = new Set<() => void>();
+  const emit = () => listeners.forEach((l) => l());
+  return {
+    subscribe(cb) {
+      listeners.add(cb);
+      const onPopState = () => {
+        if (snapshot !== null) {
+          snapshot = null;
+          emit();
+        }
+      };
+      window.addEventListener("popstate", onPopState);
+      return () => {
+        listeners.delete(cb);
+        window.removeEventListener("popstate", onPopState);
+      };
+    },
+    getSnapshot: () => snapshot,
+    set(id) { snapshot = id; emit(); },
+  };
+}
+
+export default function RackPlannerModule() {
+  const [store] = useState(createRackIdStore);
+  const selectedRackId = useSyncExternalStore(store.subscribe, store.getSnapshot);
 
   const handleSelectRack = useCallback((id: number) => {
-    setSelectedRackId(id);
+    store.set(id);
     window.history.pushState({ view: "editor" }, "");
-  }, []);
+  }, [store]);
 
   const handleBack = useCallback(() => {
-    setSelectedRackId(null);
-  }, []);
+    store.set(null);
+  }, [store]);
 
   return selectedRackId !== null ? (
     <RackEditor rackId={selectedRackId} onBack={handleBack} />

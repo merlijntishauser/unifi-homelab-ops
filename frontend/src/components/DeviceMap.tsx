@@ -84,7 +84,7 @@ function buildElements(
   const deviceByMac = new Map(devices.map((d) => [d.mac, d]));
 
   // Sort devices by rank so dagre respects the layering
-  const sortedDevices = [...devices].sort(
+  const sortedDevices = devices.toSorted(
     (a, b) => getDeviceRank(a.type) - getDeviceRank(b.type),
   );
 
@@ -106,10 +106,12 @@ function buildElements(
     },
   }));
 
-  const edges: Edge[] = topologyEdges.map((te, idx) => {
+  const edges: Edge[] = [];
+  topologyEdges.forEach((te, idx) => {
+    if (!deviceByMac.has(te.from_mac) || !deviceByMac.has(te.to_mac)) return;
     const speed = formatEdgeSpeed(te.speed);
     const label = [speed, te.poe ? "PoE" : ""].filter(Boolean).join(" / ");
-    return {
+    edges.push({
       id: `edge-${idx}`,
       source: te.from_mac,
       target: te.to_mac,
@@ -121,8 +123,8 @@ function buildElements(
       label: label || undefined,
       labelStyle: { fontSize: 10, fill: "#7b8ba2" },
       style: { stroke: te.wireless ? "#006fff" : "#4a5468" },
-    };
-  }).filter((e) => deviceByMac.has(e.source) && deviceByMac.has(e.target));
+    });
+  });
 
   const result = layoutDevices(nodes, edges);
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 interface BuildInfo {
   version: string;
@@ -10,7 +10,7 @@ interface BuildInfo {
 
 interface VersionState {
   build: BuildInfo;
-  updateAvailable: string | null;
+  updateAvailable: string | undefined;
 }
 
 /* v8 ignore start -- only exercised with real build metadata */
@@ -83,23 +83,39 @@ async function checkForUpdate(currentVersion: string): Promise<string | null> {
 }
 /* v8 ignore stop */
 
+let updateSnapshot: string | undefined = undefined;
+const updateListeners = new Set<() => void>();
+let pollingStarted = false;
+
+/* v8 ignore start -- only runs in production builds */
+function startPolling(): void {
+  if (pollingStarted || build.isDev) return;
+  pollingStarted = true;
+  const check = async (): Promise<void> => {
+    const tag = await checkForUpdate(build.version);
+    if (tag && tag !== updateSnapshot) {
+      updateSnapshot = tag;
+      updateListeners.forEach((l) => l());
+    }
+  };
+  check();
+  setInterval(check, CHECK_INTERVAL);
+}
+/* v8 ignore stop */
+
+function subscribeUpdate(cb: () => void): () => void {
+  updateListeners.add(cb);
+  startPolling();
+  return () => {
+    updateListeners.delete(cb);
+  };
+}
+
+function getUpdateSnapshot(): string | undefined {
+  return updateSnapshot;
+}
+
 export function useVersionCheck(): VersionState {
-  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (build.isDev) return;
-    /* v8 ignore start -- only runs in production builds */
-    let cancelled = false;
-    const check = () => {
-      checkForUpdate(build.version).then((tag) => {
-        if (!cancelled && tag) setUpdateAvailable(tag);
-      });
-    };
-    check();
-    const interval = setInterval(check, CHECK_INTERVAL);
-    return () => { cancelled = true; clearInterval(interval); };
-    /* v8 ignore stop */
-  }, []);
-
+  const updateAvailable = useSyncExternalStore(subscribeUpdate, getUpdateSnapshot);
   return { build, updateAvailable };
 }

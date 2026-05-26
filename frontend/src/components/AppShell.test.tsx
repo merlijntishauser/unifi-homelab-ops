@@ -28,10 +28,10 @@ vi.mock("./NotificationDrawer", () => ({
   }) =>
     open ? (
       <div data-testid="notification-drawer">
-        <button data-testid="close-drawer" onClick={onClose}>Close</button>
-        <button data-testid="dismiss-one" onClick={() => onDismiss(1)}>Dismiss</button>
-        <button data-testid="dismiss-all" onClick={onDismissAll}>Dismiss All</button>
-        <button data-testid="navigate" onClick={() => onNavigateToDevice("aa:01")}>Navigate</button>
+        <button type="button" data-testid="close-drawer" onClick={onClose}>Close</button>
+        <button type="button" data-testid="dismiss-one" onClick={() => onDismiss(1)}>Dismiss</button>
+        <button type="button" data-testid="dismiss-all" onClick={onDismissAll}>Dismiss All</button>
+        <button type="button" data-testid="navigate" onClick={() => onNavigateToDevice("aa:01")}>Navigate</button>
         <span data-testid="count">{notifications.length}</span>
       </div>
     ) : null,

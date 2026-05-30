@@ -120,11 +120,11 @@ jobs:
             -v "$PWD/.cache:/root/.cache" \
             -v "$PWD:/work" \
             -w /work \
-            ghcr.io/aquasecurity/trivy:0.68.1 image \
+            ghcr.io/aquasecurity/trivy:0.70.0 image \
             --scanners vuln \
             --format sarif \
             --output "trivy-results-${{ matrix.variant }}.sarif" \
-            --vuln-type os,library \
+            --pkg-types os,library \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
             --exit-code 1 \

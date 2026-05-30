@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import type { RouteObject } from "react-router-dom";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppShell from "./components/AppShell";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import SuspenseRoute from "./components/SuspenseRoute";
 import {
   FirewallModule,
@@ -13,19 +15,31 @@ import {
   CablingModule,
 } from "./routeComponents";
 
+// Each module route gets its own errorElement so a crash in one module renders
+// inside the shell (nav stays usable) rather than blanking the whole app.
+function moduleRoute(path: string, element: ReactNode): RouteObject {
+  return {
+    path,
+    element: <SuspenseRoute>{element}</SuspenseRoute>,
+    errorElement: <RouteErrorBoundary />,
+  };
+}
+
 const routes: RouteObject[] = [
   {
     element: <AppShell />,
+    // Fallback for errors in the shell itself (toolbar, sidebar, etc.).
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <Navigate to="/health" replace /> },
-      { path: "firewall", element: <SuspenseRoute><FirewallModule /></SuspenseRoute> },
-      { path: "topology", element: <SuspenseRoute><TopologyModule /></SuspenseRoute> },
-      { path: "metrics", element: <SuspenseRoute><MetricsModule /></SuspenseRoute> },
-      { path: "health", element: <SuspenseRoute><HealthModule /></SuspenseRoute> },
-      { path: "docs", element: <SuspenseRoute><DocumentationModule /></SuspenseRoute> },
-      { path: "rack-planner", element: <SuspenseRoute><RackPlannerModule /></SuspenseRoute> },
-      { path: "cabling", element: <SuspenseRoute><CablingModule /></SuspenseRoute> },
-      { path: "home-assistant", element: <SuspenseRoute><HomeAssistantModule /></SuspenseRoute> },
+      moduleRoute("firewall", <FirewallModule />),
+      moduleRoute("topology", <TopologyModule />),
+      moduleRoute("metrics", <MetricsModule />),
+      moduleRoute("health", <HealthModule />),
+      moduleRoute("docs", <DocumentationModule />),
+      moduleRoute("rack-planner", <RackPlannerModule />),
+      moduleRoute("cabling", <CablingModule />),
+      moduleRoute("home-assistant", <HomeAssistantModule />),
     ],
   },
 ];

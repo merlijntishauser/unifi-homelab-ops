@@ -69,17 +69,21 @@ function UserIcon() {
 // --- Connection pane ---
 
 interface ConnectionFormState {
+  authMethod: "password" | "apiKey";
   url: string;
   username: string;
   password: string;
+  apiKey: string;
   site: string;
   verifySsl: boolean;
 }
 
 const initialConnectionFormState: ConnectionFormState = {
+  authMethod: "password",
   url: "",
   username: "",
   password: "",
+  apiKey: "",
   site: "default",
   verifySsl: false,
 };
@@ -88,11 +92,16 @@ function connectionFormReducer(state: ConnectionFormState, update: Partial<Conne
   return { ...state, ...update };
 }
 
+const CONN_TAB_BASE = "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors";
+const CONN_TAB_ACTIVE = "bg-ub-blue text-white";
+const CONN_TAB_INACTIVE = "text-ui-text-secondary dark:text-noc-text-secondary hover:text-ui-text dark:hover:text-noc-text";
+
 function ConnectionPane() {
   const { connectionInfo, onLogout } = useAppContext();
   const loginMutation = useLogin();
   const [form, dispatch] = useReducer(connectionFormReducer, initialConnectionFormState, () => ({
     ...initialConnectionFormState,
+    authMethod: connectionInfo?.authMethod === "api_key" ? "apiKey" as const : "password" as const,
     url: connectionInfo?.url ?? "",
     username: connectionInfo?.username ?? "",
   }));
@@ -102,9 +111,10 @@ function ConnectionPane() {
     : null;
 
   function handleConnect() {
-    loginMutation.mutate(
-      { url: form.url, username: form.username, password: form.password, site: form.site, verifySsl: form.verifySsl },
-    );
+    const payload = form.authMethod === "apiKey"
+      ? { url: form.url, site: form.site, verifySsl: form.verifySsl, apiKey: form.apiKey }
+      : { url: form.url, site: form.site, verifySsl: form.verifySsl, username: form.username, password: form.password };
+    loginMutation.mutate(payload);
   }
 
   return (
@@ -127,15 +137,37 @@ function ConnectionPane() {
         <input id="conn-url" type="url" autoComplete="url" value={form.url} onChange={e => dispatch({ url: e.target.value })} placeholder="https://192.168.1.1" aria-label="Controller URL" className={INPUT_CLASS} />
       </div>
 
-      <div>
-        <label htmlFor="conn-username" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Username</label>
-        <input id="conn-username" type="text" autoComplete="username" value={form.username} onChange={e => dispatch({ username: e.target.value })} aria-label="Username" className={INPUT_CLASS} />
+      <div className="flex gap-1 rounded-lg bg-ui-input dark:bg-noc-input p-1" role="tablist" aria-label="Authentication method">
+        <button type="button" role="tab" aria-selected={form.authMethod === "password"}
+          onClick={() => dispatch({ authMethod: "password" })}
+          className={`${CONN_TAB_BASE} ${form.authMethod === "password" ? CONN_TAB_ACTIVE : CONN_TAB_INACTIVE}`}>
+          Username &amp; Password
+        </button>
+        <button type="button" role="tab" aria-selected={form.authMethod === "apiKey"}
+          onClick={() => dispatch({ authMethod: "apiKey" })}
+          className={`${CONN_TAB_BASE} ${form.authMethod === "apiKey" ? CONN_TAB_ACTIVE : CONN_TAB_INACTIVE}`}>
+          API Key
+        </button>
       </div>
 
-      <div>
-        <label htmlFor="conn-password" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Password</label>
-        <PasswordInput id="conn-password" value={form.password} onChange={v => dispatch({ password: v })} />
-      </div>
+      {form.authMethod === "password" ? (
+        <>
+          <div>
+            <label htmlFor="conn-username" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Username</label>
+            <input id="conn-username" type="text" autoComplete="username" value={form.username} onChange={e => dispatch({ username: e.target.value })} aria-label="Username" className={INPUT_CLASS} />
+          </div>
+
+          <div>
+            <label htmlFor="conn-password" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Password</label>
+            <PasswordInput id="conn-password" value={form.password} onChange={v => dispatch({ password: v })} />
+          </div>
+        </>
+      ) : (
+        <div>
+          <label htmlFor="conn-api-key" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">API Key</label>
+          <PasswordInput id="conn-api-key" value={form.apiKey} onChange={v => dispatch({ apiKey: v })} autoComplete="off" ariaLabel="API Key" />
+        </div>
+      )}
 
       <div>
         <label htmlFor="conn-site" className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary mb-1">Site</label>

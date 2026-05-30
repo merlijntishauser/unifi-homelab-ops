@@ -125,8 +125,9 @@ volumes:
 |---|---|---|
 | `UNIFI_URL` | Controller URL (e.g. `https://192.168.1.1`) | -- |
 | `UNIFI_SITE` | Site name | `default` |
-| `UNIFI_USER` | Controller username | -- |
-| `UNIFI_PASS` | Controller password | -- |
+| `UNIFI_USER` | Controller username (ignored if `UNIFI_API_KEY` is set) | -- |
+| `UNIFI_PASS` | Controller password (ignored if `UNIFI_API_KEY` is set) | -- |
+| `UNIFI_API_KEY` | Network integration API key; takes priority over user/password | -- |
 | `UNIFI_VERIFY_SSL` | Verify SSL certificates | `false` |
 | `APP_PASSWORD` | Optional passphrase gate for the web UI | -- |
 | `APP_SESSION_TTL` | Session duration in seconds | `86400` |

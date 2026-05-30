@@ -26,6 +26,7 @@ async def test_status_no_credentials(client: AsyncClient) -> None:
     assert data["source"] == "none"
     assert data["url"] == ""
     assert data["username"] == ""
+    assert data["auth_method"] == "none"
 
 
 @pytest.mark.anyio
@@ -53,6 +54,7 @@ async def test_login_stores_credentials(client: AsyncClient) -> None:
     assert status_data["source"] == "runtime"
     assert status_data["url"] == "https://unifi.example.com"
     assert status_data["username"] == "admin"
+    assert status_data["auth_method"] == "password"
 
 
 @pytest.mark.anyio
@@ -143,11 +145,58 @@ async def test_login_replaces_previous_credentials(client: AsyncClient) -> None:
 
 
 @pytest.mark.anyio
+async def test_login_with_api_key_stores_credentials(client: AsyncClient) -> None:
+    """Login with an API key stores api-key credentials and reports the method."""
+    with _mock_login_validation():
+        resp = await client.post(
+            "/api/auth/login",
+            json={"url": "https://unifi.example.com", "api_key": "secret-key", "site": "default"},
+        )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+
+    status_resp = await client.get("/api/auth/status")
+    status_data = status_resp.json()
+    assert status_data["configured"] is True
+    assert status_data["source"] == "runtime"
+    assert status_data["url"] == "https://unifi.example.com"
+    assert status_data["username"] == ""
+    assert status_data["auth_method"] == "api_key"
+
+
+@pytest.mark.anyio
+async def test_login_api_key_invalid_returns_401(client: AsyncClient) -> None:
+    with patch("app.routers.auth.fetch_firewall_zones", side_effect=UnifiAuthError("bad key")):
+        resp = await client.post(
+            "/api/auth/login",
+            json={"url": "https://unifi.example.com", "api_key": "wrong-key"},
+        )
+    assert resp.status_code == 401
+    status_resp = await client.get("/api/auth/status")
+    assert status_resp.json()["configured"] is False
+
+
+@pytest.mark.anyio
 async def test_login_validation_missing_fields(client: AsyncClient) -> None:
-    """Missing required fields should return 422."""
+    """No auth method provided should return 422."""
     resp = await client.post(
         "/api/auth/login",
         json={"url": "https://unifi.local"},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_login_rejects_both_auth_methods(client: AsyncClient) -> None:
+    """Providing both api_key and username/password should return 422."""
+    resp = await client.post(
+        "/api/auth/login",
+        json={
+            "url": "https://unifi.local",
+            "username": "admin",
+            "password": "pass",
+            "api_key": "key",
+        },
     )
     assert resp.status_code == 422
 

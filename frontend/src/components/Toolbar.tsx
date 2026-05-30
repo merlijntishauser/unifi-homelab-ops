@@ -6,6 +6,7 @@ interface ConnectionInfo {
   url: string;
   username: string;
   source: "env" | "runtime" | "none";
+  authMethod: "password" | "api_key" | "none";
 }
 
 interface AiInfo {

@@ -83,13 +83,13 @@ describe("LoginScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Connect" }));
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith(
-        "https://192.168.1.1",
-        "admin",
-        "pass",
-        "default",
-        false,
-      );
+      expect(mockLogin).toHaveBeenCalledWith({
+        url: "https://192.168.1.1",
+        site: "default",
+        verifySsl: false,
+        username: "admin",
+        password: "pass",
+      });
     });
 
     await waitFor(() => {
@@ -218,13 +218,51 @@ describe("LoginScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Connect" }));
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith(
-        "https://192.168.1.1",
-        "admin",
-        "pass",
-        "default",
-        true,
-      );
+      expect(mockLogin).toHaveBeenCalledWith({
+        url: "https://192.168.1.1",
+        site: "default",
+        verifySsl: true,
+        username: "admin",
+        password: "pass",
+      });
+    });
+  });
+
+  it("switches to API key mode and submits an api_key payload", async () => {
+    mockLogin.mockResolvedValue(undefined);
+    renderWithQuery(<LoginScreen onLoggedIn={onLoggedIn} />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "API Key" }));
+
+    // Username/password fields are replaced by the API key field
+    expect(screen.queryByLabelText("Username")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+
+    // Toggling back restores the username/password fields
+    fireEvent.click(screen.getByRole("tab", { name: "Username & Password" }));
+    expect(screen.getByLabelText("Username")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "API Key" }));
+
+    fireEvent.change(screen.getByLabelText("Controller URL"), {
+      target: { value: "https://192.168.1.1" },
+    });
+    fireEvent.change(screen.getByLabelText("API Key"), {
+      target: { value: "my-secret-key" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Connect" }));
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith({
+        url: "https://192.168.1.1",
+        site: "default",
+        verifySsl: false,
+        apiKey: "my-secret-key",
+      });
+    });
+
+    await waitFor(() => {
+      expect(onLoggedIn).toHaveBeenCalled();
     });
   });
 });

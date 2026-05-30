@@ -246,6 +246,29 @@ describe("SettingsModal", () => {
     expect(mockLoginFn).toHaveBeenCalled();
   });
 
+  it("connects with an API key when API Key mode is selected", async () => {
+    const mockLoginFn = vi.mocked(api.login);
+    mockLoginFn.mockResolvedValue(undefined);
+
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("tab", { name: "API Key" }));
+    expect(screen.queryByLabelText("Username")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Controller URL"), { target: { value: "https://192.168.1.1" } });
+    fireEvent.change(screen.getByLabelText("API Key"), { target: { value: "k-123" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Connect" }));
+    });
+
+    expect(mockLoginFn).toHaveBeenCalledWith({
+      url: "https://192.168.1.1",
+      site: "default",
+      verifySsl: false,
+      apiKey: "k-123",
+    });
+  });
+
   it("switches back to Connection tab from another tab", () => {
     renderModal(vi.fn());
     fireEvent.click(screen.getByRole("button", { name: "User Settings" }));

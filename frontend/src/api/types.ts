@@ -153,6 +153,16 @@ export interface AuthStatus {
   source: "env" | "runtime" | "none";
   url: string;
   username: string;
+  auth_method: "password" | "api_key" | "none";
+}
+
+export interface LoginPayload {
+  url: string;
+  site: string;
+  verifySsl: boolean;
+  username?: string;
+  password?: string;
+  apiKey?: string;
 }
 
 export interface ZoneFilter {

@@ -13,6 +13,7 @@ import type {
   AppAuthStatus,
   AppNotification,
   AuthStatus,
+  LoginPayload,
   BomResponse,
   DocumentationResponse,
   HealthAnalysisResult,
@@ -60,21 +61,16 @@ export const api = {
     }),
   appLogout: () => fetchJson("/auth/app-logout", { method: "POST" }),
   getAuthStatus: () => fetchJson<AuthStatus>("/auth/status"),
-  login: (
-    url: string,
-    username: string,
-    password: string,
-    site: string,
-    verifySsl: boolean,
-  ) =>
+  login: (payload: LoginPayload) =>
     fetchJson("/auth/login", {
       method: "POST",
       body: JSON.stringify({
-        url,
-        username,
-        password,
-        site,
-        verify_ssl: verifySsl,
+        url: payload.url,
+        username: payload.username,
+        password: payload.password,
+        api_key: payload.apiKey,
+        site: payload.site,
+        verify_ssl: payload.verifySsl,
       }),
     }),
   logout: () => fetchJson("/auth/logout", { method: "POST" }),

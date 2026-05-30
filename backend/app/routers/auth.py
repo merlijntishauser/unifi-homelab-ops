@@ -1,11 +1,11 @@
 import asyncio
 import hmac
-from typing import Literal
+from typing import Literal, Self
 
 import structlog
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from unifi_topology import fetch_firewall_zones
 from unifi_topology.adapters.unifi_api import UnifiAuthError
 
@@ -27,10 +27,19 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 class LoginRequest(BaseModel):
     url: str
-    username: str
-    password: str
+    username: str = ""
+    password: str = ""
+    api_key: str | None = None
     site: str = "default"
     verify_ssl: bool = False
+
+    @model_validator(mode="after")
+    def _require_one_auth_method(self) -> Self:
+        has_api_key = bool(self.api_key)
+        has_password = bool(self.username) and bool(self.password)
+        if has_api_key == has_password:
+            raise ValueError("Provide either api_key or username and password, not both")
+        return self
 
 
 class LoginResponse(BaseModel):
@@ -48,6 +57,7 @@ class AuthStatusResponse(BaseModel):
     source: Literal["env", "runtime", "none"]
     url: str
     username: str
+    auth_method: Literal["password", "api_key", "none"]
 
 
 @router.post("/app-login")
@@ -97,7 +107,8 @@ async def app_status(request: Request) -> AppAuthStatus:
 
 @router.post("/login")
 async def login(request: LoginRequest) -> LoginResponse:
-    log.info("controller_login", url=request.url, user=request.username, site=request.site)
+    method = "api_key" if request.api_key else "password"
+    log.info("controller_login", url=request.url, user=request.username, site=request.site, method=method)
 
     # Validate credentials by making a lightweight call to the controller
     from app.config import UnifiCredentials
@@ -106,6 +117,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         url=request.url,
         username=request.username,
         password=request.password,
+        api_key=request.api_key,
         site=request.site,
         verify_ssl=request.verify_ssl,
     )
@@ -113,7 +125,7 @@ async def login(request: LoginRequest) -> LoginResponse:
     try:
         await asyncio.to_thread(fetch_firewall_zones, config, site=creds.site, use_cache=False)
     except UnifiAuthError as exc:
-        log.warning("controller_login_failed", url=request.url, user=request.username, error=str(exc))
+        log.warning("controller_login_failed", url=request.url, method=method, error=str(exc))
         return JSONResponse(status_code=401, content={"detail": "Invalid controller credentials"})  # type: ignore[return-value]
     except Exception as exc:
         log.warning("controller_login_error", url=request.url, error=str(exc))
@@ -123,6 +135,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         url=request.url,
         username=request.username,
         password=request.password,
+        api_key=request.api_key,
         site=request.site,
         verify_ssl=request.verify_ssl,
     )
@@ -143,6 +156,13 @@ async def status() -> AuthStatusResponse:
     log.debug("auth_status", source=source, configured=config is not None)
 
     if config is None:
-        return AuthStatusResponse(configured=False, source="none", url="", username="")
+        return AuthStatusResponse(configured=False, source="none", url="", username="", auth_method="none")
 
-    return AuthStatusResponse(configured=True, source=source, url=config.url, username=config.username)
+    auth_method: Literal["password", "api_key"] = "api_key" if config.api_key else "password"
+    return AuthStatusResponse(
+        configured=True,
+        source=source,
+        url=config.url,
+        username=config.username,
+        auth_method=auth_method,
+    )

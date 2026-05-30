@@ -95,3 +95,43 @@ def test_get_credential_source_env() -> None:
         patch.object(settings, "unifi_pass", "p"),
     ):
         assert get_credential_source() == "env"
+
+
+def test_set_and_get_runtime_api_key() -> None:
+    clear_runtime_credentials()
+    set_runtime_credentials(url="https://test.local", api_key="my-key", site="s")
+    config = get_unifi_config()
+    assert config is not None
+    assert config.api_key == "my-key"
+    assert config.username == ""
+    assert config.password == ""
+    assert get_credential_source() == "runtime"
+    clear_runtime_credentials()
+
+
+def test_get_unifi_config_env_api_key() -> None:
+    clear_runtime_credentials()
+    with (
+        patch.object(settings, "unifi_url", "https://env.local"),
+        patch.object(settings, "unifi_api_key", "env-key"),
+        patch.object(settings, "unifi_site", "mysite"),
+    ):
+        config = get_unifi_config()
+        assert config is not None
+        assert config.api_key == "env-key"
+        assert config.site == "mysite"
+        assert get_credential_source() == "env"
+
+
+def test_env_api_key_wins_over_password() -> None:
+    clear_runtime_credentials()
+    with (
+        patch.object(settings, "unifi_url", "https://env.local"),
+        patch.object(settings, "unifi_api_key", "env-key"),
+        patch.object(settings, "unifi_user", "u"),
+        patch.object(settings, "unifi_pass", "p"),
+    ):
+        config = get_unifi_config()
+        assert config is not None
+        assert config.api_key == "env-key"
+        assert config.username == ""

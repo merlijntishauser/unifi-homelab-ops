@@ -3,13 +3,27 @@ from unittest.mock import patch
 from unifi_topology import Config
 
 from app.config import UnifiCredentials
-from app.services.firewall import _build_network_lookup, get_zone_pairs
+from app.services.firewall import _build_network_lookup, get_zone_pairs, to_topology_config
 
 MOCK_CREDS = UnifiCredentials(url="https://x", username="u", password="p")
 
 
 def _config() -> Config:
     return Config(url="https://x", site="default", user="u", password="p", verify_ssl=False)
+
+
+class TestToTopologyConfig:
+    def test_password_credentials(self) -> None:
+        config = to_topology_config(UnifiCredentials(url="https://x", username="u", password="p"))
+        assert config.user == "u"
+        assert config.password == "p"
+        assert config.api_key is None
+
+    def test_api_key_credentials(self) -> None:
+        config = to_topology_config(UnifiCredentials(url="https://x", api_key="k"))
+        assert config.api_key == "k"
+        assert config.user is None
+        assert config.password is None
 
 
 class TestBuildNetworkLookup:

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
-import type { AiAnalyzeRequest, AiConfigInput, CableRunInput, NodePosition, PatchPanelInput, RackInput, RackItemInput, SimulateRequest } from "../api/types";
+import type { AiAnalyzeRequest, AiConfigInput, CableRunInput, LoginPayload, NodePosition, PatchPanelInput, RackInput, RackItemInput, SimulateRequest } from "../api/types";
 
 export const queryKeys = {
   zones: ["zones"] as const,
@@ -222,8 +222,7 @@ export function useAppLogin() {
 export function useLogin() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { url: string; username: string; password: string; site: string; verifySsl: boolean }) =>
-      api.login(vars.url, vars.username, vars.password, vars.site, vars.verifySsl),
+    mutationFn: (vars: LoginPayload) => api.login(vars),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.authStatus }),
   });
 }

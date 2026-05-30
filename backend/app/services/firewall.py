@@ -31,7 +31,18 @@ log = structlog.get_logger()
 
 
 def to_topology_config(credentials: UnifiCredentials) -> Config:
-    """Convert our credentials to a unifi-topology Config."""
+    """Convert our credentials to a unifi-topology Config.
+
+    Config requires exactly one of api_key or user+password, so branch on
+    which the credentials carry.
+    """
+    if credentials.api_key:
+        return Config(
+            url=credentials.url,
+            site=credentials.site,
+            api_key=credentials.api_key,
+            verify_ssl=credentials.verify_ssl,
+        )
     return Config(
         url=credentials.url,
         site=credentials.site,

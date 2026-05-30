@@ -8,18 +8,24 @@ interface LoginScreenProps {
   onLoggedIn: () => void;
 }
 
+type AuthMethod = "password" | "apiKey";
+
 interface LoginFormState {
+  authMethod: AuthMethod;
   url: string;
   username: string;
   password: string;
+  apiKey: string;
   site: string;
   verifySsl: boolean;
 }
 
 const initialLoginFormState: LoginFormState = {
+  authMethod: "password",
   url: "",
   username: "",
   password: "",
+  apiKey: "",
   site: "default",
   verifySsl: false,
 };
@@ -28,9 +34,13 @@ function loginFormReducer(state: LoginFormState, update: Partial<LoginFormState>
   return { ...state, ...update };
 }
 
+const TAB_BASE = "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors";
+const TAB_ACTIVE = "bg-ub-blue text-white";
+const TAB_INACTIVE = "text-ui-text-secondary dark:text-noc-text-secondary hover:text-ui-text dark:hover:text-noc-text";
+
 export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
   const [form, dispatch] = useReducer(loginFormReducer, initialLoginFormState);
-  const { url, username, password, site, verifySsl } = form;
+  const { authMethod, url, username, password, apiKey, site, verifySsl } = form;
   const loginMutation = useLogin();
 
   const error = loginMutation.error
@@ -40,10 +50,10 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    loginMutation.mutate(
-      { url, username, password, site, verifySsl },
-      { onSuccess: onLoggedIn },
-    );
+    const payload = authMethod === "apiKey"
+      ? { url, site, verifySsl, apiKey }
+      : { url, site, verifySsl, username, password };
+    loginMutation.mutate(payload, { onSuccess: onLoggedIn });
   }
 
   return (
@@ -85,39 +95,84 @@ export default function LoginScreen({ onLoggedIn }: LoginScreenProps) {
           />
         </div>
 
-        <div className="space-y-1">
-          <label
-            htmlFor="username"
-            className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+        <div className="flex gap-1 rounded-lg bg-ui-input dark:bg-noc-input p-1" role="tablist" aria-label="Authentication method">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={authMethod === "password"}
+            onClick={() => dispatch({ authMethod: "password" })}
+            className={`${TAB_BASE} ${authMethod === "password" ? TAB_ACTIVE : TAB_INACTIVE}`}
           >
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            required
-            autoComplete="username"
-            value={username}
-            onChange={(e) => dispatch({ username: e.target.value })}
-            aria-label="Username"
-            className={INPUT_CLASS}
-          />
+            Username &amp; Password
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={authMethod === "apiKey"}
+            onClick={() => dispatch({ authMethod: "apiKey" })}
+            className={`${TAB_BASE} ${authMethod === "apiKey" ? TAB_ACTIVE : TAB_INACTIVE}`}
+          >
+            API Key
+          </button>
         </div>
 
-        <div className="space-y-1">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
-          >
-            Password
-          </label>
-          <PasswordInput
-            id="password"
-            required
-            value={password}
-            onChange={(v) => dispatch({ password: v })}
-          />
-        </div>
+        {authMethod === "password" ? (
+          <>
+            <div className="space-y-1">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+              >
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                required
+                autoComplete="username"
+                value={username}
+                onChange={(e) => dispatch({ username: e.target.value })}
+                aria-label="Username"
+                className={INPUT_CLASS}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+              >
+                Password
+              </label>
+              <PasswordInput
+                id="password"
+                required
+                value={password}
+                onChange={(v) => dispatch({ password: v })}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="space-y-1">
+            <label
+              htmlFor="apiKey"
+              className="block text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary"
+            >
+              API Key
+            </label>
+            <PasswordInput
+              id="apiKey"
+              required
+              value={apiKey}
+              onChange={(v) => dispatch({ apiKey: v })}
+              autoComplete="off"
+              ariaLabel="API Key"
+            />
+            <p className="text-xs text-ui-text-dim dark:text-noc-text-dim">
+              UniFi Network integration API key (Settings → Control Plane → Admins → API Keys).
+            </p>
+          </div>
+        )}
 
         <div className="space-y-1">
           <label

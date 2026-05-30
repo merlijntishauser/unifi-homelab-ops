@@ -12,7 +12,7 @@ export function useAuthFlow() {
   const authed = authQuery.data?.configured ?? false;
   const authLoading = appAuth.isLoading || (shouldCheckUnifi && authQuery.isLoading);
   const connectionInfo = useMemo(
-    () => authed ? { url: authQuery.data!.url, username: authQuery.data!.username, source: authQuery.data!.source } : null,
+    () => authed ? { url: authQuery.data!.url, username: authQuery.data!.username, source: authQuery.data!.source, authMethod: authQuery.data!.auth_method } : null,
     [authed, authQuery.data],
   );
 

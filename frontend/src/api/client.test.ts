@@ -42,7 +42,7 @@ describe("api client", () => {
 
     it("merges custom headers with default Content-Type", async () => {
       mockFetch.mockResolvedValue(mockOkResponse({}));
-      await api.login("https://unifi.local", "admin", "pass", "default", true);
+      await api.login({ url: "https://unifi.local", username: "admin", password: "pass", site: "default", verifySsl: true });
       const [url, init] = mockFetch.mock.calls[0];
       expect(url).toBe("/api/auth/login");
       expect(init.headers).toEqual({ "Content-Type": "application/json" });
@@ -94,7 +94,7 @@ describe("api client", () => {
   describe("login", () => {
     it("sends POST with credentials", async () => {
       mockFetch.mockResolvedValue(mockOkResponse({ success: true }));
-      await api.login("https://unifi.local", "admin", "pass", "default", false);
+      await api.login({ url: "https://unifi.local", username: "admin", password: "pass", site: "default", verifySsl: false });
       const [, init] = mockFetch.mock.calls[0];
       expect(init.method).toBe("POST");
       const body = JSON.parse(init.body);
@@ -102,14 +102,25 @@ describe("api client", () => {
         url: "https://unifi.local",
         username: "admin",
         password: "pass",
+        api_key: undefined,
         site: "default",
         verify_ssl: false,
       });
     });
 
+    it("sends api_key when provided", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ success: true }));
+      await api.login({ url: "https://unifi.local", apiKey: "my-key", site: "default", verifySsl: false });
+      const [, init] = mockFetch.mock.calls[0];
+      const body = JSON.parse(init.body);
+      expect(body.api_key).toBe("my-key");
+      expect(body.username).toBeUndefined();
+      expect(body.password).toBeUndefined();
+    });
+
     it("sends verify_ssl as true when verifySsl is true", async () => {
       mockFetch.mockResolvedValue(mockOkResponse({ success: true }));
-      await api.login("https://unifi.local", "admin", "pass", "default", true);
+      await api.login({ url: "https://unifi.local", username: "admin", password: "pass", site: "default", verifySsl: true });
       const [, init] = mockFetch.mock.calls[0];
       const body = JSON.parse(init.body);
       expect(body.verify_ssl).toBe(true);

@@ -5,12 +5,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.config import UnifiCredentials
 from app.services.topology import get_topology_devices, get_topology_svg
 
-MOCK_CONFIG = type("Credentials", (), {
-    "url": "https://unifi.example.com", "site": "default",
-    "username": "admin", "password": "secret", "verify_ssl": False,
-})()
+MOCK_CONFIG = UnifiCredentials(
+    url="https://unifi.example.com", site="default",
+    username="admin", password="secret", verify_ssl=False,
+)
 
 MOCK_RAW_DEVICES = [
     {

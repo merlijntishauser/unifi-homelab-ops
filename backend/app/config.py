@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     unifi_site: str = "default"
     unifi_user: str = ""
     unifi_pass: str = ""
+    unifi_api_key: str = ""
     unifi_verify_ssl: bool = False
     app_password: str = ""
     app_session_ttl: int = 86400  # 24 hours in seconds
@@ -24,10 +25,31 @@ settings = Settings()
 @dataclass(frozen=True)
 class UnifiCredentials:
     url: str
-    username: str
-    password: str
+    username: str = ""
+    password: str = ""
+    api_key: str | None = None
     site: str = "default"
     verify_ssl: bool = False
+
+
+def _env_credentials() -> UnifiCredentials | None:
+    """Build credentials from env vars. API key takes priority over user/password."""
+    if settings.unifi_url and settings.unifi_api_key:
+        return UnifiCredentials(
+            url=settings.unifi_url,
+            api_key=settings.unifi_api_key,
+            site=settings.unifi_site,
+            verify_ssl=settings.unifi_verify_ssl,
+        )
+    if settings.unifi_url and settings.unifi_user and settings.unifi_pass:
+        return UnifiCredentials(
+            url=settings.unifi_url,
+            username=settings.unifi_user,
+            password=settings.unifi_pass,
+            site=settings.unifi_site,
+            verify_ssl=settings.unifi_verify_ssl,
+        )
+    return None
 
 
 _runtime_credentials: UnifiCredentials | None = None
@@ -36,8 +58,9 @@ _credentials_lock = Lock()
 
 def set_runtime_credentials(
     url: str,
-    username: str,
-    password: str,
+    username: str = "",
+    password: str = "",
+    api_key: str | None = None,
     site: str = "default",
     verify_ssl: bool = False,
 ) -> None:
@@ -47,6 +70,7 @@ def set_runtime_credentials(
             url=url,
             username=username,
             password=password,
+            api_key=api_key,
             site=site,
             verify_ssl=verify_ssl,
         )
@@ -64,16 +88,7 @@ def get_unifi_config() -> UnifiCredentials | None:
         if _runtime_credentials is not None:
             return _runtime_credentials
 
-    if settings.unifi_url and settings.unifi_user and settings.unifi_pass:
-        return UnifiCredentials(
-            url=settings.unifi_url,
-            username=settings.unifi_user,
-            password=settings.unifi_pass,
-            site=settings.unifi_site,
-            verify_ssl=settings.unifi_verify_ssl,
-        )
-
-    return None
+    return _env_credentials()
 
 
 def has_credentials() -> bool:
@@ -86,7 +101,7 @@ def get_credential_source() -> Literal["runtime", "env", "none"]:
     with _credentials_lock:
         if _runtime_credentials is not None:
             return "runtime"
-    if settings.unifi_url and settings.unifi_user and settings.unifi_pass:
+    if _env_credentials() is not None:
         return "env"
     return "none"
 

@@ -27,6 +27,7 @@ async def test_status_no_credentials(client: AsyncClient) -> None:
     assert data["url"] == ""
     assert data["username"] == ""
     assert data["auth_method"] == "none"
+    assert data["controller_status"] == "unknown"
 
 
 @pytest.mark.anyio
@@ -55,6 +56,8 @@ async def test_login_stores_credentials(client: AsyncClient) -> None:
     assert status_data["url"] == "https://unifi.example.com"
     assert status_data["username"] == "admin"
     assert status_data["auth_method"] == "password"
+    # Login validated the credentials, so the controller is reported healthy.
+    assert status_data["controller_status"] == "ok"
 
 
 @pytest.mark.anyio
@@ -199,6 +202,33 @@ async def test_login_rejects_both_auth_methods(client: AsyncClient) -> None:
         },
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_status_reflects_controller_auth_error(client: AsyncClient) -> None:
+    """A rejected-credentials state from the poller surfaces in auth status."""
+    from app.services.controller_health import set_controller_health
+
+    with _mock_login_validation():
+        await client.post(
+            "/api/auth/login",
+            json={"url": "https://unifi.example.com", "api_key": "key"},
+        )
+    set_controller_health("auth_error", "API key rejected (HTTP 401)")
+
+    status_resp = await client.get("/api/auth/status")
+    data = status_resp.json()
+    assert data["controller_status"] == "auth_error"
+    assert data["controller_detail"] == "API key rejected (HTTP 401)"
+
+
+@pytest.mark.anyio
+async def test_logout_resets_controller_health(client: AsyncClient) -> None:
+    from app.services.controller_health import get_controller_health, set_controller_health
+
+    set_controller_health("auth_error", "rejected")
+    await client.post("/api/auth/logout")
+    assert get_controller_health().status == "unknown"
 
 
 @pytest.mark.anyio

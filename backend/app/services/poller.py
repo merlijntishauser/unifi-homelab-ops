@@ -7,9 +7,11 @@ import time
 
 import structlog
 from unifi_topology import DeviceStats, fetch_device_stats, normalize_device_stats
+from unifi_topology.adapters.unifi_api import UnifiAuthError
 
 from app.config import get_unifi_config, has_credentials
 from app.services.anomaly_checker import AnomalyResult, run_checks
+from app.services.controller_health import set_controller_health
 from app.services.firewall import to_topology_config
 from app.services.metrics import (
     create_notification,
@@ -22,6 +24,7 @@ from app.services.metrics import (
 log = structlog.get_logger()
 
 _POLL_INTERVAL = 30
+_AUTH_ERROR_INTERVAL = 120  # back off when the controller rejects our credentials
 _PRUNE_INTERVAL = 3600  # one hour
 _last_prune_time: float = 0.0
 _previous_stats: dict[str, DeviceStats] = {}
@@ -102,13 +105,34 @@ def _poll_once() -> None:
     record_snapshot(stats)
     _check_anomalies(stats)
     _maybe_prune()
+    set_controller_health("ok")
+
+
+def _handle_auth_error(exc: UnifiAuthError) -> None:
+    """Record a rejected-credentials state, logging only on transition (no spam)."""
+    previous = set_controller_health("auth_error", str(exc))
+    if previous != "auth_error":
+        log.warning(
+            "metrics_poll_auth_error",
+            error=str(exc),
+            detail="Controller rejected the configured credentials; backing off until they change",
+        )
 
 
 async def start_metrics_poller() -> None:
-    """Background task that polls device stats every 30 seconds."""
+    """Background task that polls device stats on an interval.
+
+    Rejected credentials are an expected, recoverable condition: log them once
+    and back off rather than emitting a traceback every cycle.
+    """
     while True:
+        interval = _POLL_INTERVAL
         try:
             await asyncio.to_thread(_poll_once)
-        except Exception:
-            log.exception("metrics_poll_error")
-        await asyncio.sleep(_POLL_INTERVAL)
+        except UnifiAuthError as exc:
+            _handle_auth_error(exc)
+            interval = _AUTH_ERROR_INTERVAL
+        except Exception as exc:
+            set_controller_health("unreachable", str(exc))
+            log.warning("metrics_poll_error", error=str(exc))
+        await asyncio.sleep(interval)

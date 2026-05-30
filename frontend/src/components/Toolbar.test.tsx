@@ -6,7 +6,7 @@ describe("Toolbar", () => {
   const defaultProps = {
     themePreference: "dark" as const,
     onThemePreferenceChange: vi.fn(),
-    connectionInfo: { url: "https://unifi.local", username: "admin", source: "runtime" as const },
+    connectionInfo: { url: "https://unifi.local", username: "admin", source: "runtime" as const, authMethod: "password" as const, controllerStatus: "ok" as const, controllerDetail: "" },
     aiInfo: { configured: false, provider: "", model: "" },
   };
 
@@ -65,9 +65,9 @@ describe("Toolbar", () => {
   });
 
   it("shows connected Controller badge with tooltip", () => {
-    renderToolbar({ connectionInfo: { url: "https://unifi.local", username: "admin", source: "runtime" as const } });
+    renderToolbar({ connectionInfo: { url: "https://unifi.local", username: "admin", source: "runtime" as const, authMethod: "password" as const, controllerStatus: "ok" as const, controllerDetail: "" } });
     expect(screen.getByText("Controller")).toBeInTheDocument();
-    expect(screen.getByText(/Connected to: https:\/\/unifi\.local/)).toBeInTheDocument();
+    expect(screen.getByText(/Controller: https:\/\/unifi\.local/)).toBeInTheDocument();
     expect(screen.getByText(/As: admin/)).toBeInTheDocument();
     expect(screen.getByText(/Config from: runtime/)).toBeInTheDocument();
   });
@@ -76,6 +76,23 @@ describe("Toolbar", () => {
     renderToolbar({ connectionInfo: null });
     expect(screen.getByText("Controller")).toBeInTheDocument();
     expect(screen.getByText("Not connected")).toBeInTheDocument();
+  });
+
+  it("shows a rejected-credentials Controller tooltip on auth_error", () => {
+    renderToolbar({ connectionInfo: { url: "https://unifi.local", username: "", source: "runtime" as const, authMethod: "api_key" as const, controllerStatus: "auth_error" as const, controllerDetail: "API key rejected (HTTP 401)" } });
+    expect(screen.getByText(/Credentials rejected by the controller/)).toBeInTheDocument();
+    expect(screen.getByText(/Update them in Settings/)).toBeInTheDocument();
+  });
+
+  it("shows an unreachable Controller tooltip on unreachable status", () => {
+    renderToolbar({ connectionInfo: { url: "https://unifi.local", username: "admin", source: "env" as const, authMethod: "password" as const, controllerStatus: "unreachable" as const, controllerDetail: "Connection refused" } });
+    expect(screen.getByText(/Controller unreachable/)).toBeInTheDocument();
+    expect(screen.getByText(/Connection refused/)).toBeInTheDocument();
+  });
+
+  it("shows an unreachable Controller tooltip without detail when none is provided", () => {
+    renderToolbar({ connectionInfo: { url: "https://unifi.local", username: "admin", source: "env" as const, authMethod: "password" as const, controllerStatus: "unreachable" as const, controllerDetail: "" } });
+    expect(screen.getByText(/Controller unreachable/)).toBeInTheDocument();
   });
 
   it("shows active AI badge with provider and model tooltip", () => {

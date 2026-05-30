@@ -18,6 +18,12 @@ from app.config import (
 )
 from app.middleware import COOKIE_NAME, create_session_cookie, verify_session_cookie
 from app.models import AppAuthStatus, AppLoginInput
+from app.services.controller_health import (
+    ControllerStatus,
+    get_controller_health,
+    reset_controller_health,
+    set_controller_health,
+)
 from app.services.firewall import to_topology_config
 
 log = structlog.get_logger()
@@ -58,6 +64,8 @@ class AuthStatusResponse(BaseModel):
     url: str
     username: str
     auth_method: Literal["password", "api_key", "none"]
+    controller_status: ControllerStatus
+    controller_detail: str
 
 
 @router.post("/app-login")
@@ -139,6 +147,8 @@ async def login(request: LoginRequest) -> LoginResponse:
         site=request.site,
         verify_ssl=request.verify_ssl,
     )
+    # The validation call above succeeded, so the controller accepts these credentials.
+    set_controller_health("ok")
     return LoginResponse(status="ok", message="Credentials verified")
 
 
@@ -146,6 +156,7 @@ async def login(request: LoginRequest) -> LoginResponse:
 async def logout() -> LogoutResponse:
     log.info("controller_logout")
     clear_runtime_credentials()
+    reset_controller_health()
     return LogoutResponse(status="ok", message="Credentials cleared")
 
 
@@ -156,13 +167,19 @@ async def status() -> AuthStatusResponse:
     log.debug("auth_status", source=source, configured=config is not None)
 
     if config is None:
-        return AuthStatusResponse(configured=False, source="none", url="", username="", auth_method="none")
+        return AuthStatusResponse(
+            configured=False, source="none", url="", username="", auth_method="none",
+            controller_status="unknown", controller_detail="",
+        )
 
     auth_method: Literal["password", "api_key"] = "api_key" if config.api_key else "password"
+    health = get_controller_health()
     return AuthStatusResponse(
         configured=True,
         source=source,
         url=config.url,
         username=config.username,
         auth_method=auth_method,
+        controller_status=health.status,
+        controller_detail=health.detail,
     )

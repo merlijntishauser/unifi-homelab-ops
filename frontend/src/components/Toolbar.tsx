@@ -7,6 +7,8 @@ interface ConnectionInfo {
   username: string;
   source: "env" | "runtime" | "none";
   authMethod: "password" | "api_key" | "none";
+  controllerStatus: "ok" | "auth_error" | "unreachable" | "unknown";
+  controllerDetail: string;
 }
 
 interface AiInfo {
@@ -25,22 +27,52 @@ interface ToolbarProps {
   onAppLogout?: () => void;
 }
 
-function StatusBadge({ active, label, tooltip, tooltipAlign }: { active: boolean; label: string; tooltip: string; tooltipAlign?: "center" | "left" | "right" }) {
+type BadgeState = "ok" | "warning" | "error" | "off";
+
+const BADGE_STYLES: Record<BadgeState, { pill: string; dot: string }> = {
+  ok: {
+    pill: "bg-emerald-50 dark:bg-status-success-dim text-emerald-700 dark:text-status-success",
+    dot: "bg-emerald-500 dark:bg-status-success",
+  },
+  warning: {
+    pill: "bg-amber-50 dark:bg-status-warning-dim text-amber-700 dark:text-status-warning",
+    dot: "bg-amber-500 dark:bg-status-warning",
+  },
+  error: {
+    pill: "bg-red-50 dark:bg-status-danger-dim text-red-700 dark:text-status-danger",
+    dot: "bg-red-500 dark:bg-status-danger",
+  },
+  off: {
+    pill: "bg-ui-raised dark:bg-noc-raised text-ui-text-dim dark:text-noc-text-dim",
+    dot: "bg-ui-text-dim dark:bg-noc-text-dim",
+  },
+};
+
+function StatusBadge({ state, label, tooltip, tooltipAlign }: { state: BadgeState; label: string; tooltip: string; tooltipAlign?: "center" | "left" | "right" }) {
+  const style = BADGE_STYLES[state];
   return (
     <div className="relative group">
-      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium select-none ${
-        active
-          ? "bg-emerald-50 dark:bg-status-success-dim text-emerald-700 dark:text-status-success"
-          : "bg-ui-raised dark:bg-noc-raised text-ui-text-dim dark:text-noc-text-dim"
-      }`}>
-        <span className={`inline-block size-1.5 rounded-full ${
-          active ? "bg-emerald-500 dark:bg-status-success" : "bg-ui-text-dim dark:bg-noc-text-dim"
-        }`} />
+      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium select-none ${style.pill}`}>
+        <span className={`inline-block size-1.5 rounded-full ${style.dot}`} />
         <span>{label}</span>
       </div>
       <Tooltip text={tooltip} align={tooltipAlign} />
     </div>
   );
+}
+
+function controllerBadge(connectionInfo: ConnectionInfo | null): { state: BadgeState; tooltip: string } {
+  if (!connectionInfo) {
+    return { state: "off", tooltip: "Not connected" };
+  }
+  const base = `Controller: ${connectionInfo.url}\nAs: ${connectionInfo.username || "API key"}\nConfig from: ${connectionInfo.source}`;
+  if (connectionInfo.controllerStatus === "auth_error") {
+    return { state: "error", tooltip: `${base}\n\nCredentials rejected by the controller.\nUpdate them in Settings.` };
+  }
+  if (connectionInfo.controllerStatus === "unreachable") {
+    return { state: "warning", tooltip: `${base}\n\nController unreachable.${connectionInfo.controllerDetail ? `\n${connectionInfo.controllerDetail}` : ""}` };
+  }
+  return { state: "ok", tooltip: base };
 }
 
 const THEME_OPTIONS: ThemePreference[] = ["light", "dark", "system"];
@@ -143,9 +175,7 @@ export default function Toolbar({
   onOpenNotifications,
   onAppLogout,
 }: ToolbarProps) {
-  const connectionTooltip = connectionInfo
-    ? `Connected to: ${connectionInfo.url}\nAs: ${connectionInfo.username}\nConfig from: ${connectionInfo.source}`
-    : "Not connected";
+  const controller = controllerBadge(connectionInfo);
 
   const aiTooltip = aiInfo.configured
     ? `AI LLM: ${aiInfo.provider}\nModel: ${aiInfo.model}`
@@ -158,8 +188,8 @@ export default function Toolbar({
           UniFi Homelab Ops
         </h1>
         <div className="flex items-center gap-1.5">
-          <StatusBadge active={connectionInfo !== null} label="Controller" tooltip={connectionTooltip} tooltipAlign="left" />
-          <StatusBadge active={aiInfo.configured} label="AI" tooltip={aiTooltip} />
+          <StatusBadge state={controller.state} label="Controller" tooltip={controller.tooltip} tooltipAlign="left" />
+          <StatusBadge state={aiInfo.configured ? "ok" : "off"} label="AI" tooltip={aiTooltip} />
         </div>
       </div>
 

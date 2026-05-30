@@ -180,15 +180,20 @@ MOCK_RAW_NETWORKS = [
 @pytest.fixture(autouse=True)
 def _clean_credentials() -> Iterator[None]:
     """Ensure all credentials (runtime and env-based) are cleared for each test."""
+    from app.services.controller_health import reset_controller_health
+
     clear_runtime_credentials()
+    reset_controller_health()
     with (
         patch("app.config.settings.unifi_url", ""),
         patch("app.config.settings.unifi_user", ""),
         patch("app.config.settings.unifi_pass", ""),
+        patch("app.config.settings.unifi_api_key", ""),
         patch("app.config.settings.app_password", ""),
     ):
         yield
     clear_runtime_credentials()
+    reset_controller_health()
 
 
 MOCK_RAW_GROUPS: list[dict[str, object]] = [

@@ -154,6 +154,8 @@ export interface AuthStatus {
   url: string;
   username: string;
   auth_method: "password" | "api_key" | "none";
+  controller_status: "ok" | "auth_error" | "unreachable" | "unknown";
+  controller_detail: string;
 }
 
 export interface LoginPayload {

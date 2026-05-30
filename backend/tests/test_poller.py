@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from unifi_topology import DeviceStats, PoePortStats
+from unifi_topology.adapters.unifi_api import UnifiAuthError
 
 from app.database import init_db_for_tests, reset_engine
 from app.services.metrics import create_notification, get_notifications
@@ -216,6 +217,9 @@ class TestStartMetricsPoller:
 
     @pytest.mark.anyio
     async def test_handles_exception_gracefully(self) -> None:
+        from app.services.controller_health import get_controller_health, reset_controller_health
+
+        reset_controller_health()
         call_count = 0
 
         async def stop_after_one(*args: object) -> None:
@@ -231,3 +235,58 @@ class TestStartMetricsPoller:
             await start_metrics_poller()
 
         assert call_count == 1  # Loop continued past the exception
+        assert get_controller_health().status == "unreachable"
+
+    @pytest.mark.anyio
+    async def test_success_marks_controller_ok(self) -> None:
+        from app.services.controller_health import get_controller_health, reset_controller_health
+
+        reset_controller_health()
+        with (
+            patch("app.services.poller.has_credentials", return_value=True),
+            patch("app.services.poller.get_unifi_config", return_value=MagicMock()),
+            patch("app.services.poller.to_topology_config", return_value=MagicMock()),
+            patch("app.services.poller.fetch_device_stats", return_value=[]),
+            patch("app.services.poller.normalize_device_stats", return_value=[]),
+            patch("app.services.poller.record_snapshot"),
+            patch("app.services.poller._check_anomalies"),
+            patch("app.services.poller._maybe_prune"),
+            patch("asyncio.sleep", side_effect=asyncio.CancelledError),
+            pytest.raises(asyncio.CancelledError),
+        ):
+            await start_metrics_poller()
+
+        assert get_controller_health().status == "ok"
+
+    @pytest.mark.anyio
+    async def test_auth_error_backs_off_and_logs_once(self) -> None:
+        from app.services.controller_health import get_controller_health, reset_controller_health
+        from app.services.poller import _AUTH_ERROR_INTERVAL
+
+        reset_controller_health()
+        sleeps: list[float] = []
+        warnings = 0
+
+        def count_warning(*args: object, **kwargs: object) -> None:
+            nonlocal warnings
+            warnings += 1
+
+        async def record_sleep(interval: float) -> None:
+            sleeps.append(interval)
+            if len(sleeps) >= 2:  # let the poller fail twice, then stop
+                raise asyncio.CancelledError
+
+        with (
+            patch("app.services.poller.has_credentials", return_value=True),
+            patch("app.services.poller.get_unifi_config", return_value=MagicMock()),
+            patch("app.services.poller.to_topology_config", return_value=MagicMock()),
+            patch("app.services.poller.fetch_device_stats", side_effect=UnifiAuthError("API key rejected")),
+            patch("app.services.poller.log.warning", side_effect=count_warning),
+            patch("asyncio.sleep", side_effect=record_sleep),
+            pytest.raises(asyncio.CancelledError),
+        ):
+            await start_metrics_poller()
+
+        assert sleeps == [_AUTH_ERROR_INTERVAL, _AUTH_ERROR_INTERVAL]  # backed off both cycles
+        assert warnings == 1  # logged only once despite two consecutive failures
+        assert get_controller_health().status == "auth_error"

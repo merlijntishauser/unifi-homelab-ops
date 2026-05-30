@@ -8,6 +8,8 @@ interface ConnectionInfo {
   username: string;
   source: "env" | "runtime" | "none";
   authMethod: "password" | "api_key" | "none";
+  controllerStatus: "ok" | "auth_error" | "unreachable" | "unknown";
+  controllerDetail: string;
 }
 
 interface AiInfo {

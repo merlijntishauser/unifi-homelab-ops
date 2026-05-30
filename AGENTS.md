@@ -2,62 +2,66 @@
 
 ## Project overview
 
-UniFi Homelab Ops -- a self-hosted web application that extends the native UniFi dashboard with firewall analysis, network topology visualization, and device metrics monitoring. Users connect to a UniFi controller, see zones in a matrix or interactive graph, inspect rules, simulate traffic, and optionally get AI-powered risk analysis.
+UniFi Homelab Ops -- a self-hosted web app that augments the UniFi dashboard. Modules are routed via React Router under a shared `AppShell`:
+
+- **Firewall** -- zones in a matrix or interactive graph, rule inspection, traffic simulation, AI risk analysis
+- **Topology** -- device map (xyflow) and SVG diagram, draggable layout
+- **Metrics** -- per-device CPU/mem/temp/PoE charts
+- **Health** -- cross-domain anomaly analysis
+- **Rack Planner** -- rack visualisation with drag-drop items and BOM
+- **Cabling** -- cable runs and patch panels
+- **Docs / Home Assistant** -- companion panes
 
 ## Architecture
 
 ```
-backend/               Python 3.13, FastAPI, Pydantic
-  app/
-    main.py            FastAPI app with lifespan, CORS, error handler
-    config.py          pydantic-settings + runtime credential management
-    models.py          Pydantic models (Zone, Rule, ZonePair, Finding, etc.)
-    database.py        SQLite for AI config and analysis cache
-    routers/           One module per domain:
-      auth.py            /api/auth -- login, logout, status
-      zones.py           /api/zones -- list zones
-      rules.py           /api/rules, /api/zone-pairs -- rules and analyzed pairs
-      simulate.py        /api/simulate -- traffic simulation
-      analyze.py         /api/analyze -- AI analysis
-      settings.py        /api/settings/ai -- AI provider configuration
-    services/          Business logic:
-      firewall.py        Fetches data via unifi-topology library
-      analyzer.py        Static rule analysis (scoring, grading, findings)
-      ai_analyzer.py     AI-powered analysis (Anthropic/OpenAI, cached)
-      ai_settings.py     AI config persistence
-      simulator.py       Traffic simulation with rule matching
+backend/app/          Python 3.13, FastAPI, Pydantic
+  main.py             FastAPI app with lifespan, CORS, error handler
+  middleware.py       Request logging, error wrapping
+  config.py           pydantic-settings + runtime credential management
+  models.py           Pydantic request/response models
+  models_db.py        SQLAlchemy models for AI config, analyses, racks, cables, notifications
+  database.py         SQLite connection + migrations
+  routers/            One file per domain, all prefixed /api
+                      auth, zones, rules, simulate, analyze, settings,
+                      health, metrics, topology, rack_planner, cable,
+                      documentation, zone_filter
+  services/           Pure business logic (testable in isolation), notably:
+                      firewall (fetch via unifi-topology), analyzer (rule grading),
+                      ai_analyzer + _ai_provider (multi-provider AI, cached by rule hash),
+                      simulator, site_health, anomaly_checker, poller,
+                      rack_planner, cable_service, topology_positions
 
-frontend/              React 19, TypeScript, Tailwind CSS 4, Vite
-  src/
-    App.tsx            Root: auth flow, matrix/graph toggle, state management
-    api/
-      types.ts           Interfaces mirroring backend models
-      client.ts          API client (fetchJson helper, all endpoints)
-    components/
-      LoginScreen.tsx    Controller credentials form
-      Toolbar.tsx        Top bar: theme, disabled rules toggle, refresh, settings
-      ZoneMatrix.tsx     Grid overview of all zone-to-zone pairs
-      MatrixCell.tsx     Single cell with rule count and grade
-      ZoneGraph.tsx      ReactFlow graph with zones as nodes, rules as edges
-      ZoneNode.tsx       Custom ReactFlow node (zone name, networks, VLANs)
-      RuleEdge.tsx       Custom ReactFlow edge (rule badges, step paths)
-      RulePanel.tsx      Side panel: rules, findings, traffic simulation
-      SettingsModal.tsx  AI provider configuration
-    hooks/
-      useFirewallData.ts Fetches zones + zone pairs, manages loading state
-    utils/
-      layout.ts          Dagre graph layout + edge offset computation
-      edgeColor.ts       Edge color by allow/block ratio
+frontend/src/         React 19, TypeScript, Tailwind CSS 4, Vite
+  main.tsx            Entry: React root, QueryClientProvider, RouterProvider
+  App.tsx             Auth flow + AppContext provider (zones, filter state, notifications)
+  router.tsx          Route table; lazy modules live in routeComponents.tsx
+  routeComponents.tsx Lazy-imported feature modules (kept separate so router.tsx
+                      exports only non-components -- react-doctor's only-export-components)
+  api/                client.ts (fetchJson + endpoints), types.ts (mirrors backend)
+  hooks/              queries.ts (every TanStack Query + mutation in the app),
+                      useAppContext, useAuth, useFirewallQueries, useAiInfo,
+                      useNotifications, useVersionCheck, useIsMobile
+  components/         One folder per feature; AppShell + ModuleSidebar host
+                      the routed module (FirewallModule, TopologyModule,
+                      RackPlannerModule, CablingModule, HealthModule,
+                      MetricsModule, DocumentationModule, HomeAssistantModule).
+                      Cross-cutting: NotificationDrawer, SettingsModal,
+                      ConfirmDialog, LoginScreen, PassphraseScreen.
+                      Firewall internals: ZoneMatrix/MatrixCell, ZoneGraph/
+                      ZoneNode/RuleEdge, RulePanel + rule-panel/ subcomponents.
+  utils/              layout.ts (dagre + edge fan-out), edgeColor.ts, export.ts
 ```
 
 ## Tech stack
 
-| Layer    | Key dependencies                                                |
-|----------|-----------------------------------------------------------------|
-| Backend  | FastAPI 0.115, Pydantic 2.10, unifi-topology, SQLite           |
-| Frontend | React 19, TypeScript 5.9, Tailwind CSS 4, @xyflow/react 12.10 |
-| Layout   | @dagrejs/dagre 2.0                                             |
-| Infra    | Docker Compose, Vite 7, uv (Python), npm                       |
+| Layer        | Key dependencies                                                |
+|--------------|-----------------------------------------------------------------|
+| Backend      | FastAPI, Pydantic v2, SQLAlchemy + SQLite, unifi-topology       |
+| Frontend     | React 19, TypeScript 6, Tailwind CSS 4, React Router 7          |
+| Server state | TanStack Query 5 -- **all** API calls go through `hooks/queries.ts` |
+| Graph        | @xyflow/react 12, @dagrejs/dagre 3                              |
+| Build/infra  | Vite 8, uv (Python), npm, Docker Compose                        |
 
 ## Running the app
 
@@ -79,6 +83,11 @@ Both services mount source code as volumes -- changes reflect immediately via Vi
 | Cyclomatic complexity    | max 15    |
 | Maintainability index    | grade A   |
 | mypy                     | strict    |
+| React Doctor score       | 100 / 100 |
+
+The pre-commit hook (`scripts/ci-checks.sh`) runs the full `make ci` pipeline
+plus React Doctor and blocks the commit if any gate fails. Don't `--no-verify`;
+fix the violation. Commits must also be signed (1Password SSH agent).
 
 ### Commands
 
@@ -126,10 +135,23 @@ docker compose exec frontend npx tsc --noEmit
 - **API types**: interfaces in `api/types.ts` mirror backend models exactly
 - **Hooks**: custom hooks in `hooks/` directory
 - **Utilities**: pure functions in `utils/`
+- **Server state**: every fetch/mutation goes through `hooks/queries.ts`. Don't call `fetch` / `api.*` from components.
+- **Target**: ES2023 (uses `Array.prototype.toSorted` etc. -- prefer it over `[...arr].sort()`)
+
+### React 19 conventions (enforced by React Doctor)
+
+- Prefer `use(Context)` over `useContext(Context)` (React 19+)
+- Use semantic `<button type="...">` / `<dialog>` over `role="button"` / `role="dialog"` divs
+- Native `<button>` handles Enter/Space -- test keyboard with `@testing-library/user-event`'s `keyboard()`, not `fireEvent.keyDown` (jsdom doesn't synthesize the click)
+- Memoise context Provider `value`; never inline `value={{ ... }}`
+- Sync with external stores (history, custom stores) via `useSyncExternalStore`, not `useState` + `useEffect`
+- Mutations that should refresh cached queries: `onSuccess: () => qc.invalidateQueries(...)`
 
 ### Styling
 
 - **Tailwind-first** with custom theme tokens defined in `index.css` via `@theme`
+- **Sizing**: collapse `w-N h-N` to `size-N` when both axes match (Tailwind 3.4+)
+- **Typography**: typographic ellipsis `…` (not `...`) in JSX text
 - **Dark theme tokens**: `noc-bg`, `noc-surface`, `noc-raised`, `noc-input`, `noc-border`, `noc-text`, `noc-text-secondary`, `noc-text-dim`
 - **Accent tokens**: `ub-blue`, `ub-blue-light`, `ub-blue-dim`, `ub-purple`
 - **Status tokens**: `status-success`, `status-warning`, `status-danger` (each with `-dim` variant)
@@ -140,6 +162,16 @@ docker compose exec frontend npx tsc --noEmit
 
 - Concise messages, no emoji, no Co-Authored-By lines
 - Pre-commit hook runs the full CI pipeline
+- Signed commits required (1Password SSH agent); stop and alert if signing fails
+
+### Dependabot PRs
+
+- `@dependabot rebase` / `@dependabot recreate` are sometimes ignored -- wait a
+  few minutes, then manually rebase: fetch the branch, merge `main`, regenerate
+  `package-lock.json` with `npm install`, force-push the dependabot branch.
+- The `docker-images` job's Trivy step can fail on pre-existing image CVEs
+  unrelated to the dep bump; verify the same step fails on `main` before
+  treating it as a regression.
 
 ## Design decisions
 

@@ -116,9 +116,9 @@ function SlidePanel({ title, testId, onClose, footer, children }: SlidePanelProp
   return (
     <>
       <div className={BACKDROP_CLASS} role="presentation" onClick={onClose} />
-      <aside
-        className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-ui-surface dark:bg-noc-surface border-l border-ui-border dark:border-noc-border shadow-xl z-50 flex flex-col overflow-hidden"
-        role="dialog"
+      <dialog
+        open
+        className="fixed right-0 top-0 bottom-0 left-auto m-0 p-0 w-full max-w-md bg-ui-surface dark:bg-noc-surface border-l border-ui-border dark:border-noc-border shadow-xl z-50 flex flex-col overflow-hidden"
         aria-label={title}
         data-testid={testId}
       >
@@ -130,7 +130,7 @@ function SlidePanel({ title, testId, onClose, footer, children }: SlidePanelProp
         <div className="flex items-center gap-2 px-4 py-3 border-t border-ui-border dark:border-noc-border shrink-0">
           {footer}
         </div>
-      </aside>
+      </dialog>
     </>
   );
 }
@@ -143,10 +143,10 @@ interface CableFormFieldsProps {
   panels: PatchPanel[];
 }
 
-function CableFormFields({ form, update, panels }: CableFormFieldsProps) {
-  const parseOptionalFloat = (v: string) => v ? parseFloat(v) : null;
-  const parseOptionalInt = (v: string) => v ? parseInt(v) : null;
+const parseOptionalFloat = (v: string) => v ? parseFloat(v) : null;
+const parseOptionalInt = (v: string) => v ? parseInt(v) : null;
 
+function CableFormFields({ form, update, panels }: CableFormFieldsProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="col-span-2">

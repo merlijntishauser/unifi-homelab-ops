@@ -8,6 +8,8 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 5;
 const ZOOM_STEP = 0.1;
 
+const clampZoom = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+
 export default function SvgViewer({ svgContent }: SvgViewerProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -21,8 +23,6 @@ export default function SvgViewer({ svgContent }: SvgViewerProps) {
       svgRef.current.innerHTML = svgContent;
     }
   }, [svgContent]);
-
-  const clampZoom = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();

@@ -96,6 +96,11 @@ const dlIcon = (
 const BTN = "inline-flex items-center gap-1.5 rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
 const BTN_ACTIVE = "inline-flex items-center gap-1.5 rounded-lg border border-ub-blue px-3 py-1.5 min-h-[36px] text-sm text-ub-blue bg-blue-50 dark:bg-ub-blue-dim cursor-pointer transition-all";
 
+const segmentClass = (active: boolean, isFirst: boolean) =>
+  `px-3 py-1.5 min-h-[36px] text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
+    active ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue font-medium" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised"
+  }`;
+
 export default function TopologyModule() {
   const { colorMode, connectionInfo } = useAppContext();
   const authed = connectionInfo !== null;
@@ -106,7 +111,10 @@ export default function TopologyModule() {
   const [projection, setProjection] = useState<"orthogonal" | "isometric">(() =>
     readStorage("topologyProjection", "isometric", ["orthogonal", "isometric"] as const),
   );
-  const deepLinkDevice = useRef(new URLSearchParams(window.location.search).get("device"));
+  const deepLinkDevice = useRef<string | null>(null);
+  if (deepLinkDevice.current === null) {
+    deepLinkDevice.current = new URLSearchParams(window.location.search).get("device");
+  }
   const [selectedDevice, setSelectedDevice] = useState<TopologyDevice | null>(null);
 
   const svgQuery = useTopologySvg(colorMode === "dark" ? "dark" : "light", projection, authed && subView === "diagram");
@@ -136,7 +144,10 @@ export default function TopologyModule() {
 
   const savePositionsMutation = useSaveTopologyPositions();
   const resetPositionsMutation = useResetTopologyPositions();
-  const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const pendingPositions = useRef<Map<string, { x: number; y: number }> | null>(null);
+  if (pendingPositions.current == null) {
+    pendingPositions.current = new Map();
+  }
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
@@ -145,21 +156,16 @@ export default function TopologyModule() {
   }, []);
 
   const handleNodeDragEnd = useCallback((mac: string, x: number, y: number) => {
-    pendingPositions.current.set(mac, { x, y });
+    pendingPositions.current!.set(mac, { x, y });
     clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
-      const positions = Array.from(pendingPositions.current.entries()).map(
+      const positions = Array.from(pendingPositions.current!.entries()).map(
         ([m, pos]) => ({ mac: m, x: pos.x, y: pos.y }),
       );
-      pendingPositions.current.clear();
+      pendingPositions.current!.clear();
       savePositionsMutation.mutate(positions);
     }, 500);
   }, [savePositionsMutation]);
-
-  const segmentClass = (active: boolean, isFirst: boolean) =>
-    `px-3 py-1.5 min-h-[36px] text-sm transition-colors ${!isFirst ? "border-l border-ui-border dark:border-noc-border" : ""} ${
-      active ? "bg-blue-50 dark:bg-ub-blue-dim text-ub-blue font-medium" : "text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised"
-    }`;
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">

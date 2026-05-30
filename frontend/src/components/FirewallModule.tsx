@@ -24,7 +24,10 @@ export default function FirewallModule() {
     zonePairs, hasHiddenZones, hasDisabledRules,
   } = ctx;
 
-  const deepLinkPair = useRef(new URLSearchParams(window.location.search).get("pair"));
+  const deepLinkPair = useRef<string | null>(null);
+  if (deepLinkPair.current === null) {
+    deepLinkPair.current = new URLSearchParams(window.location.search).get("pair");
+  }
   const [selectedPairKey, setSelectedPairKey] = useState<SelectedPairKey | null>(null);
   const [focusZoneIds, setFocusZoneIds] = useState<string[] | null>(null);
 

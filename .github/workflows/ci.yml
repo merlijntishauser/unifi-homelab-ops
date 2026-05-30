@@ -17,7 +17,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - run: uv sync
       - run: uv run ruff check app/
       - run: uv run mypy app/
@@ -61,7 +61,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - uses: actions/setup-node@v6
         with:
           node-version: 22

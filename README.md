@@ -166,7 +166,7 @@ Multi-arch: `linux/amd64` and `linux/arm64`.
 
 | Layer | Stack |
 |---|---|
-| Backend | Python 3.13, FastAPI, SQLite, [unifi-topology](https://github.com/merlijntishauser/unifi-topology) |
+| Backend | Python 3.14, FastAPI, SQLite, [unifi-topology](https://github.com/merlijntishauser/unifi-topology) |
 | Frontend | React 19, TypeScript, Tailwind CSS 4, ReactFlow |
 | Infra | Docker, Vite, uv |
 

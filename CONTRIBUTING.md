@@ -21,7 +21,7 @@ make e2e-prod            # Playwright e2e tests (production Docker image)
 ## Architecture
 
 ```
-backend/               Python 3.13, FastAPI, Pydantic
+backend/               Python 3.14, FastAPI, Pydantic
   app/
     main.py            FastAPI app with lifespan, CORS, error handler
     config.py          pydantic-settings + runtime credential management
@@ -93,7 +93,7 @@ docker compose exec frontend npx tsc --noEmit
 
 ### Python
 
-- **Formatting/linting**: Ruff (line length 120, target py313)
+- **Formatting/linting**: Ruff (line length 120, target py314)
 - **Types**: mypy strict mode -- no untyped defs, no `type: ignore` without justification
 - **Models**: Pydantic BaseModel in `models.py`, dataclasses for internal DTOs in services
 - **Routers**: one file per domain, all under `/api` prefix, use `RequireCredentials` dependency

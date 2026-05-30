@@ -15,7 +15,7 @@ UniFi Homelab Ops -- a self-hosted web app that augments the UniFi dashboard. Mo
 ## Architecture
 
 ```
-backend/app/          Python 3.13, FastAPI, Pydantic
+backend/app/          Python 3.14, FastAPI, Pydantic
   main.py             FastAPI app with lifespan, CORS, error handler
   middleware.py       Request logging, error wrapping
   config.py           pydantic-settings + runtime credential management
@@ -118,7 +118,7 @@ docker compose exec frontend npx tsc --noEmit
 
 ### Python
 
-- **Formatting/linting**: Ruff (line length 120, target py313)
+- **Formatting/linting**: Ruff (line length 120, target py314)
 - **Types**: mypy strict mode -- no untyped defs, no `type: ignore` without justification
 - **Models**: Pydantic BaseModel in `models.py`, dataclasses for internal DTOs in services
 - **Routers**: one file per domain, all under `/api` prefix

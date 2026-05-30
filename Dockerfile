@@ -1,4 +1,4 @@
-FROM node:22-alpine AS frontend-build
+FROM node:24-alpine AS frontend-build
 
 ARG BUILD_VERSION=dev
 ARG BUILD_COMMIT=
@@ -19,7 +19,7 @@ ENV BUILD_DATE=${BUILD_DATE}
 RUN npm run build
 
 
-FROM python:3.13-slim AS backend-build
+FROM python:3.14-slim AS backend-build
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -36,7 +36,7 @@ COPY backend/app ./app
 COPY backend/alembic ./alembic
 
 
-FROM python:3.13-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 

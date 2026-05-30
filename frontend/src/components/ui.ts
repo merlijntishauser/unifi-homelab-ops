@@ -17,3 +17,11 @@ export const BACKDROP_CLASS =
 /** Close button with 44px min touch target. */
 export const CLOSE_BUTTON_CLASS =
   "min-w-[44px] min-h-[44px] flex items-center justify-center text-ui-text-dim dark:text-noc-text-dim hover:text-ui-text dark:hover:text-noc-text text-xl cursor-pointer transition-colors";
+
+/** Primary action button used in error fallback screens. */
+export const ERROR_PRIMARY_BTN =
+  "flex-1 rounded-lg bg-ub-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 transition-all";
+
+/** Secondary action button used in error fallback screens. */
+export const ERROR_SECONDARY_BTN =
+  "rounded-lg border border-ui-border dark:border-noc-border px-4 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-all";

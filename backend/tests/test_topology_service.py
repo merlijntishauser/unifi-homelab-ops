@@ -154,6 +154,18 @@ class TestGetTopologyDevices:
             result = get_topology_devices(MOCK_CONFIG)
         assert result.devices[0].status == "offline"
 
+    def test_null_uptime_and_num_sta_coerced_to_zero(self) -> None:
+        raw_devices = [dict(MOCK_RAW_DEVICES[0], uptime=None, num_sta=None)]
+        devices = [MOCK_DEVICES[0]]
+        with (
+            patch("app.services.topology.fetch_devices", return_value=raw_devices),
+            patch("app.services.topology.normalize_devices", return_value=devices),
+            patch("app.services.topology.build_topology", return_value=MOCK_TOPOLOGY),
+        ):
+            result = get_topology_devices(MOCK_CONFIG)
+        assert result.devices[0].uptime == 0
+        assert result.devices[0].client_count == 0
+
     def test_device_with_ports_and_lldp(self) -> None:
         mock_port = type("Port", (), {
             "port_idx": 1, "name": "Port 1", "ifname": "eth0",

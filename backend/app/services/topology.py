@@ -82,9 +82,9 @@ def _build_device_model(
         type=device.type,
         ip=device.ip,
         version=device.version,
-        uptime=int(raw.get("uptime", 0)),
+        uptime=int(raw.get("uptime") or 0),
         status=status,
-        client_count=int(raw.get("num_sta", 0)),
+        client_count=int(raw.get("num_sta") or 0),
         ports=ports,
     )
 

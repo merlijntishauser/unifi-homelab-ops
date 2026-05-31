@@ -188,6 +188,25 @@ class TestNotifications:
         assert len(notifications) == 2
 
 
+def test_resolve_all_notifications_clears_every_check_for_device() -> None:
+    from app.services.metrics import (
+        create_notification,
+        get_notifications,
+        resolve_all_notifications,
+    )
+
+    create_notification("aa:bb", "high_cpu", "warning", "CPU", "high")
+    create_notification("aa:bb", "high_memory", "warning", "Mem", "high")
+    create_notification("cc:dd", "high_cpu", "warning", "CPU", "high")
+
+    resolve_all_notifications("aa:bb")
+
+    active = get_notifications(include_resolved=False)
+    macs = {n.device_mac for n in active}
+    assert "aa:bb" not in macs
+    assert "cc:dd" in macs
+
+
 class TestPruneOldData:
     def test_prune_keeps_recent_data(self) -> None:
         record_snapshot([_make_device_stats()])

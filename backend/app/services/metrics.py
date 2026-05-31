@@ -207,6 +207,28 @@ def resolve_notifications(device_mac: str, check_id: str) -> None:
         session.close()
 
 
+def resolve_all_notifications(device_mac: str) -> None:
+    """Resolve every active notification for a device, regardless of check type."""
+    now = datetime.now(UTC).isoformat()
+    session = get_session()
+    try:
+        rows = (
+            session.query(NotificationRow)
+            .filter(
+                NotificationRow.device_mac == device_mac,
+                NotificationRow.resolved_at.is_(None),
+            )
+            .all()
+        )
+        for row in rows:
+            row.resolved_at = now
+        if rows:
+            session.commit()
+            log.debug("notifications_resolved_all", device_mac=device_mac, count=len(rows))
+    finally:
+        session.close()
+
+
 def prune_old_data(hours: int = 24) -> None:
     """Delete old metrics rows and resolved notifications."""
     cutoff = (datetime.now(UTC) - timedelta(hours=hours)).isoformat()

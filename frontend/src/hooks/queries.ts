@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
-import type { AiAnalyzeRequest, AiConfigInput, CableRunInput, LoginPayload, NodePosition, PatchPanelInput, RackInput, RackItemInput, SimulateRequest } from "../api/types";
+import type { AiAnalyzeRequest, AiConfigInput, CableRunInput, LoginPayload, NodePosition, PatchPanelInput, RackInput, RackItemInput, SimulateRequest, SnoozeDeviceInput } from "../api/types";
 
 export const queryKeys = {
   zones: ["zones"] as const,
@@ -23,6 +23,7 @@ export const queryKeys = {
   patchPanels: ["patch-panels"] as const,
   cableLabelSettings: ["cable-label-settings"] as const,
   simulate: ["simulate"] as const,
+  snoozedDevices: ["snoozed-devices"] as const,
 };
 
 // --- Queries ---
@@ -192,6 +193,14 @@ export function useCableLabelSettings() {
   });
 }
 
+export function useSnoozedDevices(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.snoozedDevices,
+    queryFn: api.getSnoozedDevices,
+    enabled,
+  });
+}
+
 /* v8 ignore start -- mutation lambdas are tested via component integration, not directly */
 // --- Mutations ---
 
@@ -309,6 +318,32 @@ export function useDismissNotification() {
   return useMutation({
     mutationFn: (id: number) => api.dismissNotification(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notifications }),
+  });
+}
+
+export function useSnoozeDevices() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (devices: SnoozeDeviceInput[]) => api.snoozeDevices(devices),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.snoozedDevices });
+      qc.invalidateQueries({ queryKey: queryKeys.metricsDevices });
+      qc.invalidateQueries({ queryKey: queryKeys.topologyDevices });
+      qc.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
+  });
+}
+
+export function useUnsnoozeDevice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (mac: string) => api.unsnoozeDevice(mac),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.snoozedDevices });
+      qc.invalidateQueries({ queryKey: queryKeys.metricsDevices });
+      qc.invalidateQueries({ queryKey: queryKeys.topologyDevices });
+      qc.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
   });
 }
 

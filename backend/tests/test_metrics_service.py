@@ -103,6 +103,36 @@ class TestGetLatestSnapshots:
         snapshots = get_latest_snapshots()
         assert snapshots[0].status == "unknown"
 
+    def test_status_reflects_controller_state(self) -> None:
+        # A device present in the live poll but reporting controller state=0 is
+        # offline, not online -- mirrors topology's state-based status so the
+        # snooze UI recognises adopted-but-down devices.
+        record_snapshot([
+            _make_device_stats(mac="on:01"),
+            _make_device_stats(mac="off:02"),
+            _make_device_stats(mac="prov:03"),
+        ])
+        live = [
+            _make_device_stats(mac="on:01"),
+            _make_device_stats(mac="off:02"),
+            _make_device_stats(mac="prov:03"),
+        ]
+        snapshots = get_latest_snapshots(
+            current_stats=live,
+            state_lookup={"on:01": 1, "off:02": 0, "prov:03": 5},
+        )
+        by_mac = {s.mac: s.status for s in snapshots}
+        assert by_mac["on:01"] == "online"
+        assert by_mac["off:02"] == "offline"
+        assert by_mac["prov:03"] == "unknown"  # non-0/1 state (e.g. provisioning)
+
+    def test_status_falls_back_to_presence_without_state_lookup(self) -> None:
+        # Back-compat: when no state_lookup is given, presence in the live poll
+        # still means online.
+        record_snapshot([_make_device_stats(mac="aa:01")])
+        snapshots = get_latest_snapshots(current_stats=[_make_device_stats(mac="aa:01")])
+        assert snapshots[0].status == "online"
+
     def test_multiple_devices_latest(self) -> None:
         record_snapshot([_make_device_stats(mac="aa:01", cpu=10.0)])
         record_snapshot([_make_device_stats(mac="aa:02", cpu=20.0)])

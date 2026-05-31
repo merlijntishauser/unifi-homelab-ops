@@ -43,7 +43,7 @@ STUB_NOTIFICATIONS = [
 @pytest.mark.anyio
 async def test_metrics_devices_returns_snapshots(client: AsyncClient) -> None:
     with (
-        patch("app.routers.metrics._fetch_live_stats", return_value=([], {})),
+        patch("app.routers.metrics._fetch_live_stats", return_value=([], {}, {})),
         patch("app.routers.metrics.get_latest_snapshots", return_value=STUB_SNAPSHOTS),
     ):
         resp = await client.get("/api/metrics/devices")
@@ -57,7 +57,7 @@ async def test_metrics_devices_returns_snapshots(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_metrics_devices_empty(client: AsyncClient) -> None:
     with (
-        patch("app.routers.metrics._fetch_live_stats", return_value=([], {})),
+        patch("app.routers.metrics._fetch_live_stats", return_value=([], {}, {})),
         patch("app.routers.metrics.get_latest_snapshots", return_value=[]),
     ):
         resp = await client.get("/api/metrics/devices")
@@ -115,7 +115,7 @@ async def test_analyze_device_returns_insight(client: AsyncClient) -> None:
     config = {"base_url": "http://x", "api_key": "k", "model": "m", "provider_type": "openai"}
     with (
         patch("app.routers.metrics.get_device_history", return_value=STUB_HISTORY),
-        patch("app.routers.metrics._fetch_live_stats", return_value=([], {})),
+        patch("app.routers.metrics._fetch_live_stats", return_value=([], {}, {})),
         patch("app.routers.metrics.get_latest_snapshots", return_value=STUB_SNAPSHOTS),
         patch("app.services.ai_settings.get_full_ai_config", return_value=config),
         patch("app.services.metrics_analyzer.call_openai", return_value="Looking good."),
@@ -131,7 +131,7 @@ async def test_analyze_device_not_found(client: AsyncClient) -> None:
     config = {"base_url": "http://x", "api_key": "k", "model": "m", "provider_type": "openai"}
     with (
         patch("app.routers.metrics.get_device_history", return_value=STUB_HISTORY),
-        patch("app.routers.metrics._fetch_live_stats", return_value=([], {})),
+        patch("app.routers.metrics._fetch_live_stats", return_value=([], {}, {})),
         patch("app.routers.metrics.get_latest_snapshots", return_value=[]),
         patch("app.services.ai_settings.get_full_ai_config", return_value=config),
     ):

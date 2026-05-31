@@ -44,14 +44,34 @@ def record_snapshot(stats: list[DeviceStats]) -> None:
         session.close()
 
 
+def _derive_status(state: int | None, live: bool) -> str:
+    """Map a controller device ``state`` to a status string.
+
+    Mirrors the topology service: 1 = online, 0 = offline, any other value
+    (provisioning/upgrading/etc.) = unknown. When no state is known, fall back to
+    whether the device appeared in the live poll.
+    """
+    if state == 1:
+        return "online"
+    if state == 0:
+        return "offline"
+    if state is not None:
+        return "unknown"
+    return "online" if live else "unknown"
+
+
 def get_latest_snapshots(
     current_stats: list[DeviceStats] | None = None,
     ip_lookup: dict[str, str] | None = None,
+    state_lookup: dict[str, int | None] | None = None,
 ) -> list[MetricsSnapshot]:
     """Get the most recent metric row per device MAC.
 
-    When current_stats is provided, enrich with live name/model/type/version/status.
+    When current_stats is provided, enrich with live name/model/type/version.
     When ip_lookup is provided, enrich with device IP address.
+    When state_lookup is provided, derive online/offline status from the
+    controller ``state`` field (presence in the poll alone does not mean online --
+    an adopted but powered-down device still appears with state 0).
     """
     session = get_session()
     try:
@@ -69,6 +89,7 @@ def get_latest_snapshots(
     if current_stats:
         stats_lookup = {s.mac: s for s in current_stats}
     ips = ip_lookup or {}
+    states = state_lookup or {}
 
     from app.services.snoozed_devices import get_snoozed_macs
 
@@ -96,7 +117,7 @@ def get_latest_snapshots(
                 poe_consumption=row.poe_consumption,
                 poe_budget=live.poe_budget if live else None,
                 ip=ips.get(row.mac, ""),
-                status="online" if live else "unknown",
+                status=_derive_status(states.get(row.mac), live is not None),
             )
         )
     return snapshots

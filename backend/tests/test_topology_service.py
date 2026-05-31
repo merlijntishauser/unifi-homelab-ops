@@ -1,6 +1,7 @@
 """Tests for topology service."""
 
 from contextlib import ExitStack
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -308,21 +309,37 @@ class TestGetTopologyDevices:
         assert gw.ports[0].connected_mac is None
         assert gw.ports[0].connected_device is None
 
-    def test_snoozed_devices_are_excluded(self) -> None:
-        from pathlib import Path
-
+    def test_snoozed_devices_are_excluded(self, tmp_path: Path) -> None:
         from app.database import init_db_for_tests, reset_engine
         from app.models import SnoozeInput
         from app.services.snoozed_devices import snooze_devices
 
-        init_db_for_tests(Path("/tmp/topo_snooze_test.db"))  # noqa: S108
+        edge = type("Edge", (), {
+            "left": "aa:bb:cc:dd:ee:01", "right": "aa:bb:cc:dd:ee:02",
+            "speed": 1000, "poe": False, "wireless": False,
+        })()
+        topo = type("TopologyResult", (), {"tree_edges": [edge], "raw_edges": []})()
+
+        init_db_for_tests(tmp_path / "test.db")
         try:
+            def _run():
+                with (
+                    patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES),
+                    patch("app.services.topology.normalize_devices", return_value=MOCK_DEVICES),
+                    patch("app.services.topology.build_topology", return_value=topo),
+                ):
+                    return get_topology_devices(MOCK_CONFIG)
+
+            # Control: nothing snoozed -> Switch and its edge are present.
+            before = _run()
+            assert "aa:bb:cc:dd:ee:02" in {d.mac for d in before.devices}
+            assert len(before.edges) == 1
+
+            # Snooze the Switch -> device and its edge disappear.
             snooze_devices([SnoozeInput(mac="aa:bb:cc:dd:ee:02", name="Switch", model="USW")])
-            with _patch_all(patch_snoozed=False):
-                result = get_topology_devices(MOCK_CONFIG)
-            macs = {d.mac for d in result.devices}
-            assert "aa:bb:cc:dd:ee:02" not in macs
-            assert all("aa:bb:cc:dd:ee:02" not in (e.from_mac, e.to_mac) for e in result.edges)
+            after = _run()
+            assert "aa:bb:cc:dd:ee:02" not in {d.mac for d in after.devices}
+            assert after.edges == []
         finally:
             reset_engine()
 

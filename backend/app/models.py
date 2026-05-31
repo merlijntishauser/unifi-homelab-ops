@@ -173,6 +173,27 @@ class MetricsDevicesResponse(BaseModel):
     devices: list[MetricsSnapshot]
 
 
+class SnoozeInput(BaseModel):
+    mac: str
+    name: str = ""
+    model: str = ""
+
+
+class SnoozedDevice(BaseModel):
+    mac: str
+    name: str
+    model: str
+    snoozed_at: str
+
+
+class SnoozeRequest(BaseModel):
+    devices: list[SnoozeInput]
+
+
+class SnoozedDevicesResponse(BaseModel):
+    devices: list[SnoozedDevice]
+
+
 class MetricsHistoryResponse(BaseModel):
     mac: str
     history: list[MetricsHistoryPoint]

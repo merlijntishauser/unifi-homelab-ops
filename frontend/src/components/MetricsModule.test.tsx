@@ -22,6 +22,18 @@ vi.mock("./MetricsDetailView", () => ({
   ),
 }));
 
+vi.mock("./SnoozedDevicesSection", () => ({
+  default: ({ devices, onUnsnooze }: { devices: Array<{ mac: string; name: string }>; onUnsnooze: (mac: string) => void }) => (
+    <div data-testid="snoozed-devices-section">
+      {devices.map((d) => (
+        <button key={d.mac} type="button" onClick={() => onUnsnooze(d.mac)}>
+          Unsnooze {d.name}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 const devicesMock = vi.hoisted(() => ({
   data: {
     devices: [
@@ -45,6 +57,25 @@ const notificationsMock = vi.hoisted(() => ({
   error: null as Error | null,
 }));
 
+const snoozedDevicesMock = vi.hoisted(() => ({
+  data: { devices: [] as Array<Record<string, unknown>> },
+  isLoading: false,
+  error: null as Error | null,
+}));
+
+const snoozeMutateMock = vi.hoisted(() => vi.fn());
+const unsnoozeMutateMock = vi.hoisted(() => vi.fn());
+
+const snoozeMutationMock = vi.hoisted(() => ({
+  mutate: snoozeMutateMock,
+  isPending: false,
+}));
+
+const unsnoozeMutationMock = vi.hoisted(() => ({
+  mutate: unsnoozeMutateMock,
+  isPending: false,
+}));
+
 vi.mock("../hooks/queries", async () => {
   const actual = await vi.importActual("../hooks/queries");
   return {
@@ -52,6 +83,9 @@ vi.mock("../hooks/queries", async () => {
     useMetricsDevices: () => devicesMock,
     useMetricsHistory: () => historyMock,
     useNotifications: () => notificationsMock,
+    useSnoozedDevices: () => snoozedDevicesMock,
+    useSnoozeDevices: () => snoozeMutationMock,
+    useUnsnoozeDevice: () => unsnoozeMutationMock,
   };
 });
 
@@ -117,6 +151,11 @@ beforeEach(() => {
   ];
   notificationsMock.isLoading = false;
   notificationsMock.error = null;
+  snoozedDevicesMock.data = { devices: [] };
+  snoozedDevicesMock.isLoading = false;
+  snoozedDevicesMock.error = null;
+  snoozeMutateMock.mockClear();
+  unsnoozeMutateMock.mockClear();
 });
 
 describe("MetricsModule", () => {
@@ -213,5 +252,89 @@ describe("MetricsModule", () => {
     // Re-render to pick up new devices list
     fireEvent.click(screen.getByText("Back to overview"));
     expect(screen.getByTestId("device-card-aa:02")).toBeInTheDocument();
+  });
+
+  it("shows 'Snooze offline (N)' button when there are offline devices", () => {
+    devicesMock.data = {
+      devices: [
+        { mac: "aa:01", name: "Gateway", model: "UDM-Pro", type: "gateway", cpu: 12, mem: 45, temperature: 52, uptime: 86400, tx_bytes: 1024, rx_bytes: 2048, num_sta: 5, version: "4.0.6", poe_consumption: null, status: "offline" },
+        { mac: "aa:02", name: "Switch", model: "USW-24", type: "switch", cpu: 8, mem: 30, temperature: null, uptime: 43200, tx_bytes: 512, rx_bytes: 768, num_sta: 10, version: "7.1.0", poe_consumption: 45.2, status: "online" },
+      ],
+    };
+    renderModule();
+    expect(screen.getByRole("button", { name: "Snooze offline (1)" })).toBeInTheDocument();
+  });
+
+  it("bulk snooze button calls mutate with all offline devices", () => {
+    devicesMock.data = {
+      devices: [
+        { mac: "aa:01", name: "Gateway", model: "UDM-Pro", type: "gateway", cpu: 12, mem: 45, temperature: 52, uptime: 86400, tx_bytes: 1024, rx_bytes: 2048, num_sta: 5, version: "4.0.6", poe_consumption: null, status: "offline" },
+        { mac: "aa:02", name: "Switch", model: "USW-24", type: "switch", cpu: 8, mem: 30, temperature: null, uptime: 43200, tx_bytes: 512, rx_bytes: 768, num_sta: 10, version: "7.1.0", poe_consumption: 45.2, status: "online" },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Snooze offline (1)" }));
+    expect(snoozeMutateMock).toHaveBeenCalledWith([{ mac: "aa:01", name: "Gateway", model: "UDM-Pro" }]);
+  });
+
+  it("does not show bulk snooze button when all devices are online", () => {
+    renderModule();
+    expect(screen.queryByRole("button", { name: /Snooze offline/ })).not.toBeInTheDocument();
+  });
+
+  it("shows per-card snooze button for offline devices", () => {
+    devicesMock.data = {
+      devices: [
+        { mac: "aa:01", name: "Gateway", model: "UDM-Pro", type: "gateway", cpu: 12, mem: 45, temperature: 52, uptime: 86400, tx_bytes: 1024, rx_bytes: 2048, num_sta: 5, version: "4.0.6", poe_consumption: null, status: "offline" },
+        { mac: "aa:02", name: "Switch", model: "USW-24", type: "switch", cpu: 8, mem: 30, temperature: null, uptime: 43200, tx_bytes: 512, rx_bytes: 768, num_sta: 10, version: "7.1.0", poe_consumption: 45.2, status: "online" },
+      ],
+    };
+    renderModule();
+    expect(screen.getByRole("button", { name: "Snooze Gateway" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Snooze Switch" })).not.toBeInTheDocument();
+  });
+
+  it("per-card snooze button calls mutate with that device", () => {
+    devicesMock.data = {
+      devices: [
+        { mac: "aa:01", name: "Gateway", model: "UDM-Pro", type: "gateway", cpu: 12, mem: 45, temperature: 52, uptime: 86400, tx_bytes: 1024, rx_bytes: 2048, num_sta: 5, version: "4.0.6", poe_consumption: null, status: "offline" },
+        { mac: "aa:02", name: "Switch", model: "USW-24", type: "switch", cpu: 8, mem: 30, temperature: null, uptime: 43200, tx_bytes: 512, rx_bytes: 768, num_sta: 10, version: "7.1.0", poe_consumption: 45.2, status: "online" },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Snooze Gateway" }));
+    expect(snoozeMutateMock).toHaveBeenCalledWith([{ mac: "aa:01", name: "Gateway", model: "UDM-Pro" }]);
+  });
+
+  it("renders SnoozedDevicesSection with snoozed devices", () => {
+    snoozedDevicesMock.data = {
+      devices: [
+        { mac: "bb:01", name: "OldAP", model: "UAP-AC", snoozed_at: "2026-01-01T00:00:00Z" },
+      ],
+    };
+    renderModule();
+    expect(screen.getByTestId("snoozed-devices-section")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Unsnooze OldAP" })).toBeInTheDocument();
+  });
+
+  it("unsnooze calls unsnoozeMutate with device mac", () => {
+    snoozedDevicesMock.data = {
+      devices: [
+        { mac: "bb:01", name: "OldAP", model: "UAP-AC", snoozed_at: "2026-01-01T00:00:00Z" },
+      ],
+    };
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Unsnooze OldAP" }));
+    expect(unsnoozeMutateMock).toHaveBeenCalledWith("bb:01");
+  });
+
+  it("per-card snooze uses mac as label fallback when name is empty", () => {
+    devicesMock.data = {
+      devices: [
+        { mac: "aa:01", name: "", model: "UDM-Pro", type: "gateway", cpu: 12, mem: 45, temperature: 52, uptime: 86400, tx_bytes: 1024, rx_bytes: 2048, num_sta: 5, version: "4.0.6", poe_consumption: null, status: "offline" },
+      ],
+    };
+    renderModule();
+    expect(screen.getByRole("button", { name: "Snooze aa:01" })).toBeInTheDocument();
   });
 });

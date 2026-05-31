@@ -150,7 +150,8 @@ def get_topology_svg(
 
     raw_devices = fetch_devices(config, site=credentials.site)
     raw_clients = fetch_clients(config, site=credentials.site)
-    devices = normalize_devices(raw_devices)
+    snoozed = get_snoozed_macs()
+    devices = [d for d in normalize_devices(raw_devices) if d.mac.lower() not in snoozed]
 
     gw_types = {"gateway", "udm", "ugw"}
     gateway_macs = [d.mac for d in devices if d.type in gw_types]

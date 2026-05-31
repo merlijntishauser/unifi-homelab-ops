@@ -330,6 +330,7 @@ export function useSnoozeDevices() {
       qc.invalidateQueries({ queryKey: queryKeys.metricsDevices });
       qc.invalidateQueries({ queryKey: queryKeys.topologyDevices });
       qc.invalidateQueries({ queryKey: queryKeys.notifications });
+      qc.invalidateQueries({ queryKey: ["topology-svg"] });
     },
   });
 }
@@ -343,6 +344,7 @@ export function useUnsnoozeDevice() {
       qc.invalidateQueries({ queryKey: queryKeys.metricsDevices });
       qc.invalidateQueries({ queryKey: queryKeys.topologyDevices });
       qc.invalidateQueries({ queryKey: queryKeys.notifications });
+      qc.invalidateQueries({ queryKey: ["topology-svg"] });
     },
   });
 }

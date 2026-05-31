@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import structlog
-from sqlalchemy import text
+from sqlalchemy import func, text
 
 from app.database import get_session
 from app.models import MetricsHistoryPoint, MetricsSnapshot, Notification
@@ -221,7 +221,7 @@ def resolve_all_notifications(device_mac: str) -> None:
         rows = (
             session.query(NotificationRow)
             .filter(
-                NotificationRow.device_mac == device_mac,
+                func.lower(NotificationRow.device_mac) == device_mac.lower(),
                 NotificationRow.resolved_at.is_(None),
             )
             .all()

@@ -136,6 +136,40 @@ class TestGetTopologySvg:
         with _patch_all():
             get_topology_svg(MOCK_CONFIG)
 
+    def test_svg_excludes_snoozed_device(self, tmp_path: Path) -> None:
+        from app.database import init_db_for_tests, reset_engine
+        from app.models import SnoozeInput
+        from app.services.snoozed_devices import snooze_devices
+
+        build_topo_mock = MagicMock(return_value=MOCK_TOPOLOGY)
+
+        init_db_for_tests(tmp_path / "test.db")
+        try:
+            snooze_devices([SnoozeInput(mac="aa:bb:cc:dd:ee:02", name="Switch", model="USW-24")])
+            with (
+                patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES),
+                patch("app.services.topology.fetch_clients", return_value=MOCK_RAW_CLIENTS),
+                patch("app.services.topology.normalize_devices", return_value=MOCK_DEVICES),
+                patch("app.services.topology.build_topology", build_topo_mock),
+                patch("app.services.topology.build_device_index", return_value={}),
+                patch("app.services.topology.build_node_names", return_value={}),
+                patch("app.services.topology.build_node_type_map", return_value={}),
+                patch("app.services.topology.build_client_edges", return_value=[]),
+                patch("app.services.topology.extract_wan_info", return_value=None),
+                patch("app.services.topology.extract_vpn_tunnels", return_value=[]),
+                patch("app.services.topology.render_svg", return_value=STUB_SVG),
+                patch("app.services.topology.render_svg_isometric", return_value=STUB_SVG),
+            ):
+                get_topology_svg(MOCK_CONFIG)
+
+            devices_passed = build_topo_mock.call_args[0][0]
+            macs_passed = {d.mac for d in devices_passed}
+            assert "aa:bb:cc:dd:ee:02" not in macs_passed, (
+                "Snoozed device should be excluded from build_topology call in get_topology_svg"
+            )
+        finally:
+            reset_engine()
+
 
 class TestGetTopologyDevices:
     def test_returns_devices_and_edges(self) -> None:

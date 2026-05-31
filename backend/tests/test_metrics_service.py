@@ -15,6 +15,7 @@ from app.services.metrics import (
     get_notifications,
     prune_old_data,
     record_snapshot,
+    resolve_all_notifications,
     resolve_notifications,
 )
 
@@ -222,6 +223,16 @@ def test_get_latest_snapshots_excludes_snoozed() -> None:
     macs = {s.mac for s in snapshots}
     assert "aa:bb" not in macs
     assert "cc:dd" in macs
+
+
+def test_resolve_all_notifications_case_insensitive() -> None:
+    """resolve_all_notifications should match device_mac case-insensitively."""
+    create_notification("AA:BB", "high_cpu", "warning", "CPU", "high")
+    resolve_all_notifications("aa:bb")
+    active = get_notifications(include_resolved=False)
+    assert not any(n.device_mac == "AA:BB" for n in active), (
+        "Notification with uppercase MAC should be resolved when called with lowercase MAC"
+    )
 
 
 class TestPruneOldData:

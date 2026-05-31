@@ -972,9 +972,10 @@ describe("SettingsModal", () => {
     expect(screen.getByText("Dead Switch")).toBeInTheDocument();
   });
 
-  it("shows empty state on Snoozed tab when no devices are snoozed", () => {
+  it("shows empty state on Snoozed tab when no devices are snoozed", async () => {
     renderModal(vi.fn());
     fireEvent.click(screen.getByRole("button", { name: /Snoozed/ }));
+    await waitFor(() => expect(api.getSnoozedDevices).toHaveBeenCalled());
     expect(screen.getByText("No snoozed devices.")).toBeInTheDocument();
   });
 });

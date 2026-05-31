@@ -30,6 +30,8 @@ import type {
   Rule,
   SimulateRequest,
   SimulateResponse,
+  SnoozedDevicesResponse,
+  SnoozeDeviceInput,
   TopologyDevicesResponse,
   TopologySvgResponse,
   Zone,
@@ -133,6 +135,16 @@ export const api = {
     fetchJson("/topology/positions", { method: "PUT", body: JSON.stringify({ positions }) }),
   deleteTopologyPositions: () =>
     fetchJson<void>("/topology/positions", { method: "DELETE" }),
+  getSnoozedDevices: () => fetchJson<SnoozedDevicesResponse>("/devices/snoozed"),
+  snoozeDevices: (devices: SnoozeDeviceInput[]) =>
+    fetchJson<SnoozedDevicesResponse>("/devices/snoozed", {
+      method: "POST",
+      body: JSON.stringify({ devices }),
+    }),
+  unsnoozeDevice: (mac: string) =>
+    fetchJson<SnoozedDevicesResponse>(`/devices/snoozed/${encodeURIComponent(mac)}`, {
+      method: "DELETE",
+    }),
   getMetricsDevices: () => fetchJson<MetricsDevicesResponse>("/metrics/devices"),
   getMetricsHistory: (mac: string) =>
     fetchJson<MetricsHistoryResponse>(`/metrics/devices/${encodeURIComponent(mac)}/history`),

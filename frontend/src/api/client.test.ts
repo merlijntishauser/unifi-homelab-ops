@@ -648,4 +648,30 @@ describe("api client", () => {
       expect(init.method).toBe("PUT");
     });
   });
+
+  describe("snoozed devices", () => {
+    it("gets the snoozed list", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ devices: [] }));
+      await api.getSnoozedDevices();
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/devices/snoozed");
+    });
+
+    it("posts devices to snooze", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ devices: [] }));
+      await api.snoozeDevices([{ mac: "aa:bb", name: "A", model: "m" }]);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/devices/snoozed");
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(init.body)).toEqual({ devices: [{ mac: "aa:bb", name: "A", model: "m" }] });
+    });
+
+    it("deletes (unsnoozes) by mac", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ devices: [] }));
+      await api.unsnoozeDevice("aa:bb");
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toBe("/api/devices/snoozed/aa%3Abb");
+      expect(init.method).toBe("DELETE");
+    });
+  });
 });

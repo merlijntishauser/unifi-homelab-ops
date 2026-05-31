@@ -484,3 +484,20 @@ export interface CableLabelSettings {
   next_number: number;
   custom_pattern: string | null;
 }
+
+export interface SnoozedDevice {
+  mac: string;
+  name: string;
+  model: string;
+  snoozed_at: string;
+}
+
+export interface SnoozeDeviceInput {
+  mac: string;
+  name: string;
+  model: string;
+}
+
+export interface SnoozedDevicesResponse {
+  devices: SnoozedDevice[];
+}

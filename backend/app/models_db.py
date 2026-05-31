@@ -35,6 +35,15 @@ class HiddenZoneRow(Base):
     zone_id: Mapped[str] = mapped_column(Text, primary_key=True)
 
 
+class SnoozedDeviceRow(Base):
+    __tablename__ = "snoozed_devices"
+
+    mac: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    model: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    snoozed_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 class AiAnalysisSettingsRow(Base):
     __tablename__ = "ai_analysis_settings"
     __table_args__ = (CheckConstraint("id = 1", name="singleton_ai_analysis_settings"),)

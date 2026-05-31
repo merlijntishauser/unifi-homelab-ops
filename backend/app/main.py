@@ -26,6 +26,7 @@ from app.routers.rack_planner import router as rack_planner_router
 from app.routers.rules import router as rules_router
 from app.routers.settings import router as settings_router
 from app.routers.simulate import router as simulate_router
+from app.routers.snoozed_devices import router as snoozed_devices_router
 from app.routers.topology import router as topology_router
 from app.routers.zone_filter import router as zone_filter_router
 from app.routers.zones import router as zones_router
@@ -175,6 +176,9 @@ app.include_router(documentation_router, prefix="/api/docs")
 
 # Metrics module
 app.include_router(metrics_router, prefix="/api/metrics")
+
+# Devices module
+app.include_router(snoozed_devices_router, prefix="/api/devices")
 
 # Rack planner module
 app.include_router(rack_planner_router, prefix="/api/racks")

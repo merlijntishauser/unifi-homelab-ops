@@ -22,6 +22,8 @@ vi.mock("../api/client", () => ({
     login: vi.fn(),
     logout: vi.fn(),
     getAuthStatus: vi.fn(),
+    getSnoozedDevices: vi.fn().mockResolvedValue({ devices: [] }),
+    unsnoozeDevice: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -951,5 +953,28 @@ describe("SettingsModal", () => {
   it("renderModalElement helper works", () => {
     renderModalElement(<SettingsModal onClose={vi.fn()} />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  // --- Snoozed Devices pane ---
+
+  it("shows the Snoozed devices tab and lists snoozed devices", async () => {
+    vi.mocked(api.getSnoozedDevices).mockResolvedValue({
+      devices: [
+        { mac: "aa:bb", name: "Dead Switch", model: "USW", snoozed_at: "2026-05-31T10:00:00Z" },
+      ],
+    });
+
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: /Snoozed/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Snoozed devices \(1\)/ })).toBeInTheDocument();
+    });
+    expect(screen.getByText("Dead Switch")).toBeInTheDocument();
+  });
+
+  it("shows empty state on Snoozed tab when no devices are snoozed", () => {
+    renderModal(vi.fn());
+    fireEvent.click(screen.getByRole("button", { name: /Snoozed/ }));
+    expect(screen.getByText("No snoozed devices.")).toBeInTheDocument();
   });
 });

@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { api } from "../api/client";
 import type { AiPreset } from "../api/types";
-import { useSaveAiConfig, useDeleteAiConfig, useLogin } from "../hooks/queries";
+import { useSaveAiConfig, useDeleteAiConfig, useLogin, useSnoozedDevices, useUnsnoozeDevice } from "../hooks/queries";
 import { useAppContext } from "../hooks/useAppContext";
 import type { ThemePreference } from "../hooks/useAppContext";
 import { INPUT_CLASS, SELECT_CLASS, BACKDROP_CLASS, CLOSE_BUTTON_CLASS } from "./ui";
 import PasswordInput from "./PasswordInput";
+import SnoozedDevicesSection from "./SnoozedDevicesSection";
 
 interface SettingsModalProps {
   onClose: () => void;
 }
 
-type SettingsTab = "connection" | "ai" | "user";
+type SettingsTab = "connection" | "ai" | "user" | "snoozed";
 
 // --- Tab button ---
 
@@ -563,6 +564,28 @@ function UserPane() {
   );
 }
 
+// --- Snoozed Devices pane ---
+
+function SnoozedPane() {
+  const { connectionInfo } = useAppContext();
+  const snoozedQuery = useSnoozedDevices(connectionInfo !== null);
+  const unsnoozeMutation = useUnsnoozeDevice();
+  const devices = snoozedQuery.data?.devices ?? [];
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-ui-text-secondary dark:text-noc-text-secondary">
+        Snoozed devices are hidden from Topology and Metrics and stop generating alerts. They return automatically when they reconnect.
+      </p>
+      {devices.length === 0 ? (
+        <p className="text-sm text-ui-text-dim dark:text-noc-text-dim">No snoozed devices.</p>
+      ) : (
+        <SnoozedDevicesSection devices={devices} onUnsnooze={(mac) => unsnoozeMutation.mutate(mac)} defaultOpen />
+      )}
+    </div>
+  );
+}
+
 // --- Main modal ---
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
@@ -592,6 +615,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <TabButton icon={<LinkIcon />} label="Connection" active={tab === "connection"} onClick={() => setTab("connection")} />
           <TabButton icon={<CpuIcon />} label="AI Provider" active={tab === "ai"} onClick={() => setTab("ai")} />
           <TabButton icon={<UserIcon />} label="User Settings" active={tab === "user"} onClick={() => setTab("user")} />
+          <TabButton icon={<UserIcon />} label="Snoozed" active={tab === "snoozed"} onClick={() => setTab("snoozed")} />
         </div>
 
         {/* Content area */}
@@ -601,6 +625,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               {tab === "connection" && "Connection"}
               {tab === "ai" && "AI Provider Settings"}
               {tab === "user" && "User Settings"}
+              {tab === "snoozed" && "Snoozed Devices"}
             </h2>
             <button type="button" onClick={onClose} className={CLOSE_BUTTON_CLASS} aria-label="Close settings">
               &times;
@@ -610,6 +635,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             {tab === "connection" && <ConnectionPane />}
             {tab === "ai" && <AiPane onClose={onClose} />}
             {tab === "user" && <UserPane />}
+            {tab === "snoozed" && <SnoozedPane />}
           </div>
         </div>
         </div>

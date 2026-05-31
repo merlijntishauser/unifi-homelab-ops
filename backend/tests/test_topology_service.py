@@ -69,8 +69,16 @@ MOCK_TOPOLOGY = type("TopologyResult", (), {"tree_edges": [], "raw_edges": []})(
 STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg"><text>stub</text></svg>'
 
 
-def _patch_all(render_mock: MagicMock | None = None, iso_mock: MagicMock | None = None) -> ExitStack:
-    """Patch all external dependencies."""
+def _patch_all(
+    render_mock: MagicMock | None = None,
+    iso_mock: MagicMock | None = None,
+    patch_snoozed: bool = True,
+) -> ExitStack:
+    """Patch all external dependencies.
+
+    Set patch_snoozed=False to let get_snoozed_macs use the real database
+    (requires the test to call init_db_for_tests first).
+    """
     stack = ExitStack()
     stack.enter_context(patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES))
     stack.enter_context(patch("app.services.topology.fetch_clients", return_value=MOCK_RAW_CLIENTS))
@@ -81,6 +89,8 @@ def _patch_all(render_mock: MagicMock | None = None, iso_mock: MagicMock | None 
     stack.enter_context(patch("app.services.topology.build_client_edges", return_value=[]))
     stack.enter_context(patch("app.services.topology.extract_wan_info", return_value=None))
     stack.enter_context(patch("app.services.topology.extract_vpn_tunnels", return_value=[]))
+    if patch_snoozed:
+        stack.enter_context(patch("app.services.topology.get_snoozed_macs", return_value=set()))
     if render_mock:
         stack.enter_context(patch("app.services.topology.render_svg", render_mock))
     else:
@@ -151,6 +161,7 @@ class TestGetTopologyDevices:
             patch("app.services.topology.fetch_devices", return_value=raw_devices),
             patch("app.services.topology.normalize_devices", return_value=devices),
             patch("app.services.topology.build_topology", return_value=MOCK_TOPOLOGY),
+            patch("app.services.topology.get_snoozed_macs", return_value=set()),
         ):
             result = get_topology_devices(MOCK_CONFIG)
         assert result.devices[0].status == "offline"
@@ -162,6 +173,7 @@ class TestGetTopologyDevices:
             patch("app.services.topology.fetch_devices", return_value=raw_devices),
             patch("app.services.topology.normalize_devices", return_value=devices),
             patch("app.services.topology.build_topology", return_value=MOCK_TOPOLOGY),
+            patch("app.services.topology.get_snoozed_macs", return_value=set()),
         ):
             result = get_topology_devices(MOCK_CONFIG)
         assert result.devices[0].uptime == 0
@@ -189,6 +201,7 @@ class TestGetTopologyDevices:
             patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES),
             patch("app.services.topology.normalize_devices", return_value=[device_with_ports, MOCK_DEVICES[1]]),
             patch("app.services.topology.build_topology", return_value=MOCK_TOPOLOGY),
+            patch("app.services.topology.get_snoozed_macs", return_value=set()),
         ):
             result = get_topology_devices(MOCK_CONFIG)
         gw = result.devices[0]
@@ -210,6 +223,7 @@ class TestGetTopologyDevices:
             patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES),
             patch("app.services.topology.normalize_devices", return_value=MOCK_DEVICES),
             patch("app.services.topology.build_topology", return_value=mock_topo),
+            patch("app.services.topology.get_snoozed_macs", return_value=set()),
         ):
             result = get_topology_devices(MOCK_CONFIG)
         assert len(result.edges) == 0
@@ -258,6 +272,7 @@ class TestGetTopologyDevices:
             patch("app.services.topology.fetch_devices", return_value=raw),
             patch("app.services.topology.normalize_devices", return_value=dup_devices),
             patch("app.services.topology.build_topology", return_value=mock_topo),
+            patch("app.services.topology.get_snoozed_macs", return_value=set()),
         ):
             result = get_topology_devices(MOCK_CONFIG)
         # All 3 devices should be present
@@ -285,12 +300,31 @@ class TestGetTopologyDevices:
             patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES),
             patch("app.services.topology.normalize_devices", return_value=[device_with_port_no_lldp, MOCK_DEVICES[1]]),
             patch("app.services.topology.build_topology", return_value=MOCK_TOPOLOGY),
+            patch("app.services.topology.get_snoozed_macs", return_value=set()),
         ):
             result = get_topology_devices(MOCK_CONFIG)
         gw = result.devices[0]
         assert len(gw.ports) == 1
         assert gw.ports[0].connected_mac is None
         assert gw.ports[0].connected_device is None
+
+    def test_snoozed_devices_are_excluded(self) -> None:
+        from pathlib import Path
+
+        from app.database import init_db_for_tests, reset_engine
+        from app.models import SnoozeInput
+        from app.services.snoozed_devices import snooze_devices
+
+        init_db_for_tests(Path("/tmp/topo_snooze_test.db"))  # noqa: S108
+        try:
+            snooze_devices([SnoozeInput(mac="aa:bb:cc:dd:ee:02", name="Switch", model="USW")])
+            with _patch_all(patch_snoozed=False):
+                result = get_topology_devices(MOCK_CONFIG)
+            macs = {d.mac for d in result.devices}
+            assert "aa:bb:cc:dd:ee:02" not in macs
+            assert all("aa:bb:cc:dd:ee:02" not in (e.from_mac, e.to_mac) for e in result.edges)
+        finally:
+            reset_engine()
 
     def test_returns_edges(self) -> None:
         mock_edge = type("Edge", (), {
@@ -304,6 +338,7 @@ class TestGetTopologyDevices:
             patch("app.services.topology.fetch_devices", return_value=MOCK_RAW_DEVICES),
             patch("app.services.topology.normalize_devices", return_value=MOCK_DEVICES),
             patch("app.services.topology.build_topology", return_value=mock_topo),
+            patch("app.services.topology.get_snoozed_macs", return_value=set()),
         ):
             result = get_topology_devices(MOCK_CONFIG)
         assert len(result.edges) == 1

@@ -30,6 +30,7 @@ from unifi_topology.render import render_svg, render_svg_isometric, resolve_svg_
 from app.config import UnifiCredentials
 from app.models import TopologyDevice, TopologyDevicesResponse, TopologyEdge, TopologyPort
 from app.services.firewall import to_topology_config
+from app.services.snoozed_devices import get_snoozed_macs
 
 log = structlog.get_logger()
 
@@ -94,7 +95,8 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
     config = to_topology_config(credentials)
 
     raw_devices: list[dict[str, Any]] = list(fetch_devices(config, site=credentials.site))  # type: ignore[arg-type]
-    devices = normalize_devices(raw_devices)
+    snoozed = get_snoozed_macs()
+    devices = [d for d in normalize_devices(raw_devices) if d.mac.lower() not in snoozed]
     raw_lookup = _raw_device_lookup(raw_devices)
 
     gateway_types = {"gateway", "udm", "ugw"}

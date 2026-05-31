@@ -259,6 +259,35 @@ class TestStartMetricsPoller:
         assert get_controller_health().status == "ok"
 
     @pytest.mark.anyio
+    async def test_snoozed_devices_are_suppressed_and_reconciled(self) -> None:
+        from app.models import SnoozeInput
+        from app.services.poller import _poll_once
+        from app.services.snoozed_devices import get_snoozed_macs, snooze_devices
+
+        # Two devices snoozed; only "aa:bb" comes back online in the poll.
+        snooze_devices([SnoozeInput(mac="aa:bb", name="A", model="m")])
+        snooze_devices([SnoozeInput(mac="cc:dd", name="B", model="m")])
+
+        online = [_make_stats(mac="aa:bb")]
+        recorded: list[list[object]] = []
+
+        with (
+            patch("app.services.poller.has_credentials", return_value=True),
+            patch("app.services.poller.get_unifi_config", return_value=MagicMock()),
+            patch("app.services.poller.to_topology_config", return_value=MagicMock()),
+            patch("app.services.poller.fetch_device_stats", return_value=[]),
+            patch("app.services.poller.normalize_device_stats", return_value=online),
+            patch("app.services.poller.record_snapshot", side_effect=lambda s: recorded.append(s)),
+            patch("app.services.poller._check_anomalies"),
+            patch("app.services.poller._maybe_prune"),
+        ):
+            _poll_once()
+
+        # aa:bb reconnected -> auto-unsnoozed and recorded; cc:dd stays snoozed.
+        assert get_snoozed_macs() == {"cc:dd"}
+        assert recorded and {s.mac for s in recorded[0]} == {"aa:bb"}
+
+    @pytest.mark.anyio
     async def test_auth_error_backs_off_and_logs_once(self) -> None:
         from app.services.controller_health import get_controller_health, reset_controller_health
         from app.services.poller import _AUTH_ERROR_INTERVAL

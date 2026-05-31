@@ -20,6 +20,7 @@ from app.services.metrics import (
     record_snapshot,
     resolve_notifications,
 )
+from app.services.snoozed_devices import get_snoozed_macs, reconcile_online
 
 log = structlog.get_logger()
 
@@ -102,8 +103,16 @@ def _poll_once() -> None:
     config = to_topology_config(credentials)
     raw_stats = fetch_device_stats(config, site=credentials.site)
     stats = normalize_device_stats(raw_stats)  # type: ignore[arg-type]
-    record_snapshot(stats)
-    _check_anomalies(stats)
+
+    # Auto-unsnooze any snoozed device that is back online, then drop those that
+    # are still snoozed so they produce no snapshots or notifications.
+    online_macs = {s.mac.lower() for s in stats}
+    reconcile_online(online_macs)
+    snoozed = get_snoozed_macs()
+    active_stats = [s for s in stats if s.mac.lower() not in snoozed]
+
+    record_snapshot(active_stats)
+    _check_anomalies(active_stats)
     _maybe_prune()
     set_controller_health("ok")
 

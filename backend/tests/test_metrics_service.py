@@ -207,6 +207,23 @@ def test_resolve_all_notifications_clears_every_check_for_device() -> None:
     assert "cc:dd" in macs
 
 
+def test_get_latest_snapshots_excludes_snoozed() -> None:
+    from app.models import SnoozeInput
+    from app.services.metrics import get_latest_snapshots, record_snapshot
+    from app.services.snoozed_devices import snooze_devices
+
+    record_snapshot([
+        _make_device_stats(mac="aa:bb", name="A"),
+        _make_device_stats(mac="cc:dd", name="B"),
+    ])
+    snooze_devices([SnoozeInput(mac="AA:BB", name="A", model="m")])
+
+    snapshots = get_latest_snapshots()
+    macs = {s.mac for s in snapshots}
+    assert "aa:bb" not in macs
+    assert "cc:dd" in macs
+
+
 class TestPruneOldData:
     def test_prune_keeps_recent_data(self) -> None:
         record_snapshot([_make_device_stats()])

@@ -70,8 +70,14 @@ def get_latest_snapshots(
         stats_lookup = {s.mac: s for s in current_stats}
     ips = ip_lookup or {}
 
+    from app.services.snoozed_devices import get_snoozed_macs
+
+    snoozed = get_snoozed_macs()
+
     snapshots: list[MetricsSnapshot] = []
     for row in rows:
+        if row.mac.lower() in snoozed:
+            continue
         live = stats_lookup.get(row.mac)
         snapshots.append(
             MetricsSnapshot(

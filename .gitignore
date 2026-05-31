@@ -51,7 +51,10 @@ frontend/dist/
 Thumbs.db
 
 # Claude AI Assistant
-.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/verifier-webapp/
 
 # Playwright
 .playwright-mcp/

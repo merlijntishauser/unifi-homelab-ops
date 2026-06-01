@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-06-01
+
+### Added
+- **Snooze offline devices**: hide an offline device (per-device button or bulk "Snooze offline (N)") from Topology and Metrics and suppress its anomaly alerts until it reconnects, at which point it auto-unsnoozes
+  - Collapsible "Snoozed devices" section in the Metrics module plus a dedicated pane in Settings to review and re-enable snoozed devices
+  - App-local state persisted by MAC (`/api/devices/snoozed`); the background poller reconciles every cycle, auto-unsnoozing devices the moment they come back online
+- **UniFi API key authentication**: connect with a Network integration API key as an alternative to username/password, via env (`UNIFI_API_KEY`, takes priority over user/pass) or a Password/API key toggle in the login and connection screens
+- **Friendly error screens**: a top-level error boundary plus per-route boundaries replace React Router's raw error fallback with a styled recovery screen (Try again / Go to Health / Reload); a crash in one module no longer blanks the whole app
+
+### Changed
+- **Upgraded to Python 3.14 and Node 24** across all Docker images (standard + Alpine) and the CI toolchain
+- **Upgraded unifi-topology from 2.1.0 to 2.2.1** (adds API-key authentication support)
+- Controller credential rejection is now handled gracefully: the metrics poller logs once and backs off instead of emitting a traceback every poll cycle, and the Toolbar "Controller" badge turns red ("credentials rejected") or amber ("unreachable") with the reason surfaced via `/api/auth/status`
+- Metrics device status is derived from the controller `state` field (online/offline/unknown) instead of mere presence in the live poll, so adopted-but-powered-down devices correctly read as offline (and can be snoozed)
+- CI: upgraded Trivy 0.68.1 -> 0.70.0 and replaced the deprecated `--vuln-type` flag with `--pkg-types`
+- Reached React Doctor 100/100 and refreshed AGENTS.md for the new rules
+- Dependency bumps: uuid 11 -> 14, dompurify 3.4.0, vite 8.0.5, eslint-plugin-react-hooks (canary for ESLint 10), and npm minor/patch groups (40+ updates across three batches); backend uvicorn/httpx/radon/alembic minimum versions raised
+
+### Fixed
+- Topology: coerce null `uptime`/`num_sta` from the controller to 0, fixing a 500 in the Health summary endpoint
+- Snooze: snoozed devices are excluded from the Topology SVG diagram as well as the interactive map, the SVG query is invalidated on snooze/unsnooze, and notification resolution on snooze is case-insensitive on MAC
+
+### Security
+- Patched Dependabot alerts: Mako (path traversal, 1.3.10 -> 1.3.12), Pygments (ReDoS, -> 2.20.0), urllib3, and idna
+
 ## [1.3.0] - 2026-04-04
 
 ### Added
@@ -255,7 +280,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.1...v1.1.2

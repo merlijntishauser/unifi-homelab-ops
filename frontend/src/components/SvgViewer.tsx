@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import DOMPurify from "dompurify";
 
 interface SvgViewerProps {
   svgContent: string;
@@ -20,7 +21,12 @@ export default function SvgViewer({ svgContent }: SvgViewerProps) {
 
   useEffect(() => {
     if (svgRef.current) {
-      svgRef.current.innerHTML = svgContent;
+      // svgContent is generated server-side by unifi-topology (trusted), but
+      // sanitize at the DOM sink as defense-in-depth before injecting it.
+      svgRef.current.innerHTML = DOMPurify.sanitize(svgContent, {
+        USE_PROFILES: { svg: true, svgFilters: true },
+        ADD_TAGS: ["foreignObject"],
+      });
     }
   }, [svgContent]);
 
@@ -66,7 +72,6 @@ export default function SvgViewer({ svgContent }: SvgViewerProps) {
   const zoomIn = useCallback(() => setZoom((z) => clampZoom(z + ZOOM_STEP * z)), []);
   const zoomOut = useCallback(() => setZoom((z) => clampZoom(z - ZOOM_STEP * z)), []);
 
-  // SVG content is generated server-side by the unifi-topology library (trusted)
   return (
     <div className="relative flex-1 overflow-hidden bg-ui-bg dark:bg-noc-bg">
       <div

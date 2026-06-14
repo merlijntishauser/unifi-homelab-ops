@@ -11,6 +11,23 @@ describe("SvgViewer", () => {
     expect(screen.getByTestId("test-svg")).toBeInTheDocument();
   });
 
+  it("preserves style, image and text elements through sanitization", () => {
+    const richSvg =
+      '<svg data-testid="rich"><defs></defs><style>.n{fill:red}</style>' +
+      '<image href="data:image/svg+xml;base64,Zm9v"/><text>Node A</text></svg>';
+    render(<SvgViewer svgContent={richSvg} />);
+    const svg = screen.getByTestId("rich");
+    expect(svg.querySelector("style")).toBeInTheDocument();
+    expect(svg.querySelector("image")).toBeInTheDocument();
+    expect(svg.querySelector("text")?.textContent).toBe("Node A");
+  });
+
+  it("strips script injection from SVG content", () => {
+    render(<SvgViewer svgContent={'<svg data-testid="evil"><script>window.__xss=1</script><rect/></svg>'} />);
+    expect(screen.getByTestId("evil").querySelector("script")).toBeNull();
+    expect((window as unknown as { __xss?: number }).__xss).toBeUndefined();
+  });
+
   it("shows zoom controls", () => {
     render(<SvgViewer svgContent={STUB_SVG} />);
     expect(screen.getByLabelText("Zoom in")).toBeInTheDocument();

@@ -10,6 +10,7 @@ import {
   type Node,
   type Edge,
   type ColorMode,
+  type OnNodeDrag,
 } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 import type { NodePosition, TopologyDevice, TopologyEdge } from "../api/types";
@@ -155,8 +156,8 @@ function DeviceMapInner({
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
   /* v8 ignore start -- requires real ReactFlow drag event */
-  const handleNodeDragStop = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
+  const handleNodeDragStop = useCallback<OnNodeDrag<Node>>(
+    (_event, node) => {
       onNodeDragEnd?.(node.id, node.position.x, node.position.y);
     },
     [onNodeDragEnd],

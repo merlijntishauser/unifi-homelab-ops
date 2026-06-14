@@ -57,6 +57,9 @@ function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
   useEffect(() => {
     if (ref.current && svgHtml) {
       ref.current.replaceChildren();
+      // svgHtml is already DOMPurify.sanitize()d in renderMermaidSvg (svg profile);
+      // react-doctor's taint tracker can't follow the value through useState.
+      // react-doctor-disable-next-line react-doctor/dangerous-html-sink
       ref.current.insertAdjacentHTML("afterbegin", svgHtml);
     }
   }, [svgHtml]);

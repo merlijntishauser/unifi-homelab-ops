@@ -110,5 +110,41 @@ describe("MetricsChart", () => {
     expect(formatter(undefined)).toEqual(["0%", "CPU"]);
     expect(formatter(42)).toEqual(["42%", "CPU"]);
   });
+
+  it("falls back to a placeholder when the recharts chunk fails to load", async () => {
+    vi.resetModules();
+    vi.doMock("recharts", () => {
+      throw new Error("chunk load failed");
+    });
+    const { default: FreshMetricsChart } = await import("./MetricsChart");
+
+    render(<FreshMetricsChart label="CPU" value="25%" data={[]} color="#006fff" unit="%" />);
+
+    await waitFor(() => expect(screen.getByText("Chart unavailable")).toBeInTheDocument());
+    expect(screen.getByText("CPU")).toBeInTheDocument();
+    expect(screen.getByText("25%")).toBeInTheDocument();
+
+    vi.doUnmock("recharts");
+    vi.resetModules();
+  });
+
+  it("does not set state when unmounted before the failed load settles", async () => {
+    vi.resetModules();
+    vi.doMock("recharts", () => {
+      throw new Error("chunk load failed");
+    });
+    const { default: FreshMetricsChart } = await import("./MetricsChart");
+
+    const { unmount } = render(
+      <FreshMetricsChart label="CPU" value="25%" data={[]} color="#006fff" unit="%" />,
+    );
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(screen.queryByText("Chart unavailable")).not.toBeInTheDocument();
+
+    vi.doUnmock("recharts");
+    vi.resetModules();
+  });
 });
 

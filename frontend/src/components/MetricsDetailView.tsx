@@ -225,7 +225,7 @@ export default function MetricsDetailView({
       {/* Back button */}
       <button type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised shadow-sm cursor-pointer transition-all mb-4"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised shadow-sm cursor-pointer transition-colors mb-4"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4">
           <polyline points="15 18 9 12 15 6" />

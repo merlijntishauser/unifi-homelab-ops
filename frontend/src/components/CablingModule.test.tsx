@@ -333,6 +333,30 @@ describe("CablingModule", () => {
       expect(screen.getByText("Edit Cable")).toBeInTheDocument();
     });
 
+    it("pressing Enter on a cable row opens edit panel", async () => {
+      const user = userEvent.setup();
+      renderModule();
+      screen.getByTestId("cable-row-1").focus();
+      await user.keyboard("{Enter}");
+      expect(screen.getByTestId("cable-edit-panel")).toBeInTheDocument();
+    });
+
+    it("pressing Space on a cable row opens edit panel", async () => {
+      const user = userEvent.setup();
+      renderModule();
+      screen.getByTestId("cable-row-1").focus();
+      await user.keyboard(" ");
+      expect(screen.getByTestId("cable-edit-panel")).toBeInTheDocument();
+    });
+
+    it("pressing an unrelated key on a cable row does not open edit panel", async () => {
+      const user = userEvent.setup();
+      renderModule();
+      screen.getByTestId("cable-row-1").focus();
+      await user.keyboard("{Escape}");
+      expect(screen.queryByTestId("cable-edit-panel")).not.toBeInTheDocument();
+    });
+
     it("edit panel has delete button for existing cables", () => {
       renderModule();
       fireEvent.click(screen.getByTestId("cable-row-1"));

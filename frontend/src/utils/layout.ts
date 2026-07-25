@@ -22,6 +22,13 @@ interface EdgeOffsets {
   routeOffsets: Map<string, number>;
 }
 
+/** Append `edge` to the bucket for `key`, creating the bucket when absent. */
+function appendEdge(buckets: Map<string, Edge[]>, key: string, edge: Edge): void {
+  const bucket = buckets.get(key);
+  if (bucket) bucket.push(edge);
+  else buckets.set(key, [edge]);
+}
+
 function computeEdgeOffsets(
   edges: Edge[],
   posMap: Map<string, { x: number; y: number }>,
@@ -35,10 +42,8 @@ function computeEdgeOffsets(
   const targetRouteOffsets = new Map<string, number>();
 
   for (const edge of edges) {
-    if (!outgoing.has(edge.source)) outgoing.set(edge.source, []);
-    outgoing.get(edge.source)!.push(edge);
-    if (!incoming.has(edge.target)) incoming.set(edge.target, []);
-    incoming.get(edge.target)!.push(edge);
+    appendEdge(outgoing, edge.source, edge);
+    appendEdge(incoming, edge.target, edge);
     // Defaults — overwritten by the loops below
     sourceOffsets.set(edge.id, 0);
     targetOffsets.set(edge.id, 0);

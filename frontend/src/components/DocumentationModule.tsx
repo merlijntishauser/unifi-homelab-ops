@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import mermaid from "mermaid";
 import DOMPurify from "dompurify";
 import { useAppContext } from "../hooks/useAppContext";
 import { useDocSections } from "../hooks/queries";
@@ -30,6 +29,9 @@ const MERMAID_LIGHT = {
 };
 
 async function renderMermaidSvg(code: string, isDark: boolean): Promise<string> {
+  // Loaded on demand: mermaid is a large dependency and only the topology
+  // section renders diagrams.
+  const { default: mermaid } = await import("mermaid");
   mermaid.initialize({
     startOnLoad: false, theme: "base", securityLevel: "loose",
     themeVariables: isDark ? MERMAID_DARK : MERMAID_LIGHT,
@@ -76,7 +78,7 @@ function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
 }
 
 const BTN =
-  "inline-flex items-center gap-1.5 rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+  "inline-flex items-center gap-1.5 rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-colors";
 
 function LoadingSpinner({ message }: { message: string }) {
   return (

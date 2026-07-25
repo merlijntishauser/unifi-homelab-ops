@@ -20,8 +20,8 @@ export const CLOSE_BUTTON_CLASS =
 
 /** Primary action button used in error fallback screens. */
 export const ERROR_PRIMARY_BTN =
-  "flex-1 rounded-lg bg-ub-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 transition-all";
+  "flex-1 rounded-lg bg-ub-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light focus:outline-none focus:ring-2 focus:ring-ub-blue/40 transition-colors";
 
 /** Secondary action button used in error fallback screens. */
 export const ERROR_SECONDARY_BTN =
-  "rounded-lg border border-ui-border dark:border-noc-border px-4 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-all";
+  "rounded-lg border border-ui-border dark:border-noc-border px-4 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised transition-colors";

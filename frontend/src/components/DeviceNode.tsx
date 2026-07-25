@@ -82,7 +82,7 @@ export default function DeviceNodeComponent({ data, id }: NodeProps<DeviceNode>)
       : "border-ui-border dark:border-noc-border";
 
   return (
-    <div className={`relative rounded-lg border ${borderColor} bg-ui-surface dark:bg-noc-raised shadow-md w-[200px] transition-all`}>
+    <div className={`relative rounded-lg border ${borderColor} bg-ui-surface dark:bg-noc-raised shadow-md w-[200px] transition-colors`}>
       <Handle type="target" position={Position.Top} className="!bg-ui-text-dim dark:!bg-noc-text-dim" />
 
       <button

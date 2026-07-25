@@ -76,8 +76,8 @@ export default function FindingsList({ findings }: { findings: Finding[] }) {
       <h3 className="text-[10px] font-semibold text-ui-text-dim dark:text-noc-text-dim uppercase tracking-widest">
         Findings ({findings.length})
       </h3>
-      {sorted.map((finding, idx) => (
-        <FindingCard key={finding.id ?? idx} finding={finding} />
+      {sorted.map((finding) => (
+        <FindingCard key={finding.id} finding={finding} />
       ))}
     </div>
   );

@@ -39,7 +39,7 @@ export default function DeviceMetricCard({ device, onClick }: DeviceMetricCardPr
   return (
     <button
       type="button"
-      className="text-left block w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shadow-sm p-4 cursor-pointer hover:bg-ui-raised dark:hover:bg-noc-raised hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
+      className="text-left block w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shadow-sm p-4 cursor-pointer hover:bg-ui-raised dark:hover:bg-noc-raised hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-[color,background-color,border-color,box-shadow]"
       onClick={onClick}
     >
       <div className="flex items-center gap-2 mb-1">

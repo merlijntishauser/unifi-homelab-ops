@@ -66,7 +66,7 @@ export default function MatrixCell({
     <button type="button"
       data-testid="matrix-cell"
       onClick={onClick}
-      className={`group relative size-full flex items-center justify-center text-xs font-medium rounded-lg border hover:ring-2 hover:ring-ub-blue/40 cursor-pointer transition-all ${color}`}
+      className={`group relative size-full flex items-center justify-center text-xs font-medium rounded-lg border hover:ring-2 hover:ring-ub-blue/40 cursor-pointer transition-[color,background-color,border-color,box-shadow] ${color}`}
     >
       {actionLabel ? (
         <span className="flex items-center gap-1">

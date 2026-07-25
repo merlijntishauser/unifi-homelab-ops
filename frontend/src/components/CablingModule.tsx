@@ -16,13 +16,13 @@ import {
 // --- Shared button styles ---
 
 const btnClass =
-  "inline-flex items-center rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+  "inline-flex items-center rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-colors";
 
 const btnPrimaryClass =
-  "inline-flex items-center rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 min-h-[36px] text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-all";
+  "inline-flex items-center rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 min-h-[36px] text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-colors";
 
 const btnDangerClass =
-  "inline-flex items-center rounded-lg border border-status-danger bg-status-danger px-3 py-1.5 min-h-[36px] text-sm text-white hover:opacity-90 cursor-pointer transition-all";
+  "inline-flex items-center rounded-lg border border-status-danger bg-status-danger px-3 py-1.5 min-h-[36px] text-sm text-white hover:opacity-90 cursor-pointer transition-[color,background-color,border-color,opacity]";
 
 const labelClass = "block text-xs text-ui-text-dim dark:text-noc-text-dim mb-1";
 
@@ -302,26 +302,43 @@ function PanelEditPanel({ panel, onSave, onDelete, onClose, title }: PanelEditPa
 
 // --- Port grid for PatchPanelCard ---
 
+interface PanelPort {
+  /** Physical port number (1-based) -- the stable identity of a patch panel port. */
+  num: number;
+  cable: CableRun | undefined;
+  title: string;
+}
+
+function buildPanelPorts(portCount: number, portMap: Map<number, CableRun>): PanelPort[] {
+  const ports: PanelPort[] = [];
+  for (let num = 1; num <= portCount; num++) {
+    const cable = portMap.get(num);
+    ports.push({
+      num,
+      cable,
+      title: cable
+        ? `${cable.label} - ${cable.source_device_name ?? cable.source_device_mac ?? "?"} -> ${cable.dest_device_name ?? cable.dest_label ?? "?"}`
+        : `Port ${num} (empty)`,
+    });
+  }
+  return ports;
+}
+
 function PortGrid({ panel, portMap }: { panel: PatchPanel; portMap: Map<number, CableRun> }) {
+  const ports = useMemo(() => buildPanelPorts(panel.port_count, portMap), [panel.port_count, portMap]);
+
   return (
     <div className="mt-2 border-t border-ui-border dark:border-noc-border pt-2" data-testid={`panel-ports-${panel.id}`}>
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-1">
-        {Array.from({ length: panel.port_count }, (_, i) => {
-          const portNum = i + 1;
-          const cable = portMap.get(portNum);
-          const portTitle = cable
-            ? `${cable.label} - ${cable.source_device_name ?? cable.source_device_mac ?? "?"} -> ${cable.dest_device_name ?? cable.dest_label ?? "?"}`
-            : `Port ${portNum} (empty)`;
-          return (
-            <div
-              key={portNum}
-              className={`text-center p-1 rounded text-[10px] font-mono ${cable ? "bg-ub-blue-dim text-ub-blue" : "bg-ui-raised dark:bg-noc-input text-ui-text-dim dark:text-noc-text-dim"}`}
-              title={portTitle}
-            >
-              {portNum}
-            </div>
-          );
-        })}
+        {ports.map((port) => (
+          <div
+            key={port.num}
+            className={`text-center p-1 rounded text-[10px] font-mono ${port.cable ? "bg-ub-blue-dim text-ub-blue" : "bg-ui-raised dark:bg-noc-input text-ui-text-dim dark:text-noc-text-dim"}`}
+            title={port.title}
+          >
+            {port.num}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -357,7 +374,7 @@ function PatchPanelCard({ panel, cables, onEdit }: PatchPanelCardProps) {
 
   return (
     <div
-      className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
+      className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-[color,background-color,border-color,box-shadow]"
       data-testid={`panel-card-${panel.id}`}
     >
       <button
@@ -395,8 +412,15 @@ function CableRow({ cable, panelName, onClick }: { cable: CableRun; panelName: s
 
   return (
     <tr
-      className="border-b border-ui-border/50 dark:border-noc-border/50 hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors"
+      className="border-b border-ui-border/50 dark:border-noc-border/50 hover:bg-ui-raised dark:hover:bg-noc-raised cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ub-blue/40"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       data-testid={`cable-row-${cable.id}`}
     >
       <td className={`${tdClass} font-mono font-medium`}>{cable.label || "--"}</td>
@@ -419,6 +443,52 @@ function CableRow({ cable, panelName, onClick }: { cable: CableRun; panelName: s
         </span>
       </td>
     </tr>
+  );
+}
+
+// --- Cable table headers ---
+
+interface CableColumn {
+  /** `null` for columns that cannot be sorted (rendered as plain text). */
+  field: SortField | null;
+  label: string;
+}
+
+const CABLE_COLUMNS: CableColumn[] = [
+  { field: "label", label: "Label" },
+  { field: "source", label: "Source" },
+  { field: "destination", label: "Destination" },
+  { field: null, label: "Via" },
+  { field: "type", label: "Type" },
+  { field: "length", label: "Length" },
+  { field: "speed", label: "Speed" },
+  { field: "status", label: "Status" },
+];
+
+const TH_CLASS = "text-left px-3 py-2 text-xs font-semibold text-ui-text-dim dark:text-noc-text-dim select-none";
+const TH_BUTTON_CLASS = "inline-flex items-center cursor-pointer hover:text-ui-text dark:hover:text-noc-text transition-colors";
+
+interface CableHeaderCellProps {
+  column: CableColumn;
+  sortField: SortField;
+  sortAsc: boolean;
+  onSort: (field: SortField) => void;
+}
+
+function CableHeaderCell({ column, sortField, sortAsc, onSort }: CableHeaderCellProps) {
+  const { field, label } = column;
+
+  if (field === null) {
+    return <th scope="col" className={TH_CLASS}>{label}</th>;
+  }
+
+  const active = sortField === field;
+  return (
+    <th scope="col" className={TH_CLASS} aria-sort={active ? (sortAsc ? "ascending" : "descending") : "none"}>
+      <button type="button" className={TH_BUTTON_CLASS} onClick={() => onSort(field)}>
+        {label}{active ? (sortAsc ? " ↑" : " ↓") : ""}
+      </button>
+    </th>
   );
 }
 
@@ -466,13 +536,6 @@ function CableTable({ cables, panels, onEditCable, onAddCable, onSync, isSyncing
     });
   }, [cables, statusFilter, sortField, sortAsc]);
 
-  const thClass = "text-left px-3 py-2 text-xs font-semibold text-ui-text-dim dark:text-noc-text-dim cursor-pointer select-none hover:text-ui-text dark:hover:text-noc-text transition-colors";
-
-  const sortIndicator = (field: SortField) => {
-    if (sortField !== field) return "";
-    return sortAsc ? " \u2191" : " \u2193";
-  };
-
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 px-3 lg:px-4 py-2.5 border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface shrink-0">
@@ -480,6 +543,7 @@ function CableTable({ cables, panels, onEditCable, onAddCable, onSync, isSyncing
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
+          aria-label="Filter cables by status"
           className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-input dark:bg-noc-input px-2 py-1 text-xs text-ui-text dark:text-noc-text"
           data-testid="status-filter"
         >
@@ -501,14 +565,15 @@ function CableTable({ cables, panels, onEditCable, onAddCable, onSync, isSyncing
           <table className="w-full min-w-[700px]" data-testid="cable-table">
             <thead className="border-b border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface sticky top-0">
               <tr>
-                <th className={thClass} onClick={() => handleSort("label")}>Label{sortIndicator("label")}</th>
-                <th className={thClass} onClick={() => handleSort("source")}>Source{sortIndicator("source")}</th>
-                <th className={thClass} onClick={() => handleSort("destination")}>Destination{sortIndicator("destination")}</th>
-                <th className={thClass}>Via</th>
-                <th className={thClass} onClick={() => handleSort("type")}>Type{sortIndicator("type")}</th>
-                <th className={thClass} onClick={() => handleSort("length")}>Length{sortIndicator("length")}</th>
-                <th className={thClass} onClick={() => handleSort("speed")}>Speed{sortIndicator("speed")}</th>
-                <th className={thClass} onClick={() => handleSort("status")}>Status{sortIndicator("status")}</th>
+                {CABLE_COLUMNS.map((column) => (
+                  <CableHeaderCell
+                    key={column.label}
+                    column={column}
+                    sortField={sortField}
+                    sortAsc={sortAsc}
+                    onSort={handleSort}
+                  />
+                ))}
               </tr>
             </thead>
             <tbody>

@@ -199,14 +199,14 @@ function ConnectionPane() {
         <button type="button"
           onClick={handleConnect}
           disabled={loginMutation.isPending}
-          className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+          className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-[color,background-color,opacity]"
         >
           {loginMutation.isPending ? "Connecting..." : "Connect"}
         </button>
         {connectionInfo && (
           <button type="button"
             onClick={onLogout}
-            className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all"
+            className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-colors"
           >
             Disconnect
           </button>
@@ -520,14 +520,14 @@ function AiPane({ onClose }: { onClose: () => void }) {
       )}
 
       <div className="flex gap-2 pt-2">
-        <button type="button" onClick={handleSave} disabled={saving || (!isEnvSourced && !selectedPresetId)} className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
+        <button type="button" onClick={handleSave} disabled={saving || (!isEnvSourced && !selectedPresetId)} className="flex-1 rounded-lg bg-ub-blue min-h-[40px] px-3 py-2 text-sm font-semibold text-white hover:bg-ub-blue-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-[color,background-color,opacity]">
           {saving ? "Saving..." : "Save"}
         </button>
-        <button type="button" onClick={handleTest} disabled={testing} className="rounded-lg border border-ui-border dark:border-noc-border min-h-[40px] px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-all">
+        <button type="button" onClick={handleTest} disabled={testing} className="rounded-lg border border-ui-border dark:border-noc-border min-h-[40px] px-3 py-2 text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text disabled:opacity-50 cursor-pointer transition-[color,background-color,opacity]">
           {testing ? "Testing..." : "Test Connection"}
         </button>
         {configSource === "db" && (
-          <button type="button" onClick={handleDelete} className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-all">
+          <button type="button" onClick={handleDelete} className="rounded-lg border border-red-300 dark:border-status-danger/30 min-h-[40px] px-3 py-2 text-sm text-red-600 dark:text-status-danger hover:bg-red-50 dark:hover:bg-status-danger-dim cursor-pointer transition-colors">
             Delete
           </button>
         )}

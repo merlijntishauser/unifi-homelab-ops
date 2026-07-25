@@ -55,6 +55,7 @@ Thumbs.db
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/verifier-webapp/
+/.agents
 
 # Playwright
 .playwright-mcp/

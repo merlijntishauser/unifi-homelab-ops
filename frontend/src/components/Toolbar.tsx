@@ -133,7 +133,7 @@ function ThemePicker({ themePreference, onThemePreferenceChange }: { themePrefer
     <div ref={ref} className="relative">
       <button type="button"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all"
+        className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-colors"
         aria-label={`Theme: ${THEME_LABELS[themePreference]}`}
         aria-expanded={open}
       >
@@ -198,7 +198,7 @@ export default function Toolbar({
       {onOpenNotifications && (
         <button type="button"
           onClick={onOpenNotifications}
-          className="lg:hidden relative rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all"
+          className="lg:hidden relative rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-colors"
           aria-label="Notifications"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-5">
@@ -219,7 +219,7 @@ export default function Toolbar({
         <div className="relative group">
           <button type="button"
             onClick={onAppLogout}
-            className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-status-danger-dim hover:text-status-danger hover:border-status-danger/20 cursor-pointer transition-all"
+            className="rounded-lg border border-ui-border dark:border-noc-border p-2 text-ui-text-secondary dark:text-noc-text-secondary hover:bg-status-danger-dim hover:text-status-danger hover:border-status-danger/20 cursor-pointer transition-colors"
             aria-label="Log out"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-5">

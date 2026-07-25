@@ -51,10 +51,10 @@ const DEVICE_TYPE_OPTIONS = [
 // --- Shared button style ---
 
 const btnClass =
-  "inline-flex items-center rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-all";
+  "inline-flex items-center rounded-lg border border-ui-border dark:border-noc-border px-3 py-1.5 min-h-[36px] text-sm text-ui-text-secondary dark:text-noc-text-secondary hover:bg-ui-raised dark:hover:bg-noc-raised hover:text-ui-text dark:hover:text-noc-text hover:border-ui-border-hover dark:hover:border-noc-border-hover cursor-pointer transition-colors";
 
 const btnPrimaryClass =
-  "inline-flex items-center rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 min-h-[36px] text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-all";
+  "inline-flex items-center rounded-lg border border-ub-blue bg-ub-blue px-3 py-1.5 min-h-[36px] text-sm text-white hover:bg-ub-blue-light cursor-pointer transition-colors";
 
 // --- RackCard ---
 
@@ -69,7 +69,7 @@ function RackCard({ rack, onClick }: RackCardProps) {
   return (
     <button
       type="button"
-      className="text-left block w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-all"
+      className="text-left block w-full rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-raised p-4 cursor-pointer hover:border-ui-border-hover dark:hover:border-noc-border-hover hover:shadow-md transition-[color,background-color,border-color,box-shadow]"
       data-testid={`rack-card-${rack.id}`}
       onClick={onClick}
     >
@@ -315,6 +315,17 @@ const initialAddItemState: AddItemState = {
 
 const EMPTY_SPECS: DeviceSpec[] = [];
 
+/**
+ * Height field parse. `<input type="number">` reports "" for a cleared or
+ * partially typed field, and a valid number string otherwise. Empty maps to 0 --
+ * a real height here, meaning "mounts on the side rails" -- rather than letting
+ * a NaN leak into the request body.
+ */
+function parseHeightU(raw: string): number {
+  if (raw === "") return 0;
+  return Number(raw);
+}
+
 const WIDTH_OPTIONS: { label: string; value: number }[] = [
   { label: "Full width", value: 1.0 },
   { label: "Half width", value: 0.5 },
@@ -461,7 +472,7 @@ function AddItemForm({ onSubmit, onCancel, maxPositionU, initialValues, submitLa
             id="add-item-height"
             type="number"
             value={heightU}
-            onChange={(e) => { const v = parseFloat(e.target.value); dispatch({ heightU: isNaN(v) ? 0 : v }); }}
+            onChange={(e) => dispatch({ heightU: parseHeightU(e.target.value) })}
             min={0}
             max={5}
             step={0.5}

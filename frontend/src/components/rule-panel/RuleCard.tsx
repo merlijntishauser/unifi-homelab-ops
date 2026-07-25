@@ -43,7 +43,7 @@ function RuleWriteControls({
         className="relative w-7 h-4 rounded-full cursor-pointer transition-colors disabled:opacity-30"
         style={{ backgroundColor: rule.enabled ? "var(--color-status-success)" : "var(--color-noc-text-dim, #9ca3af)" }}
       >
-        <span className={`absolute top-0.5 ${rule.enabled ? "left-3.5" : "left-0.5"} size-3 rounded-full bg-ui-surface shadow transition-all`} />
+        <span className={`absolute top-0.5 ${rule.enabled ? "left-3.5" : "left-0.5"} size-3 rounded-full bg-ui-surface shadow transition-[left]`} />
       </button>
     </>
   );

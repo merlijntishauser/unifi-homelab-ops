@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { BACKDROP_CLASS } from "./ui";
 
 interface ConfirmDialogProps {
@@ -17,6 +18,8 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const titleId = useId();
+
   if (!open) return null;
 
   return (
@@ -30,6 +33,7 @@ export default function ConfirmDialog({
       <dialog
         open
         aria-modal="true"
+        aria-labelledby={titleId}
         className="static bg-ui-surface dark:bg-noc-surface border border-ui-border dark:border-noc-border rounded-xl shadow-xl p-5 max-w-sm w-full mx-4"
       >
         <div
@@ -37,7 +41,7 @@ export default function ConfirmDialog({
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
-          <h3 className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text">
+          <h3 id={titleId} className="text-sm font-sans font-semibold text-ui-text dark:text-noc-text">
             {title}
           </h3>
           <p className="mt-2 text-xs text-ui-text-secondary dark:text-noc-text-secondary">

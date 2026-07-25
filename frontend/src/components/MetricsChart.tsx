@@ -39,6 +39,17 @@ function ChartLoading() {
   );
 }
 
+function ChartUnavailable({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4 h-[210px] flex flex-col">
+      <ChartHeader label={label} value={value} />
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-xs text-ui-text-dim dark:text-noc-text-dim">Chart unavailable</p>
+      </div>
+    </div>
+  );
+}
+
 function ChartHeader({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between mb-2">
@@ -62,10 +73,12 @@ const tooltipStyle = {
 };
 
 function useRecharts() {
-  const [rc, setRc] = useState<RechartsModule | null>(null);
+  const [rc, setRc] = useState<RechartsModule | "failed" | null>(null);
   useEffect(() => {
     let cancelled = false;
-    import("recharts").then((mod) => { if (!cancelled) setRc(mod); });
+    import("recharts")
+      .then((mod) => { if (!cancelled) setRc(mod); })
+      .catch(() => { if (!cancelled) setRc("failed"); });
     return () => { cancelled = true; };
   }, []);
   return rc;
@@ -74,6 +87,7 @@ function useRecharts() {
 export default function MetricsChart({ label, value, data, color, unit, referenceLine, referenceLabel }: MetricsChartProps) {
   const rc = useRecharts();
 
+  if (rc === "failed") return <ChartUnavailable label={label} value={value} />;
   if (!rc) return <ChartLoading />;
 
   const { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } = rc;

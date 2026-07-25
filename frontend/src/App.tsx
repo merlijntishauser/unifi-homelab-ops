@@ -178,6 +178,52 @@ function App() {
     qc.invalidateQueries({ queryKey: queryKeys.aiConfig });
   }, [qc]);
 
+  const handleShowHiddenChange = useCallback((val: boolean) => dispatch({ showHidden: val }), []);
+  const handleOpenSettings = useCallback(() => dispatch({ settingsOpen: true }), []);
+  const handleOpenNotifications = useCallback(() => dispatch({ notificationsOpen: true }), []);
+  const handleCloseNotifications = useCallback(() => dispatch({ notificationsOpen: false }), []);
+
+  const onAppLogout = appAuthRequired && appAuthenticated ? handleAppLogout : null;
+
+  // Memoised so every context consumer does not re-render on each App render.
+  const contextValue = useMemo(() => ({
+    colorMode,
+    themePreference,
+    onThemePreferenceChange: handleThemePreferenceChange,
+    showHidden,
+    onShowHiddenChange: handleShowHiddenChange,
+    hasHiddenZones,
+    hasDisabledRules,
+    onRefresh: handleRefresh,
+    dataLoading,
+    onLogout: handleLogout,
+    onOpenSettings: handleOpenSettings,
+    onCloseSettings: handleCloseSettings,
+    settingsOpen,
+    connectionInfo,
+    aiInfo,
+    aiConfigured,
+    zones,
+    zonePairs,
+    filteredZonePairs,
+    visibleZones,
+    hiddenZoneIds,
+    onToggleZone: handleToggleZone,
+    dataError,
+    notificationsOpen,
+    onOpenNotifications: handleOpenNotifications,
+    onCloseNotifications: handleCloseNotifications,
+    notificationCount: notificationState.activeCount,
+    notificationState,
+    onAppLogout,
+  }), [
+    colorMode, themePreference, handleThemePreferenceChange, showHidden, handleShowHiddenChange,
+    hasHiddenZones, hasDisabledRules, handleRefresh, dataLoading, handleLogout, handleOpenSettings,
+    handleCloseSettings, settingsOpen, connectionInfo, aiInfo, aiConfigured, zones, zonePairs,
+    filteredZonePairs, visibleZones, hiddenZoneIds, handleToggleZone, dataError, notificationsOpen,
+    handleOpenNotifications, handleCloseNotifications, notificationState, onAppLogout,
+  ]);
+
   // Auth gates
   if (appAuthRequired && !appAuthenticated && !authLoading) {
     return (
@@ -196,38 +242,6 @@ function App() {
   if (authLoading) {
     return <LoadingOverlay message="Checking authentication..." />;
   }
-
-  const contextValue = {
-    colorMode,
-    themePreference,
-    onThemePreferenceChange: handleThemePreferenceChange,
-    showHidden,
-    onShowHiddenChange: (val: boolean) => dispatch({ showHidden: val }),
-    hasHiddenZones,
-    hasDisabledRules,
-    onRefresh: handleRefresh,
-    dataLoading,
-    onLogout: handleLogout,
-    onOpenSettings: () => dispatch({ settingsOpen: true }),
-    onCloseSettings: handleCloseSettings,
-    settingsOpen,
-    connectionInfo,
-    aiInfo,
-    aiConfigured,
-    zones,
-    zonePairs,
-    filteredZonePairs,
-    visibleZones,
-    hiddenZoneIds,
-    onToggleZone: handleToggleZone,
-    dataError,
-    notificationsOpen,
-    onOpenNotifications: () => dispatch({ notificationsOpen: true }),
-    onCloseNotifications: () => dispatch({ notificationsOpen: false }),
-    notificationCount: notificationState.activeCount,
-    notificationState,
-    onAppLogout: appAuthRequired && appAuthenticated ? handleAppLogout : null,
-  };
 
   return (
     <AppContext.Provider value={contextValue}>

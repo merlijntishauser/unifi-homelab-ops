@@ -11,8 +11,9 @@ export function downloadSvg(svgContent: string, filename: string = "topology.svg
 /* v8 ignore start -- requires real browser canvas/Image APIs not available in jsdom */
 export function downloadPng(svgContent: string, filename: string = "topology.png", scale: number = 2): Promise<void> {
   return new Promise((resolve, reject) => {
-    const blob = new Blob([svgContent], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
+    // A data URI (rather than an object URL) keeps no Blob alive past this call,
+    // and is still same-origin so the canvas stays untainted for toBlob().
+    const dataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`;
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
@@ -20,13 +21,11 @@ export function downloadPng(svgContent: string, filename: string = "topology.png
       canvas.height = img.height * scale;
       const ctx = canvas.getContext("2d");
       if (!ctx) {
-        URL.revokeObjectURL(url);
         reject(new Error("Canvas 2D context not available"));
         return;
       }
       ctx.scale(scale, scale);
       ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
 
       canvas.toBlob((pngBlob) => {
         if (!pngBlob) {
@@ -43,10 +42,9 @@ export function downloadPng(svgContent: string, filename: string = "topology.png
       }, "image/png");
     };
     img.onerror = () => {
-      URL.revokeObjectURL(url);
       reject(new Error("Failed to load SVG as image"));
     };
-    img.src = url;
+    img.src = dataUri;
   });
 }
 /* v8 ignore stop */

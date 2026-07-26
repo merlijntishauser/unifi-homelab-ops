@@ -50,11 +50,13 @@ jobs:
         id: react_doctor
         # Pinned to an immutable SHA rather than @main: this job hands the
         # action a token with statuses/pull-requests write, so the code it
-        # runs must not change without review. @main moved twice in two days
-        # (4fbab2dd -> 846c2df8) while this workflow stood still.
-        # 4fbab2dd is the commit verified green on main in run 30171991771;
-        # it is ahead of the latest release tag (v2.2.8), so pinning to that
-        # tag would instead downgrade the react-doctor CLI this runs.
+        # runs must not change without review. Upstream @main has moved
+        # twice in two days while this workflow stood still.
+        # Dependabot proposes bumps to this pin -- treat each one as a review
+        # of the upstream diff, and confirm the run stays at 100/100.
+        # Deliberately a SHA and not a release tag: the action's tags have
+        # lagged its main branch, so a tag pin can quietly downgrade the
+        # react-doctor CLI this installs and move the score.
         uses: millionco/react-doctor@846c2df84465d6ebce31ea894669afc5c28ae01f
         with:
           directory: frontend

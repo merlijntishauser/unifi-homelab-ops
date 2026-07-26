@@ -13,9 +13,9 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
       - run: uv sync
@@ -36,8 +36,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -55,7 +55,7 @@ jobs:
         # 4fbab2dd is the commit verified green on main in run 30171991771;
         # it is ahead of the latest release tag (v2.2.8), so pinning to that
         # tag would instead downgrade the react-doctor CLI this runs.
-        uses: millionco/react-doctor@4fbab2ddc8a3e808afe90a291325b4da0f7817ab
+        uses: millionco/react-doctor@846c2df84465d6ebce31ea894669afc5c28ae01f
         with:
           directory: frontend
           # Scan the whole project, not just the PR's changed files. The
@@ -83,12 +83,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -120,8 +120,8 @@ jobs:
             host_port: "18081"
             cache_scope: ci-docker-alpine
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/cache@v5
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         with:
           path: .cache/trivy
           key: trivy-db-${{ runner.os }}-${{ matrix.variant }}
@@ -176,8 +176,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-images]
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm

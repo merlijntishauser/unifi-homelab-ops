@@ -14,12 +14,14 @@ from unifi_topology import (
     build_device_inventory,
     build_node_names,
     build_topology,
+    fetch_clients,
     fetch_device_stats,
     fetch_devices,
     normalize_device_stats,
     normalize_devices,
     resolve_hostnames,
 )
+from unifi_topology.model.clients import build_client_port_map
 from unifi_topology.model.edges import build_port_map
 from unifi_topology.render import (
     render_device_inventory_table,
@@ -42,6 +44,20 @@ def _fetch_controller_data(credentials: UnifiCredentials) -> tuple[list[Any], li
     raw_devices: list[dict[str, Any]] = list(fetch_devices(config, site=credentials.site))  # type: ignore[arg-type]
     devices = normalize_devices(raw_devices)
     return raw_devices, devices
+
+
+def _fetch_clients(credentials: UnifiCredentials) -> list[Any]:
+    """Fetch controller clients, degrading to an empty list on failure.
+
+    The port overview is still worth rendering without clients, so a client
+    fetch failure must not take the whole documentation build down.
+    """
+    try:
+        config = to_topology_config(credentials)
+        return list(fetch_clients(config, site=credentials.site))
+    except Exception:  # noqa: BLE001
+        log.warning("client_fetch_failed")
+        return []
 
 
 def _build_mermaid_section(devices: list[Any]) -> DocumentationSection:
@@ -96,29 +112,60 @@ def _build_inventory_section(devices: list[Any], credentials: UnifiCredentials) 
     )
 
 
-def _build_port_data(devices: list[Any]) -> list[dict[str, str | int | float | bool | None]]:
+def _clients_by_port(
+    device_mac: str,
+    client_ports: dict[str, list[tuple[int, str]]],
+    node_names: dict[str, str],
+) -> dict[int, str]:
+    """Map a device's port numbers to the display names of the clients on them.
+
+    A port can carry several clients (an unmanaged switch or a hypervisor
+    bridge downstream of it), so names are joined rather than overwritten.
+    """
+    names: dict[int, list[str]] = {}
+    for port_idx, client_id in client_ports.get(device_mac, []):
+        names.setdefault(port_idx, []).append(node_names.get(client_id, client_id))
+    return {port_idx: ", ".join(n) for port_idx, n in names.items()}
+
+
+def _build_port_data(
+    devices: list[Any],
+    client_ports: dict[str, list[tuple[int, str]]],
+    node_names: dict[str, str],
+) -> list[dict[str, str | int | float | bool | None]]:
     """Build structured port data for JSON export."""
     rows: list[dict[str, str | int | float | bool | None]] = []
     for d in devices:
+        port_clients = _clients_by_port(d.mac, client_ports, node_names)
         for p in d.port_table:
             rows.append({
                 "device": d.name, "port": p.port_idx, "name": p.name or "",
                 "speed": p.speed, "up": p.up, "poe": p.poe_enable,
                 "poe_power": p.poe_power, "native_vlan": p.native_vlan,
+                "connected_client": port_clients.get(p.port_idx),
             })
     return rows
 
 
-def _build_port_overview_section(devices: list[Any]) -> DocumentationSection:
-    """Build the device port overview section."""
+def _build_port_overview_section(devices: list[Any], clients: list[Any]) -> DocumentationSection:
+    """Build the device port overview section.
+
+    Wired clients only: the table describes physical switch ports, and a
+    wireless client is not on one. `only_unifi` is left at its default so
+    third-party gear (a NAS, a printer) shows up rather than just UniFi kit.
+    """
     port_map = build_port_map(devices)
-    content = render_device_port_overview(devices, port_map)
+    client_ports = build_client_port_map(devices, clients, client_mode="wired")
+    node_names = build_node_names(devices, clients, client_mode="wired")
+    content = render_device_port_overview(
+        devices, port_map, client_ports=client_ports, node_names=node_names,
+    )
     return DocumentationSection(
         id="port-overview",
         title="Port Overview",
         content=content,
         item_count=len(devices),
-        data=_build_port_data(devices),
+        data=_build_port_data(devices, client_ports, node_names),
     )
 
 
@@ -263,6 +310,7 @@ def _build_metrics_section(snapshots: list[Any]) -> DocumentationSection:
 def get_documentation_sections(credentials: UnifiCredentials) -> list[DocumentationSection]:
     """Generate all documentation sections from controller data (single fetch pass)."""
     _raw_devices, devices = _fetch_controller_data(credentials)
+    clients = _fetch_clients(credentials)
 
     # Fetch firewall and metrics data once instead of per-section
     zones = get_zones(credentials)
@@ -278,7 +326,7 @@ def get_documentation_sections(credentials: UnifiCredentials) -> list[Documentat
     sections = [
         _build_mermaid_section(devices),
         _build_inventory_section(devices, credentials),
-        _build_port_overview_section(devices),
+        _build_port_overview_section(devices, clients),
         _build_lldp_section(devices),
         _build_firewall_section(zones, zone_pairs),
         _build_metrics_section(snapshots),

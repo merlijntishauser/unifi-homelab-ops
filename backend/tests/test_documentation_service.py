@@ -21,6 +21,7 @@ from app.services.documentation import (
     _build_mermaid_section,
     _build_metrics_section,
     _build_port_overview_section,
+    _fetch_clients,
     _fetch_controller_data,
     get_documentation_export,
     get_documentation_sections,
@@ -139,6 +140,18 @@ class TestBuildInventorySection:
         assert section.item_count == 2
 
 
+def _make_mock_port(port_idx: int) -> MagicMock:
+    port = MagicMock()
+    port.port_idx = port_idx
+    port.name = f"Port {port_idx}"
+    port.speed = 1000
+    port.up = True
+    port.poe_enable = False
+    port.poe_power = None
+    port.native_vlan = 1
+    return port
+
+
 class TestBuildPortOverviewSection:
     def test_generates_section(self) -> None:
         devices = [_make_mock_device()]
@@ -146,13 +159,186 @@ class TestBuildPortOverviewSection:
 
         with (
             patch("app.services.documentation.build_port_map", return_value=port_map),
+            patch("app.services.documentation.build_client_port_map", return_value={}),
+            patch("app.services.documentation.build_node_names", return_value={}),
             patch("app.services.documentation.render_device_port_overview", return_value="| Port | Speed |"),
         ):
-            section = _build_port_overview_section(devices)
+            section = _build_port_overview_section(devices, [])
 
         assert section.id == "port-overview"
         assert section.title == "Port Overview"
         assert section.item_count == 1
+
+    def test_passes_wired_clients_to_the_renderer(self) -> None:
+        devices = [_make_mock_device()]
+        clients = [MagicMock()]
+        client_ports = {"aa:bb:cc:dd:ee:ff": [(3, "11:22:33:44:55:66")]}
+
+        with (
+            patch("app.services.documentation.build_port_map", return_value=MagicMock()),
+            patch("app.services.documentation.build_client_port_map", return_value=client_ports) as mock_cpm,
+            patch("app.services.documentation.build_node_names", return_value={}) as mock_names,
+            patch("app.services.documentation.render_device_port_overview", return_value="") as mock_render,
+        ):
+            _build_port_overview_section(devices, clients)
+
+        # Wired only: the table describes physical ports, so wireless is excluded.
+        assert mock_cpm.call_args.kwargs["client_mode"] == "wired"
+        assert mock_names.call_args.kwargs["client_mode"] == "wired"
+        assert mock_render.call_args.kwargs["client_ports"] == client_ports
+        assert "node_names" in mock_render.call_args.kwargs
+
+    def test_port_data_includes_connected_client_name(self) -> None:
+        device = _make_mock_device()
+        device.port_table = [_make_mock_port(3)]
+
+        with (
+            patch("app.services.documentation.build_port_map", return_value=MagicMock()),
+            patch(
+                "app.services.documentation.build_client_port_map",
+                return_value={"aa:bb:cc:dd:ee:ff": [(3, "11:22:33:44:55:66")]},
+            ),
+            patch("app.services.documentation.build_node_names", return_value={"11:22:33:44:55:66": "NAS"}),
+            patch("app.services.documentation.render_device_port_overview", return_value=""),
+        ):
+            section = _build_port_overview_section([device], [MagicMock()])
+
+        assert section.data is not None
+        assert section.data[0]["connected_client"] == "NAS"
+
+    def test_port_data_falls_back_to_client_id_without_a_name(self) -> None:
+        device = _make_mock_device()
+        device.port_table = [_make_mock_port(3)]
+
+        with (
+            patch("app.services.documentation.build_port_map", return_value=MagicMock()),
+            patch(
+                "app.services.documentation.build_client_port_map",
+                return_value={"aa:bb:cc:dd:ee:ff": [(3, "11:22:33:44:55:66")]},
+            ),
+            patch("app.services.documentation.build_node_names", return_value={}),
+            patch("app.services.documentation.render_device_port_overview", return_value=""),
+        ):
+            section = _build_port_overview_section([device], [MagicMock()])
+
+        assert section.data is not None
+        assert section.data[0]["connected_client"] == "11:22:33:44:55:66"
+
+    def test_port_data_joins_multiple_clients_on_one_port(self) -> None:
+        device = _make_mock_device()
+        device.port_table = [_make_mock_port(3)]
+
+        with (
+            patch("app.services.documentation.build_port_map", return_value=MagicMock()),
+            patch(
+                "app.services.documentation.build_client_port_map",
+                return_value={"aa:bb:cc:dd:ee:ff": [(3, "client-a"), (3, "client-b")]},
+            ),
+            patch("app.services.documentation.build_node_names", return_value={"client-a": "NAS", "client-b": "Printer"}),
+            patch("app.services.documentation.render_device_port_overview", return_value=""),
+        ):
+            section = _build_port_overview_section([device], [MagicMock()])
+
+        assert section.data is not None
+        assert section.data[0]["connected_client"] == "NAS, Printer"
+
+    def test_port_data_leaves_an_empty_port_null(self) -> None:
+        device = _make_mock_device()
+        device.port_table = [_make_mock_port(7)]
+
+        with (
+            patch("app.services.documentation.build_port_map", return_value=MagicMock()),
+            patch("app.services.documentation.build_client_port_map", return_value={}),
+            patch("app.services.documentation.build_node_names", return_value={}),
+            patch("app.services.documentation.render_device_port_overview", return_value=""),
+        ):
+            section = _build_port_overview_section([device], [])
+
+        assert section.data is not None
+        assert section.data[0]["connected_client"] is None
+
+
+class TestPortOverviewIntegration:
+    """End-to-end through the real unifi_topology library, no mocks.
+
+    The mocked tests above would still pass if the library contract shifted
+    under us, and the e2e mock controller serves an empty client list, so this
+    is the only place the client wiring is actually exercised.
+    """
+
+    @staticmethod
+    def _raw_switch() -> dict[str, Any]:
+        # `lldp_table` must be present (may be empty) or normalize_devices
+        # discards the device as malformed.
+        return {
+            "mac": "aa:bb:cc:dd:ee:02", "name": "Core Switch", "type": "usw",
+            "model": "US24P250", "ip": "192.168.1.2", "lldp_table": [],
+            "port_table": [
+                {"port_idx": 1, "poe_mode": "auto", "poe_power": "15.2"},
+                {"port_idx": 2},
+            ],
+        }
+
+    def test_wired_client_appears_in_content_and_data(self) -> None:
+        from unifi_topology import normalize_devices
+
+        devices = normalize_devices([self._raw_switch()])
+        clients = [{
+            "mac": "11:22:33:44:55:66", "name": "Synology-NAS",
+            "is_wired": True, "sw_mac": "aa:bb:cc:dd:ee:02", "sw_port": 1,
+        }]
+
+        section = _build_port_overview_section(devices, clients)
+
+        assert "Synology-NAS" in section.content
+        assert section.data is not None
+        rows = {row["port"]: row["connected_client"] for row in section.data}
+        assert rows[1] == "Synology-NAS"
+        assert rows[2] is None
+
+    def test_wireless_client_is_excluded(self) -> None:
+        from unifi_topology import normalize_devices
+
+        devices = normalize_devices([self._raw_switch()])
+        clients = [{
+            "mac": "77:88:99:aa:bb:cc", "name": "Wifi-Phone",
+            "is_wired": False, "ap_mac": "aa:bb:cc:dd:ee:02", "ap_port": 1,
+        }]
+
+        section = _build_port_overview_section(devices, clients)
+
+        assert "Wifi-Phone" not in section.content
+        assert section.data is not None
+        assert all(row["connected_client"] is None for row in section.data)
+
+    def test_no_clients_still_renders_ports(self) -> None:
+        from unifi_topology import normalize_devices
+
+        devices = normalize_devices([self._raw_switch()])
+
+        section = _build_port_overview_section(devices, [])
+
+        assert "Core Switch" in section.content
+        assert section.data is not None
+        assert len(section.data) == 2
+
+
+class TestFetchClients:
+    def test_returns_fetched_clients(self) -> None:
+        clients = [{"mac": "11:22:33:44:55:66"}]
+
+        with (
+            patch("app.services.documentation.to_topology_config"),
+            patch("app.services.documentation.fetch_clients", return_value=iter(clients)),
+        ):
+            assert _fetch_clients(CREDENTIALS) == clients
+
+    def test_degrades_to_empty_list_on_failure(self) -> None:
+        with (
+            patch("app.services.documentation.to_topology_config"),
+            patch("app.services.documentation.fetch_clients", side_effect=RuntimeError("controller down")),
+        ):
+            assert _fetch_clients(CREDENTIALS) == []
 
 
 class TestBuildLldpSection:
@@ -360,11 +546,12 @@ class TestBuildPortData:
         port.native_vlan = 1
         device.port_table = [port]
 
-        rows = _build_port_data([device])
+        rows = _build_port_data([device], {}, {})
         assert len(rows) == 1
         assert rows[0]["device"] == "Switch"
         assert rows[0]["port"] == 1
         assert rows[0]["speed"] == 1000
+        assert rows[0]["connected_client"] is None
 
 
 class TestGetDocumentationSectionsStatsException:

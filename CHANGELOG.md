@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Connected clients in the documentation Port Overview**: each switch port now names the wired client attached to it (a NAS, a printer, a workstation), not just UniFi infrastructure peers. Ports carrying several clients list them all. The structured JSON export gains a matching `connected_client` field per port. Wireless clients are excluded -- the table describes physical ports. A client fetch failure degrades to the previous device-only output rather than failing the documentation build
+
 ### Security
 - **Upgraded React Router 7.18.1 -> 8.3.0** (GHSA-qwww-vcr4-c8h2). The advisory only affects the unstable RSC APIs, which this SPA does not use, but 8.3.0 is the only patched release. `react-router-dom` is not published for v8, so imports move to `react-router` (and `react-router/dom` for `RouterProvider`)
 - Patched pydantic-settings 2.13.1 -> 2.14.2 (GHSA-4xgf-cpjx-pc3j) and @babel/core 7.29.0 -> 7.29.7 (CVE-2026-49356); neither was reachable in this app

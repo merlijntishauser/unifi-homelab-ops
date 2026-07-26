@@ -25,6 +25,13 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The React Doctor action publishes a commit status and a sticky PR
+      # comment. Without these it only warns, and Dependabot runs get the
+      # read-only default token unless the job asks for more.
+      statuses: write
+      pull-requests: write
     defaults:
       run:
         working-directory: frontend
@@ -44,12 +51,24 @@ jobs:
         uses: millionco/react-doctor@main
         with:
           directory: frontend
+          # Scan the whole project, not just the PR's changed files. The
+          # default (`changed`) skips the scan entirely when a PR touches no
+          # React-eligible file -- which emits an empty score and so tripped
+          # the gate below on nearly every Dependabot bump. `full` also makes
+          # PR runs match main and the pre-commit hook, which both scan
+          # everything and hold the project at 100/100.
+          scope: full
       - name: Check React Doctor score
+        env:
+          SCORE: ${{ steps.react_doctor.outputs.score }}
         run: |
-          score="${{ steps.react_doctor.outputs.score }}"
-          echo "React Doctor score: ${score:-unknown}/100"
-          if [ -z "$score" ] || [ "$score" -lt 100 ]; then
-            echo "::error::React Doctor score below 100 (got: ${score:-unknown})"
+          if [ -z "$SCORE" ]; then
+            echo "::error::React Doctor produced no score (the scan did not complete)"
+            exit 1
+          fi
+          echo "React Doctor score: $SCORE/100"
+          if [ "$SCORE" -lt 100 ]; then
+            echo "::error::React Doctor score below 100 (got: $SCORE)"
             exit 1
           fi
 

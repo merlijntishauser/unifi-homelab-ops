@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Patched pydantic-settings 2.13.1 -> 2.14.2 (GHSA-4xgf-cpjx-pc3j) and @babel/core 7.29.0 -> 7.29.7 (CVE-2026-49356); neither was reachable in this app
 
 ### Changed
+- **Upgraded unifi-topology from 2.2.1 to 3.0.2.** None of the three breaking contract changes in 3.0.1 reach this app: it never catches raw `requests` exceptions (it already handles the `UnifiError` hierarchy), and it uses neither `compare_topologies` nor `collapse_client_edges`. Inherited fixes worth noting: LLDP/Markdown port tables show connected devices again, WAN1 no longer resolves to the WAN2 port, `swap_firewall_policy_order` rolls back its first PUT if the second fails, authenticated sessions survive firewall writes, requests default to a 30s timeout, and retries no longer hammer a controller on auth/4xx failures
 - CI: React Doctor now scans the full project on pull requests (`scope: full`) so dependency-only PRs produce a score instead of failing the gate, and the action is pinned to an immutable SHA
 
 ## [1.3.1] - 2026-06-01

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router";
 import Toolbar from "./Toolbar";
 import SettingsModal from "./SettingsModal";
 import ModuleSidebar from "./ModuleSidebar";

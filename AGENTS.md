@@ -58,7 +58,7 @@ frontend/src/         React 19, TypeScript, Tailwind CSS 4, Vite
 | Layer        | Key dependencies                                                |
 |--------------|-----------------------------------------------------------------|
 | Backend      | FastAPI, Pydantic v2, SQLAlchemy + SQLite, unifi-topology       |
-| Frontend     | React 19, TypeScript 6, Tailwind CSS 4, React Router 7          |
+| Frontend     | React 19, TypeScript 6, Tailwind CSS 4, React Router 8          |
 | Server state | TanStack Query 5 -- **all** API calls go through `hooks/queries.ts` |
 | Graph        | @xyflow/react 12, @dagrejs/dagre 3                              |
 | Build/infra  | Vite 8, uv (Python), npm, Docker Compose                        |

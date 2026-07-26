@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ColorMode } from "@xyflow/react";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider } from "react-router/dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   queryKeys,

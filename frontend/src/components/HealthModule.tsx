@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useAppContext } from "../hooks/useAppContext";
 import { useHealthSummary, useHealthAnalysis } from "../hooks/queries";
 import { formatRelativeTime } from "../utils/format";

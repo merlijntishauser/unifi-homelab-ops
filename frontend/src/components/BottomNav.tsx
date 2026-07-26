@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router";
 import { shieldIcon, networkIcon, activityIcon, heartPulseIcon, settingsIcon, docIcon, rackIcon, cableIcon, haIcon, moreIcon } from "./icons";
 
 interface BottomNavProps {

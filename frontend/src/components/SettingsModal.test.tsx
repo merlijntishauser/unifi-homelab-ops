@@ -3,7 +3,7 @@ import { screen, waitFor, fireEvent, act } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import SettingsModal from "./SettingsModal";
 import type { AiConfig, AiPreset } from "../api/types";
 import type { AppContextValue } from "../hooks/useAppContext";

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Upgraded React Router 7.18.1 -> 8.3.0** (GHSA-qwww-vcr4-c8h2). The advisory only affects the unstable RSC APIs, which this SPA does not use, but 8.3.0 is the only patched release. `react-router-dom` is not published for v8, so imports move to `react-router` (and `react-router/dom` for `RouterProvider`)
+- Patched pydantic-settings 2.13.1 -> 2.14.2 (GHSA-4xgf-cpjx-pc3j) and @babel/core 7.29.0 -> 7.29.7 (CVE-2026-49356); neither was reachable in this app
+
+### Changed
+- CI: React Doctor now scans the full project on pull requests (`scope: full`) so dependency-only PRs produce a score instead of failing the gate, and the action is pinned to an immutable SHA
+
 ## [1.3.1] - 2026-06-01
 
 ### Added

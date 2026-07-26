@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type { RouteObject } from "react-router-dom";
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import type { RouteObject } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import AppShell from "./components/AppShell";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import SuspenseRoute from "./components/SuspenseRoute";

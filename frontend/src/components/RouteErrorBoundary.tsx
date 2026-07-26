@@ -1,4 +1,4 @@
-import { isRouteErrorResponse, useRouteError, useNavigate } from "react-router-dom";
+import { isRouteErrorResponse, useRouteError, useNavigate } from "react-router";
 import ErrorScreen from "./ErrorScreen";
 import { ERROR_PRIMARY_BTN, ERROR_SECONDARY_BTN } from "./ui";
 

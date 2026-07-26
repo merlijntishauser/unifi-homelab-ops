@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router";
 import { useVersionCheck } from "../hooks/useVersionCheck";
 import { shieldIcon, networkIcon, activityIcon, heartPulseIcon, docIcon, rackIcon, cableIcon, haIcon, settingsIcon } from "./icons";
 

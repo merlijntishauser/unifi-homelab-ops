@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2026-07-26
 
 ### Added
 - **Connected clients in the documentation Port Overview**: each switch port now names the wired client attached to it (a NAS, a printer, a workstation), not just UniFi infrastructure peers. Ports carrying several clients list them all. The structured JSON export gains a matching `connected_client` field per port. Wireless clients are excluded -- the table describes physical ports. A client fetch failure degrades to the previous device-only output rather than failing the documentation build
@@ -291,7 +291,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.1.2...v1.2.0

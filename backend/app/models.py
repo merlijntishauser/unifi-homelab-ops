@@ -44,6 +44,14 @@ class Rule(BaseModel):
     source_address_group_members: list[str] = []
     destination_address_group: str = ""
     destination_address_group_members: list[str] = []
+    # Domain / application matching. `*_matching_target` is the general signal:
+    # anything other than "ANY" means the rule is narrowed, including by criteria
+    # not decoded into a list here (regions, app categories).
+    source_matching_target: str = ""
+    destination_matching_target: str = ""
+    destination_web_domains: list[str] = []
+    destination_web_matching_type: str = ""
+    destination_app_ids: list[str] = []
     # Connection state / metadata
     connection_state_type: str = ""
     connection_logging: bool = False

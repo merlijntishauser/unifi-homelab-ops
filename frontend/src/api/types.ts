@@ -41,6 +41,14 @@ export interface Rule {
   source_address_group_members: string[];
   destination_address_group: string;
   destination_address_group_members: string[];
+  // Domain / application matching. `*_matching_target` is the general signal:
+  // anything other than "ANY" means the rule is narrowed, including by criteria
+  // not decoded into a list here (regions, app categories).
+  source_matching_target: string;
+  destination_matching_target: string;
+  destination_web_domains: string[];
+  destination_web_matching_type: string;
+  destination_app_ids: string[];
   // Connection state / metadata
   connection_state_type: string;
   connection_logging: boolean;

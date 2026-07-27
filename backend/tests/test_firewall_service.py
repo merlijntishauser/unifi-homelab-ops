@@ -76,3 +76,61 @@ class TestGetZonePairs:
         assert z2_z1.analysis is not None
         finding_ids = [f.id for f in z2_z1.analysis.findings]
         assert "no-explicit-rules" in finding_ids
+
+
+class TestPolicyToRuleDomainMatching:
+    """Domain/application criteria must survive normalization into `Rule`.
+
+    Without these the analyzer cannot tell a domain allowlist from a rule that
+    genuinely allows everything (unifi-topology#68).
+    """
+
+    def test_domain_and_app_criteria_are_carried_over(self) -> None:
+        from unifi_topology import FirewallPolicy
+
+        from app.services.firewall import _policy_to_rule
+
+        policy = FirewallPolicy(
+            id="p1",
+            name="IoT Domain Whitelist",
+            enabled=True,
+            action="ALLOW",
+            source_zone_id="iot",
+            destination_zone_id="wan",
+            protocol="all",
+            destination_matching_target="WEB",
+            destination_web_domains=("example.com", "ntp.org"),
+            destination_web_matching_type="DOMAIN",
+            destination_app_ids=("4-6",),
+            source_matching_target="ANY",
+        )
+
+        rule = _policy_to_rule(policy, {})
+
+        assert rule.destination_web_domains == ["example.com", "ntp.org"]
+        assert rule.destination_app_ids == ["4-6"]
+        assert rule.destination_matching_target == "WEB"
+        assert rule.destination_web_matching_type == "DOMAIN"
+        assert rule.source_matching_target == "ANY"
+
+    def test_defaults_stay_empty_for_an_unrestricted_policy(self) -> None:
+        from unifi_topology import FirewallPolicy
+
+        from app.services.firewall import _policy_to_rule
+
+        rule = _policy_to_rule(
+            FirewallPolicy(
+                id="p2",
+                name="Allow All",
+                enabled=True,
+                action="ALLOW",
+                source_zone_id="lan",
+                destination_zone_id="wan",
+                protocol="all",
+            ),
+            {},
+        )
+
+        assert rule.destination_web_domains == []
+        assert rule.destination_app_ids == []
+        assert rule.destination_matching_target == ""

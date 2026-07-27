@@ -29,6 +29,11 @@ def _rule(
     source_address_group_members: list[str] | None = None,
     destination_address_group: str = "",
     destination_address_group_members: list[str] | None = None,
+    source_matching_target: str = "",
+    destination_matching_target: str = "",
+    destination_web_domains: list[str] | None = None,
+    destination_web_matching_type: str = "",
+    destination_app_ids: list[str] | None = None,
     connection_state_type: str = "",
     connection_logging: bool = False,
     schedule: str = "",
@@ -58,6 +63,11 @@ def _rule(
         source_address_group_members=source_address_group_members or [],
         destination_address_group=destination_address_group,
         destination_address_group_members=destination_address_group_members or [],
+        source_matching_target=source_matching_target,
+        destination_matching_target=destination_matching_target,
+        destination_web_domains=destination_web_domains or [],
+        destination_web_matching_type=destination_web_matching_type,
+        destination_app_ids=destination_app_ids or [],
         connection_state_type=connection_state_type,
         connection_logging=connection_logging,
         schedule=schedule,
@@ -263,6 +273,34 @@ class TestAnalyzeZonePair:
         rules = [_rule(protocol="all", port_ranges=[])]
         result = analyze_zone_pair(rules, "LAN", "WAN")
         assert any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
+    def test_allow_all_ports_not_flagged_when_restricted_to_domains(self) -> None:
+        """A domain allowlist constrains the destination, not the service."""
+        rules = [_rule(protocol="all", port_ranges=[], destination_web_domains=["example.com"])]
+        result = analyze_zone_pair(rules, "IoT", "WAN")
+        assert not any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
+    def test_allow_all_ports_not_flagged_when_restricted_to_apps(self) -> None:
+        rules = [_rule(protocol="all", port_ranges=[], destination_app_ids=["4-6"])]
+        result = analyze_zone_pair(rules, "IoT", "WAN")
+        assert not any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
+    def test_matching_target_covers_criteria_we_do_not_decode(self) -> None:
+        """A non-ANY target means narrowed even when no criteria list is populated.
+
+        Regions and app categories are not decoded into fields, so without this
+        signal such a rule would still read as unrestricted.
+        """
+        rules = [_rule(protocol="all", port_ranges=[], destination_matching_target="REGION")]
+        result = analyze_zone_pair(rules, "IoT", "WAN")
+        assert not any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
+    def test_matching_target_any_is_not_a_restriction(self) -> None:
+        """ANY is the controller's default and must not suppress the finding."""
+        for value in ("ANY", "any"):
+            rules = [_rule(protocol="all", port_ranges=[], destination_matching_target=value)]
+            result = analyze_zone_pair(rules, "IoT", "WAN")
+            assert any(f.id == "allow-all-protocols-ports" for f in result.findings), value
 
     def test_return_traffic_rule_not_flagged_as_external_to_internal(self) -> None:
         rules = [_rule(name="Allow Return Traffic", protocol="tcp", port_ranges=["80"])]

@@ -69,18 +69,35 @@ def _tokenize(value: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", value.lower()))
 
 
+def _has_matching_target(rule: Rule) -> bool:
+    """Whether the controller reports the rule narrowed by a matching target.
+
+    `*_matching_target` is the general signal rather than the decoded criteria:
+    anything other than "ANY" means the endpoint is constrained, so criteria the
+    model does not decode into a list (regions, app categories) still do not read
+    as unrestricted.
+    """
+    targets = (rule.source_matching_target, rule.destination_matching_target)
+    return any(target and target.upper() != "ANY" for target in targets)
+
+
 def _has_identity_restrictions(rule: Rule) -> bool:
-    return any(
-        (
-            rule.ip_ranges,
-            rule.source_ip_ranges,
-            rule.source_mac_addresses,
-            rule.destination_mac_addresses,
-            rule.source_network_id,
-            rule.destination_network_id,
-            rule.source_address_group_members,
-            rule.destination_address_group_members,
+    return (
+        any(
+            (
+                rule.ip_ranges,
+                rule.source_ip_ranges,
+                rule.source_mac_addresses,
+                rule.destination_mac_addresses,
+                rule.source_network_id,
+                rule.destination_network_id,
+                rule.source_address_group_members,
+                rule.destination_address_group_members,
+                rule.destination_web_domains,
+                rule.destination_app_ids,
+            )
         )
+        or _has_matching_target(rule)
     )
 
 

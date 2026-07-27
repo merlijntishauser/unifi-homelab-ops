@@ -242,6 +242,28 @@ class TestAnalyzeZonePair:
         result = analyze_zone_pair(rules, "LAN", "WAN")
         assert not any(f.id == "allow-all-protocols-ports" for f in result.findings)
 
+    def test_allow_all_ports_not_flagged_when_narrowed_to_a_host(self) -> None:
+        """A rule pinned to one host is an exception, not an unrestricted allow."""
+        rules = [_rule(protocol="all", port_ranges=[], ip_ranges=["192.168.30.10/32"])]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        assert not any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
+    def test_allow_all_ports_not_flagged_when_narrowed_to_an_address_group(self) -> None:
+        rules = [_rule(protocol="all", port_ranges=[], destination_address_group_members=["10.0.0.5"])]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        assert not any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
+    def test_allow_all_ports_not_flagged_when_narrowed_to_a_mac(self) -> None:
+        rules = [_rule(protocol="all", port_ranges=[], destination_mac_addresses=["aa:bb:cc:dd:ee:ff"])]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        assert not any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
+    def test_allow_all_ports_still_flagged_when_truly_unrestricted(self) -> None:
+        """The guard must not silence the case the check exists for."""
+        rules = [_rule(protocol="all", port_ranges=[])]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        assert any(f.id == "allow-all-protocols-ports" for f in result.findings)
+
     def test_return_traffic_rule_not_flagged_as_external_to_internal(self) -> None:
         rules = [_rule(name="Allow Return Traffic", protocol="tcp", port_ranges=["80"])]
         result = analyze_zone_pair(rules, "External", "Internal")

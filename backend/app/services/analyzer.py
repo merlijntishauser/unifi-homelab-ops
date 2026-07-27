@@ -130,10 +130,19 @@ def _check_allow_all_external(rule: Rule, src_name: str) -> Finding | None:
 
 
 def _check_allow_all_protocols_ports(rule: Rule) -> Finding | None:
+    """Flag an ALLOW rule that constrains neither service nor endpoint.
+
+    A rule narrowed to specific hosts, MACs, networks, or address groups is a
+    deliberate exception, not an unrestricted allow -- the same guard
+    `_check_allow_all_external` already applies. Note this still cannot see
+    domain/app matching: that is not parsed upstream, so a domain-restricted
+    rule is indistinguishable from a wide-open one here.
+    """
     if (
         rule.enabled
         and rule.action == "ALLOW"
         and _is_allow_all_service(rule)
+        and not _has_identity_restrictions(rule)
         and not _is_return_traffic(rule)
     ):
         return Finding(

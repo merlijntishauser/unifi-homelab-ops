@@ -147,6 +147,13 @@ Key points:
 
 - Traefik proxies all traffic (frontend + API) through one domain, so same-origin policy applies and no CORS headers are needed.
 - The health check at `/api/health` is excluded from auth and always returns `200 OK`.
+- **Probe it on `127.0.0.1`, not `localhost`.** The app listens on IPv4 only
+  (`uvicorn --host 0.0.0.0`), while `localhost` resolves to `::1` first. Clients
+  that fall back to IPv4 (Python `urllib`, `curl`) are fine either way, but ones
+  that do not (busybox `wget`, as shipped in Alpine-based sidecars) get
+  `connection refused` and report the container unhealthy while it is serving
+  traffic normally. The bundled healthchecks already use `127.0.0.1`; use it in
+  any custom probe or reverse-proxy check too.
 - Set `APP_ACCESS_URL` to your external domain so the startup banner shows the correct URL.
 - TLS is handled by Traefik via Let's Encrypt -- the app itself serves plain HTTP on port 8080.
 

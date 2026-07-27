@@ -15,7 +15,10 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - SUPPRESS_HEALTHCHECK_ACCESS_LOGS=true
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      # 127.0.0.1, not localhost: the app listens on IPv4 only, and localhost
+      # resolves to ::1 first. urllib falls back to IPv4, but a client that
+      # does not (busybox wget) would report connection refused here.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
       interval: 2s
       timeout: 3s
       retries: 15

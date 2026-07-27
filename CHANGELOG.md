@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Dev `docker-compose.yml` probed its healthcheck on `localhost`; every other healthcheck in the repo already used `127.0.0.1`. The app listens on IPv4 only, so `localhost` (which resolves to `::1` first) only works for clients that fall back. Documented the constraint in `docs/deployment.md` for custom probes and reverse-proxy checks
 - **Unwritable `/data` now fails with an actionable message instead of a SQLAlchemy traceback.** Startup aborted with a bare `sqlite3.OperationalError: unable to open database file` at the bottom of ~200 lines of stack, naming neither the path nor the cause. The database directory is now checked before the engine is built, and an unwritable one raises `DatabaseLocationError` naming the directory, the process uid/gid, the directory's owner and mode, and how to fix it. Hit when `/data` is bind-mounted from a host directory the container's uid (999) does not own, or when the container user is overridden
 
 ## [1.4.0] - 2026-07-26

@@ -136,6 +136,26 @@ volumes:
 
 All `UNIFI_*` variables are optional -- if omitted, log in through the UI after startup. Runtime credentials take priority over environment variables. Mount `/data` to persist settings, cached analysis, and metrics history.
 
+#### Persisting `/data`
+
+The container runs as a non-root user (`appuser`, uid/gid 999). A **named volume**
+(as in every example above) inherits that ownership automatically and is the
+recommended setup.
+
+A **bind mount** keeps the host directory's ownership instead, so the container
+cannot write to it unless the host directory belongs to uid 999:
+
+```bash
+mkdir -p /srv/homelab-ops
+chown 999:999 /srv/homelab-ops
+docker run -d -v /srv/homelab-ops:/data ... merlijntishauser/unifi-homelab-ops:latest
+```
+
+The same applies if you override the container user (`--user` / `user:` in
+Compose) -- it must be able to write the mount. Otherwise startup aborts with
+`The database directory /data is not writable`, naming the process uid and the
+directory's ownership.
+
 ### AI Analysis (optional)
 
 Configure via the Settings modal in the app, or via environment variables:

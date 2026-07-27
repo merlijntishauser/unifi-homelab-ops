@@ -114,3 +114,57 @@ class TestInitDbDisposesExistingEngine:
         init_db(db_path)
         engine2 = get_engine()
         assert engine2 is not None
+
+
+class TestDatabaseLocationErrors:
+    """A DB directory the process cannot write must fail with an actionable error.
+
+    SQLite otherwise surfaces this as a bare "unable to open database file" at
+    the bottom of a long SQLAlchemy traceback -- the failure a user reported
+    when bind-mounting a host directory the container's uid does not own.
+    """
+
+    def test_unwritable_directory_raises_actionable_error(self, tmp_path: Path) -> None:
+        from app.database import DatabaseLocationError, init_db
+
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        data_dir.chmod(0o500)  # r-x: exists, but not writable
+        try:
+            with pytest.raises(DatabaseLocationError) as excinfo:
+                init_db(data_dir / "homelab-ops.db")
+        finally:
+            data_dir.chmod(0o700)
+
+        message = str(excinfo.value)
+        assert str(data_dir) in message
+        assert "not writable" in message
+        assert "HOMELAB_OPS_DB_PATH" in message
+
+    def test_uncreatable_directory_raises_actionable_error(self, tmp_path: Path) -> None:
+        from app.database import DatabaseLocationError, init_db
+
+        parent = tmp_path / "locked"
+        parent.mkdir()
+        parent.chmod(0o500)  # cannot create children here
+        try:
+            with pytest.raises(DatabaseLocationError) as excinfo:
+                init_db(parent / "nested" / "homelab-ops.db")
+        finally:
+            parent.chmod(0o700)
+
+        message = str(excinfo.value)
+        assert "Cannot create the database directory" in message
+        assert "HOMELAB_OPS_DB_PATH" in message
+
+    def test_writable_directory_still_initializes(self, db_path: Path) -> None:
+        from app.database import init_db
+
+        engine = init_db(db_path)
+        assert engine is not None
+        assert db_path.exists()
+
+    def test_describe_dir_handles_a_missing_directory(self) -> None:
+        from app.database import _describe_dir
+
+        assert _describe_dir(Path("/nonexistent-path-for-tests")) == "unavailable"

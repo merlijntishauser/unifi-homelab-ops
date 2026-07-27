@@ -2,12 +2,16 @@
 
 import gc
 import os
+import stat
 from pathlib import Path
 
+import structlog
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models_db import Base
+
+log = structlog.get_logger()
 
 # HOMELAB_OPS_DB_PATH is preferred; keep legacy spellings as fallbacks.
 DEFAULT_DB_PATH = Path(
@@ -25,10 +29,69 @@ def _make_url(db_path: Path) -> str:
     return f"sqlite:///{db_path}"
 
 
+class DatabaseLocationError(RuntimeError):
+    """The configured database directory is missing or not writable."""
+
+
+def _describe_dir(directory: Path) -> str:
+    """Describe a directory's ownership and mode, for the error message."""
+    try:
+        info = directory.stat()
+    except OSError:
+        return "unavailable"
+    return f"uid={info.st_uid} gid={info.st_gid} mode={stat.filemode(info.st_mode)}"
+
+
+def _process_identity() -> str:
+    """Describe the running process identity, for the error message."""
+    return f"uid={os.getuid()} gid={os.getgid()}"
+
+
+_PERMISSION_HINT = (
+    "Set HOMELAB_OPS_DB_PATH to a writable location, or make the mount writable "
+    "by the container user -- a named volume (`-v homelab-ops-data:/data`) inherits "
+    "the right ownership, while a bind-mounted host directory keeps the host's and "
+    "must be chown'ed to the container's uid."
+)
+
+
+def _ensure_writable(db_path: Path) -> None:
+    """Fail early and legibly when the database directory cannot be written.
+
+    SQLite reports an unwritable directory as a bare "unable to open database
+    file" wrapped in a long SQLAlchemy traceback, which says nothing about the
+    path or why it failed. Check first so the operator gets an actionable line.
+    """
+    directory = db_path.parent
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        msg = (
+            f"Cannot create the database directory {directory} ({exc.strerror}). "
+            f"Process {_process_identity()}. {_PERMISSION_HINT}"
+        )
+        log.error("database_directory_uncreatable", path=str(directory), error=str(exc))
+        raise DatabaseLocationError(msg) from exc
+
+    if not os.access(directory, os.W_OK | os.X_OK):
+        msg = (
+            f"The database directory {directory} is not writable. "
+            f"Process {_process_identity()}, directory {_describe_dir(directory)}. "
+            f"{_PERMISSION_HINT}"
+        )
+        log.error(
+            "database_directory_not_writable",
+            path=str(directory),
+            process=_process_identity(),
+            directory=_describe_dir(directory),
+        )
+        raise DatabaseLocationError(msg)
+
+
 def init_db(db_path: Path = DEFAULT_DB_PATH) -> Engine:
     """Initialize the database engine, run migrations, and return the engine."""
     global _engine, _SessionFactory  # noqa: PLW0603
-    db_path.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_writable(db_path)
 
     if _engine is not None:
         _engine.dispose()

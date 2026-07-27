@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Unwritable `/data` now fails with an actionable message instead of a SQLAlchemy traceback.** Startup aborted with a bare `sqlite3.OperationalError: unable to open database file` at the bottom of ~200 lines of stack, naming neither the path nor the cause. The database directory is now checked before the engine is built, and an unwritable one raises `DatabaseLocationError` naming the directory, the process uid/gid, the directory's owner and mode, and how to fix it. Hit when `/data` is bind-mounted from a host directory the container's uid (999) does not own, or when the container user is overridden
+
 ## [1.4.0] - 2026-07-26
 
 ### Added

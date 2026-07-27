@@ -57,7 +57,7 @@ jobs:
         # Deliberately a SHA and not a release tag: the action's tags have
         # lagged its main branch, so a tag pin can quietly downgrade the
         # react-doctor CLI this installs and move the score.
-        uses: millionco/react-doctor@846c2df84465d6ebce31ea894669afc5c28ae01f
+        uses: millionco/react-doctor@b31fd85b9ee469c6b588d4e446f44385466193a2
         with:
           directory: frontend
           # Scan the whole project, not just the PR's changed files. The

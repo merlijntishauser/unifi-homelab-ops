@@ -185,11 +185,15 @@ export interface AppAuthStatus {
 }
 
 export type IconSet = "unifi" | "isometric" | "modern";
+/** "auto" follows the app's light/dark mode; "blueprint" is its own look. */
+export type DiagramTheme = "auto" | "blueprint";
 
 export interface TopologySvgResponse {
   svg: string;
   projection: string;
   icon_set: IconSet;
+  theme: DiagramTheme;
+  show_grid: boolean;
 }
 
 export interface TopologyPort {

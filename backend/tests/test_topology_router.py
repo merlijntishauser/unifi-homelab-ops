@@ -83,6 +83,39 @@ async def test_svg_forwards_icon_set_and_echoes_it(client: AsyncClient) -> None:
 
 
 @pytest.mark.anyio
+async def test_svg_invalid_theme_returns_400(client: AsyncClient) -> None:
+    _login()
+    resp = await client.get("/api/topology/svg", params={"theme": "chalkboard"})
+    assert resp.status_code == 400
+    assert "Invalid theme" in resp.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_svg_forwards_theme_and_grid(client: AsyncClient) -> None:
+    _login()
+    with patch("app.routers.topology.get_topology_svg", return_value=STUB_SVG) as mock:
+        resp = await client.get(
+            "/api/topology/svg", params={"theme": "blueprint", "show_grid": "false"},
+        )
+    assert resp.status_code == 200
+    assert mock.call_args.kwargs.get("theme_style") == "blueprint"
+    assert mock.call_args.kwargs.get("show_grid") is False
+    body = resp.json()
+    assert body["theme"] == "blueprint"
+    assert body["show_grid"] is False
+
+
+@pytest.mark.anyio
+async def test_svg_theme_and_grid_defaults(client: AsyncClient) -> None:
+    _login()
+    with patch("app.routers.topology.get_topology_svg", return_value=STUB_SVG) as mock:
+        resp = await client.get("/api/topology/svg")
+    assert mock.call_args.kwargs.get("theme_style") == "auto"
+    assert mock.call_args.kwargs.get("show_grid") is True
+    assert resp.json()["theme"] == "auto"
+
+
+@pytest.mark.anyio
 async def test_svg_icon_set_defaults_to_unifi(client: AsyncClient) -> None:
     _login()
     with patch("app.routers.topology.get_topology_svg", return_value=STUB_SVG) as mock:

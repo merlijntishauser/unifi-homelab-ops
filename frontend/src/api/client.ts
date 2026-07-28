@@ -125,10 +125,13 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ policy_id_a: policyIdA, policy_id_b: policyIdB }),
     }),
-  getTopologySvg: (colorMode: string, projection: string, iconSet: string) =>
+  getTopologySvg: (
+    colorMode: string, projection: string, iconSet: string, theme: string, showGrid: boolean,
+  ) =>
     fetchJson<TopologySvgResponse>(
       `/topology/svg?color_mode=${encodeURIComponent(colorMode)}&projection=${encodeURIComponent(projection)}`
-      + `&icon_set=${encodeURIComponent(iconSet)}`,
+      + `&icon_set=${encodeURIComponent(iconSet)}`
+      + `&theme=${encodeURIComponent(theme)}&show_grid=${showGrid}`,
     ),
   getTopologyDevices: () => fetchJson<TopologyDevicesResponse>("/topology/devices"),
   getTopologyPositions: () => fetchJson<NodePosition[]>("/topology/positions"),

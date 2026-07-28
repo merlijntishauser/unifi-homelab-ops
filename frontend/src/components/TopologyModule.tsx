@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { IconSet, TopologyDevice, TopologyDevicesResponse, TopologySvgResponse } from "../api/types";
+import type { DiagramTheme, IconSet, TopologyDevice, TopologyDevicesResponse, TopologySvgResponse } from "../api/types";
 import { useAppContext } from "../hooks/useAppContext";
 import { useTopologySvg, useTopologyDevices, useTopologyPositions, useSaveTopologyPositions, useResetTopologyPositions } from "../hooks/queries";
 import { downloadSvg, downloadPng } from "../utils/export";
@@ -16,6 +16,13 @@ const ICON_SETS = [
   { value: "isometric", label: "Isometric icons" },
   { value: "modern", label: "Modern icons" },
 ] as const satisfies readonly { value: IconSet; label: string }[];
+
+/** "auto" pairs the diagram with the app's light/dark mode; blueprint has no
+ *  light/dark variant of its own, so choosing it overrides that pairing. */
+const DIAGRAM_THEMES = [
+  { value: "auto", label: "Match app theme" },
+  { value: "blueprint", label: "Blueprint" },
+] as const satisfies readonly { value: DiagramTheme; label: string }[];
 
 function readStorage<T extends string>(key: string, fallback: T, valid: readonly T[]): T {
   try {
@@ -122,6 +129,12 @@ export default function TopologyModule() {
   const [iconSet, setIconSet] = useState<IconSet>(() =>
     readStorage("topologyIconSet", "unifi", ICON_SETS.map((s) => s.value)),
   );
+  const [diagramTheme, setDiagramTheme] = useState<DiagramTheme>(() =>
+    readStorage("topologyDiagramTheme", "auto", DIAGRAM_THEMES.map((s) => s.value)),
+  );
+  const [showGrid, setShowGrid] = useState<boolean>(() =>
+    readStorage("topologyShowGrid", "on", ["on", "off"] as const) === "on",
+  );
   const deepLinkDevice = useRef<string | null>(null);
   if (deepLinkDevice.current === null) {
     deepLinkDevice.current = new URLSearchParams(window.location.search).get("device");
@@ -129,7 +142,8 @@ export default function TopologyModule() {
   const [selectedDevice, setSelectedDevice] = useState<TopologyDevice | null>(null);
 
   const svgQuery = useTopologySvg(
-    colorMode === "dark" ? "dark" : "light", projection, iconSet, authed && subView === "diagram",
+    colorMode === "dark" ? "dark" : "light", projection, iconSet,
+    diagramTheme, showGrid, authed && subView === "diagram",
   );
   const devicesQuery = useTopologyDevices(authed);
 
@@ -153,6 +167,19 @@ export default function TopologyModule() {
     setIconSet(next);
     try { localStorage.setItem("topologyIconSet", next); } catch { /* noop */ }
   }, []);
+
+  const handleDiagramThemeChange = useCallback((next: DiagramTheme) => {
+    setDiagramTheme(next);
+    try { localStorage.setItem("topologyDiagramTheme", next); } catch { /* noop */ }
+  }, []);
+
+  const handleGridToggle = useCallback(() => {
+    // Derive next outside the updater: StrictMode double-invokes updaters, so a
+    // write in there runs twice. Same shape as handleProjectionChange.
+    const next = !showGrid;
+    setShowGrid(next);
+    try { localStorage.setItem("topologyShowGrid", next ? "on" : "off"); } catch { /* noop */ }
+  }, [showGrid]);
 
   const handleProjectionChange = useCallback(() => {
     const next = projection === "isometric" ? "orthogonal" : "isometric";
@@ -215,6 +242,29 @@ export default function TopologyModule() {
                 <option key={set.value} value={set.value}>{set.label}</option>
               ))}
             </select>
+            <select
+              value={diagramTheme}
+              onChange={(e) => handleDiagramThemeChange(e.target.value as DiagramTheme)}
+              aria-label="Diagram style"
+              className={`${BTN} pr-7 appearance-none bg-[length:14px_14px] bg-[position:right_6px_center] bg-no-repeat`}
+              data-testid="diagram-theme-select"
+            >
+              {DIAGRAM_THEMES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            {/* Isometric-only: the grid is the floor the tiles stand on, and
+                the orthogonal renderer draws no grid to hide. */}
+            {projection === "isometric" && (
+              <button type="button"
+                onClick={handleGridToggle}
+                aria-pressed={showGrid}
+                data-testid="grid-toggle"
+                className={showGrid ? BTN_ACTIVE : BTN}
+              >
+                Grid
+              </button>
+            )}
             {svgQuery.data && (
               <>
                 <button type="button" onClick={() => downloadSvg(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download SVG">{dlIcon} SVG</button>

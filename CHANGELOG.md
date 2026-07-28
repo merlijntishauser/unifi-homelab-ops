@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Blueprint diagram style** for the topology SVG, from unifi-topology 3.2.0: white line work on blueprint-blue paper with a graph-paper grid. Picked from the diagram toolbar; "Match app theme" (the default) keeps the previous behaviour of following the app's light/dark mode, while Blueprint has no light/dark variant and so overrides that pairing
+- **Grid toggle** for the isometric projection. Shown only there -- the orthogonal renderer draws no floor grid -- and persisted alongside the other diagram preferences. `GET /api/topology/svg` takes `theme` and `show_grid` and echoes both back; an unknown theme returns 400
+
+### Changed
+- **Upgraded unifi-topology from 3.1.2 to 3.2.0.** No breaking changes. Inherited without any code change here: isometric node side faces now take their colour from the theme rather than a hardcoded palette (an access point no longer draws a blue top on green sides under the `unifi` theme), routed isometric edges no longer cut through unrelated tiles, and isometric icons sit on their tiles instead of overhanging them
+
 ### Fixed
 - **A domain-restricted allow no longer "shadows" every later rule.** `rule_shadows` predates the domain/app matching fields, so a rule narrowed to specific web domains read as match-everything and the analyzer reported any later rule as dead -- including a block-the-rest rule that absolutely executes for non-whitelisted traffic. Coverage now includes matching targets (where the controller's `ANY` reads as unconstrained), web domains, app ids, and the web matching type
 - **The carve-out pattern is no longer flagged as a suspicious overlap.** Allow-specific-then-block-the-rest (and its reverse, block-SSH-then-allow-the-rest) drew a medium "review whether this ordering is intended" -- the standard way to express precedence, punished every time. When the later, broader rule fully covers the earlier one, the overlap is now a low-severity awareness note ("Exception rule ahead of a broader rule"); criss-cross overlaps, where neither rule contains the other and ordering alone decides the winner, stay medium

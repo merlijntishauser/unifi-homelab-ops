@@ -45,6 +45,11 @@ VALID_PROJECTIONS = ("orthogonal", "isometric")
 # node type; the others fall back to generic shapes for some devices.
 VALID_ICON_SETS = ("unifi", "isometric", "modern")
 DEFAULT_ICON_SET = "unifi"
+# Diagram styles. "auto" keeps the diagram in step with the app's light/dark
+# mode; "blueprint" is its own aesthetic (white line work on blueprint-blue
+# paper) with no light/dark variant, so it overrides that pairing.
+VALID_THEMES = ("auto", "blueprint")
+DEFAULT_THEME = "auto"
 
 
 def _raw_device_lookup(raw_devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -145,11 +150,24 @@ def get_topology_devices(credentials: UnifiCredentials) -> TopologyDevicesRespon
     return TopologyDevicesResponse(devices=device_models, edges=edge_models)
 
 
+def _resolve_theme_name(theme_style: str, color_mode: str) -> str:
+    """Map the requested style to a bundled theme name.
+
+    Blueprint has no light/dark pair of its own, so picking it deliberately
+    decouples the diagram from the app's colour mode.
+    """
+    if theme_style == "blueprint":
+        return "blueprint"
+    return "unifi-dark" if color_mode == "dark" else "unifi"
+
+
 def get_topology_svg(
     credentials: UnifiCredentials,
     color_mode: str = "dark",
     projection: str = "isometric",
     icon_set: str = DEFAULT_ICON_SET,
+    theme_style: str = DEFAULT_THEME,
+    show_grid: bool = True,
 ) -> str:
     """Render the network topology as an SVG string."""
     if projection not in VALID_PROJECTIONS:
@@ -158,8 +176,11 @@ def get_topology_svg(
     if icon_set not in VALID_ICON_SETS:
         msg = f"Invalid icon set: {icon_set}. Valid: {', '.join(VALID_ICON_SETS)}"
         raise ValueError(msg)
+    if theme_style not in VALID_THEMES:
+        msg = f"Invalid theme: {theme_style}. Valid: {', '.join(VALID_THEMES)}"
+        raise ValueError(msg)
 
-    theme_name = "unifi-dark" if color_mode == "dark" else "unifi"
+    theme_name = _resolve_theme_name(theme_style, color_mode)
     config = to_topology_config(credentials)
 
     raw_devices = fetch_devices(config, site=credentials.site)
@@ -198,8 +219,9 @@ def get_topology_svg(
         return render_svg_isometric(
             edges=edges, node_types=node_types, node_names=node_names, theme=theme,
             wan_info=wan_info, vpn_tunnels=vpn_tunnels,
-            # Shades the node side faces against the tile fill; isometric only.
-            options=SvgOptions(iso_lighting=True),
+            # Both isometric-only: lighting shades the node side faces against
+            # the tile fill, and the grid is the floor it all stands on.
+            options=SvgOptions(iso_lighting=True, iso_show_grid=show_grid),
         )
     return render_svg(
         edges=edges, node_types=node_types, node_names=node_names, theme=theme,

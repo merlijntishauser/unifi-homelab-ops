@@ -155,6 +155,41 @@ class TestGetTopologySvg:
             get_topology_svg(MOCK_CONFIG, projection="orthogonal", icon_set="modern")
         assert mock_render.call_args.kwargs["theme"].icon_set == "modern"
 
+    def test_invalid_theme_raises(self) -> None:
+        with pytest.raises(ValueError, match="Invalid theme"):
+            get_topology_svg(MOCK_CONFIG, theme_style="chalkboard")
+
+    def test_blueprint_overrides_the_colour_mode_pairing(self) -> None:
+        """Blueprint has no light/dark variant, so it must win over color_mode."""
+        mock_iso = MagicMock(return_value=STUB_SVG)
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, color_mode="dark", theme_style="blueprint")
+        theme = mock_iso.call_args.kwargs["theme"]
+        # The blueprint paper colour, not the unifi-dark surface.
+        assert theme.background == "#1a3a67"
+
+    def test_auto_still_follows_the_colour_mode(self) -> None:
+        mock_iso = MagicMock(return_value=STUB_SVG)
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, color_mode="dark", theme_style="auto")
+        dark_bg = mock_iso.call_args.kwargs["theme"].background
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, color_mode="light", theme_style="auto")
+        light_bg = mock_iso.call_args.kwargs["theme"].background
+        assert dark_bg != light_bg
+
+    def test_grid_is_on_by_default(self) -> None:
+        mock_iso = MagicMock(return_value=STUB_SVG)
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, projection="isometric")
+        assert mock_iso.call_args.kwargs["options"].iso_show_grid is True
+
+    def test_grid_can_be_turned_off(self) -> None:
+        mock_iso = MagicMock(return_value=STUB_SVG)
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, projection="isometric", show_grid=False)
+        assert mock_iso.call_args.kwargs["options"].iso_show_grid is False
+
     def test_isometric_render_enables_lighting(self) -> None:
         mock_iso = MagicMock(return_value=STUB_SVG)
         with _patch_all(iso_mock=mock_iso):

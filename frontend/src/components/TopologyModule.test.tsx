@@ -264,6 +264,66 @@ describe("TopologyModule", () => {
     expect(screen.getByTestId("icon-set-select")).toHaveValue("unifi");
   });
 
+  it("defaults the diagram style to matching the app theme", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.getByTestId("diagram-theme-select")).toHaveValue("auto");
+  });
+
+  it("offers blueprint as a diagram style", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    const values = Array.from(
+      screen.getByTestId("diagram-theme-select").querySelectorAll("option"),
+    ).map((o) => o.getAttribute("value"));
+    expect(values).toEqual(["auto", "blueprint"]);
+  });
+
+  it("persists the chosen diagram style", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    fireEvent.change(screen.getByTestId("diagram-theme-select"), { target: { value: "blueprint" } });
+    expect(localStorage.getItem("topologyDiagramTheme")).toBe("blueprint");
+  });
+
+  it("falls back to auto when storage holds an unknown style", () => {
+    localStorage.setItem("topologyDiagramTheme", "bogus");
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.getByTestId("diagram-theme-select")).toHaveValue("auto");
+  });
+
+  it("shows the grid on by default and toggles it off", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    const grid = screen.getByTestId("grid-toggle");
+    expect(grid).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(grid);
+    expect(screen.getByTestId("grid-toggle")).toHaveAttribute("aria-pressed", "false");
+    expect(localStorage.getItem("topologyShowGrid")).toBe("off");
+  });
+
+  it("restores a grid-off preference from storage", () => {
+    localStorage.setItem("topologyShowGrid", "off");
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.getByTestId("grid-toggle")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("hides the grid toggle in the orthogonal projection", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.getByTestId("grid-toggle")).toBeInTheDocument();
+    // The orthogonal renderer draws no floor grid, so the control would lie.
+    fireEvent.click(screen.getByRole("button", { name: "Isometric" }));
+    expect(screen.queryByTestId("grid-toggle")).not.toBeInTheDocument();
+  });
+
+  it("hides the diagram style chooser in map view", () => {
+    renderModule();
+    expect(screen.queryByTestId("diagram-theme-select")).not.toBeInTheDocument();
+  });
+
   it("hides the icon set chooser in map view", () => {
     renderModule();
     expect(screen.queryByTestId("icon-set-select")).not.toBeInTheDocument();

@@ -98,6 +98,8 @@ class TopologySvgResponse(BaseModel):
     svg: str
     projection: str
     icon_set: str = "unifi"
+    theme: str = "auto"
+    show_grid: bool = True
 
 
 class NodePosition(BaseModel):

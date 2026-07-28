@@ -9,8 +9,8 @@ export const queryKeys = {
   authStatus: ["auth-status"] as const,
   aiConfig: ["ai-config"] as const,
   zoneFilter: ["zone-filter"] as const,
-  topologySvg: (colorMode: string, projection: string, iconSet: string) =>
-    ["topology-svg", colorMode, projection, iconSet] as const,
+  topologySvg: (colorMode: string, projection: string, iconSet: string, theme: string, showGrid: boolean) =>
+    ["topology-svg", colorMode, projection, iconSet, theme, showGrid] as const,
   topologyDevices: ["topology-devices"] as const,
   metricsDevices: ["metrics-devices"] as const,
   metricsHistory: (mac: string) => ["metrics-history", mac] as const,
@@ -76,10 +76,13 @@ export function useZoneFilter(enabled: boolean) {
   });
 }
 
-export function useTopologySvg(colorMode: string, projection: string, iconSet: string, enabled: boolean) {
+export function useTopologySvg(
+  colorMode: string, projection: string, iconSet: string,
+  theme: string, showGrid: boolean, enabled: boolean,
+) {
   return useQuery({
-    queryKey: queryKeys.topologySvg(colorMode, projection, iconSet),
-    queryFn: () => api.getTopologySvg(colorMode, projection, iconSet),
+    queryKey: queryKeys.topologySvg(colorMode, projection, iconSet, theme, showGrid),
+    queryFn: () => api.getTopologySvg(colorMode, projection, iconSet, theme, showGrid),
     enabled,
     staleTime: 5 * 60 * 1000,
   });

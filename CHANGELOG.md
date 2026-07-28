@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **AI analysis failed with "Unexpected error during AI analysis" against Anthropic.** The client read the reply as `content[0]["text"]`, but `content` is a list of typed blocks and text is not guaranteed to be first -- current Claude models emit a `thinking` block ahead of it, so the index raised `KeyError` the moment the model reasoned before answering. The text block is now selected by type
+- **That error message no longer hides what went wrong.** Every failure the client could not classify collapsed into one generic string: a non-JSON body (a proxy's HTML error page), an OpenAI-compatible endpoint answering 200 with a different shape, or an unusable base URL. Unreadable responses now raise `AiProviderResponseError` naming the provider, the status, the content-type and a truncated body snippet; transport failures outside the three already handled report the URL is unreachable and point at Settings
+- A saved AI config with a blank base URL or model now reads as unconfigured instead of failing later as an unreadable response. A blank **API key** is still accepted -- keyless local providers (Ollama, LM Studio) are a valid setup
+
 ## [1.5.0] - 2026-07-28
 
 ### Changed

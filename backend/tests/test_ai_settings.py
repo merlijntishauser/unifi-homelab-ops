@@ -241,6 +241,34 @@ class TestSaveAiConfig:
         assert result["api_key"] == "sk-original"
         assert result["model"] == "gpt-4o-mini"
 
+    def test_keyless_local_provider_is_still_usable(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Ollama / LM Studio need no API key -- requiring one would report a
+        working setup as unconfigured."""
+        monkeypatch.delenv("AI_API_KEY", raising=False)
+        monkeypatch.delenv("AI_API_KEY_FILE", raising=False)
+        save_ai_config("http://localhost:11434/v1", "", "llama3", "openai")
+
+        result = get_full_ai_config()
+        assert result is not None
+        assert result["base_url"] == "http://localhost:11434/v1"
+        assert result["api_key"] == ""
+
+    def test_blank_base_url_reads_as_unconfigured(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Without a base_url the request is built against a malformed URL and
+        fails much later; report it as unconfigured instead."""
+        monkeypatch.delenv("AI_API_KEY", raising=False)
+        monkeypatch.delenv("AI_API_KEY_FILE", raising=False)
+        save_ai_config("", "test-key", "gpt-4o", "openai")
+
+        assert get_full_ai_config() is None
+
+    def test_blank_model_reads_as_unconfigured(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AI_API_KEY", raising=False)
+        monkeypatch.delenv("AI_API_KEY_FILE", raising=False)
+        save_ai_config("https://api.openai.com/v1", "test-key", "", "openai")
+
+        assert get_full_ai_config() is None
+
     def test_empty_key_on_new_config_stores_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("AI_API_KEY", raising=False)
         monkeypatch.delenv("AI_API_KEY_FILE", raising=False)

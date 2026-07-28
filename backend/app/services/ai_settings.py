@@ -107,6 +107,23 @@ def get_full_ai_config() -> dict[str, str] | None:
 
     # Use env API key as fallback when DB key is empty
     effective_key = row.api_key or api_key
+
+    # base_url and model are structurally required: without them the request is
+    # built against a malformed URL or no model, and the failure surfaces much
+    # later as an unreadable response rather than "not configured".
+    #
+    # api_key is deliberately NOT required here, unlike the env branch above: a
+    # keyless local provider (Ollama, LM Studio) is a valid setup, and demanding
+    # a key would report those as unconfigured.
+    if not (row.base_url and row.model):
+        log.debug(
+            "ai_full_config_incomplete",
+            source="db",
+            has_base_url=bool(row.base_url),
+            has_model=bool(row.model),
+        )
+        return None
+
     log.debug("ai_full_config_source", source="db", provider=row.provider_type, model=row.model)
     return {
         "base_url": row.base_url,

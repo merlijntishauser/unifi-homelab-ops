@@ -836,6 +836,50 @@ class TestAnalyzeSiteHealthAnthropicCall:
 
 class TestAnalyzeSiteHealthErrors:
     @pytest.mark.anyio
+    async def test_unreadable_response_names_the_shape(self) -> None:
+        """The Health module hit the same catch-all as the firewall analyzer."""
+        from app.config import UnifiCredentials
+
+        save_ai_config("http://test-api.com/v1", "test-key", "test-model", "openai")
+        creds = UnifiCredentials(url="https://x", username="u", password="p")
+        ctx = _make_mock_context()
+
+        ok_but_wrong = httpx.Response(
+            200, json={"unexpected": "shape"},
+            request=httpx.Request("POST", "http://test-api.com/v1"),
+        )
+        with (
+            patch("app.services.site_health._gather_health_context", return_value=ctx),
+            patch("app.services._ai_provider.httpx.post", return_value=ok_but_wrong),
+        ):
+            result = await analyze_site_health(creds)
+
+        assert result.status == "error"
+        message = (result.message or "").lower()
+        assert "unexpected error during ai analysis" not in message
+        assert "unexpected response shape" in message
+
+    @pytest.mark.anyio
+    async def test_unusable_base_url_points_at_settings(self) -> None:
+        from app.config import UnifiCredentials
+
+        save_ai_config("not-a-url", "test-key", "test-model", "openai")
+        creds = UnifiCredentials(url="https://x", username="u", password="p")
+        ctx = _make_mock_context()
+
+        with (
+            patch("app.services.site_health._gather_health_context", return_value=ctx),
+            patch(
+                "app.services._ai_provider.httpx.post",
+                side_effect=httpx.UnsupportedProtocol("no scheme"),
+            ),
+        ):
+            result = await analyze_site_health(creds)
+
+        assert result.status == "error"
+        assert "could not reach the ai provider" in (result.message or "").lower()
+
+    @pytest.mark.anyio
     async def test_http_error(self) -> None:
         from app.config import UnifiCredentials
 

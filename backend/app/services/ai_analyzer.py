@@ -13,7 +13,7 @@ import structlog
 from app.database import get_session
 from app.models import AiAnalysisResult, FindingModel, Rule
 from app.models_db import AiAnalysisCacheRow
-from app.services._ai_provider import call_anthropic, call_openai
+from app.services._ai_provider import AiProviderResponseError, call_anthropic, call_openai
 from app.services.ai_settings import get_ai_analysis_settings, get_full_ai_config
 from app.services.analyzer import Finding
 
@@ -250,6 +250,19 @@ async def analyze_with_ai(
     except httpx.ConnectError as exc:
         log.warning("ai_provider_connect_error", zone_pair=zone_pair_key, error=str(exc))
         return AiAnalysisResult(status="error", message="Connection to AI provider failed")
+    except AiProviderResponseError as exc:
+        # The provider answered but not in a shape we can read -- name it, rather
+        # than letting it fall through to the catch-all's generic message.
+        log.warning("ai_provider_bad_response", zone_pair=zone_pair_key, error=str(exc))
+        return AiAnalysisResult(status="error", message=str(exc))
+    except httpx.RequestError as exc:
+        # Parent of the transport failures not caught above: an unusable base_url
+        # (UnsupportedProtocol/InvalidURL), a dropped connection, a protocol error.
+        log.warning("ai_provider_request_error", zone_pair=zone_pair_key, error=str(exc))
+        return AiAnalysisResult(
+            status="error",
+            message=f"Could not reach the AI provider: {type(exc).__name__}. Check the base URL in Settings.",
+        )
     except Exception:
         log.exception("ai_analysis_failed", zone_pair=zone_pair_key)
         return AiAnalysisResult(status="error", message="Unexpected error during AI analysis")

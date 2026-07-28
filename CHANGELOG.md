@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.6.0] - 2026-07-28
 
 ### Added
 - **Blueprint diagram style** for the topology SVG, from unifi-topology 3.2.0: white line work on blueprint-blue paper with a graph-paper grid. Picked from the diagram toolbar; "Match app theme" (the default) keeps the previous behaviour of following the app's light/dark mode, while Blueprint has no light/dark variant and so overrides that pairing
 - **Grid toggle** for the isometric projection. Shown only there -- the orthogonal renderer draws no floor grid -- and persisted alongside the other diagram preferences. `GET /api/topology/svg` takes `theme` and `show_grid` and echoes both back; an unknown theme returns 400
+- **Re-run a device AI analysis without leaving the page.** Once a result is showing, the card header offers "Analyze again" -- previously the Analyze button was replaced by its own output, so a fresh read meant navigating away and back
 
 ### Changed
 - **Upgraded unifi-topology from 3.1.2 to 3.2.0.** No breaking changes. Inherited without any code change here: isometric node side faces now take their colour from the theme rather than a hardcoded palette (an access point no longer draws a blue top on green sides under the `unifi` theme), routed isometric edges no longer cut through unrelated tiles, and isometric icons sit on their tiles instead of overhanging them
@@ -20,9 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shadow findings now say what the shadowing costs, graded by consequence.** A dead BLOCK (traffic you believe is blocked is accepted) is high; a dead ALLOW (whatever depended on it is unreachable) is medium; a same-action duplicate is low ("Redundant rule"). The rationale names every criterion the comparison models, states the rule runs first, and says what to do: move the later rule up or remove it
 - **Device metrics AI insights rendered markdown as literal text.** The prompt asks for bullet points, so the reply came back with `-` markers and `**bold**` -- shown verbatim in a plain paragraph. It now renders as markdown, matching how the Documentation module already treats model output
 - **AI insights are easier to read.** Body text moves from 12px to 13px, bullets get list spacing and accent markers so each finding scans as a discrete item, and inline code (the metric values the prompt asks the model to be specific about) uses the app's mono face and accent colour
-
-### Added
-- **Re-run a device AI analysis without leaving the page.** Once a result is showing, the card header offers "Analyze again" -- previously the Analyze button was replaced by its own output, so a fresh read meant navigating away and back
 
 ## [1.5.1] - 2026-07-28
 
@@ -337,7 +335,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.1...v1.4.0

@@ -16,6 +16,41 @@ interface DetailSection {
   rows: DetailRow[];
 }
 
+/**
+ * Rows for domain / application matching.
+ *
+ * Falls back to the raw matching target when the criteria are not decoded
+ * (regions, app categories): without it a rule narrowed that way would show no
+ * restriction at all here, which is the impression that made a domain allowlist
+ * read as "allows everything" in the first place.
+ */
+function domainMatchRows(rule: Rule): DetailRow[] {
+  const rows: DetailRow[] = [];
+
+  if (rule.destination_web_domains.length > 0) {
+    rows.push({
+      label: "Dst Domains",
+      value: rule.destination_web_domains.join(", "),
+      type: "mono",
+      note: rule.destination_web_matching_type ? `matching: ${rule.destination_web_matching_type.toLowerCase()}` : undefined,
+    });
+  }
+  if (rule.destination_app_ids.length > 0) {
+    rows.push({ label: "Dst Apps", value: rule.destination_app_ids.join(", "), type: "mono" });
+  }
+  if (rows.length === 0 && isNarrowingTarget(rule.destination_matching_target)) {
+    rows.push({ label: "Dst Match", value: rule.destination_matching_target, type: "mono" });
+  }
+  if (isNarrowingTarget(rule.source_matching_target)) {
+    rows.push({ label: "Src Match", value: rule.source_matching_target, type: "mono" });
+  }
+  return rows;
+}
+
+function isNarrowingTarget(target: string): boolean {
+  return target !== "" && target.toUpperCase() !== "ANY";
+}
+
 function buildDetailSections(rule: Rule, sourceZoneName: string, destZoneName: string): DetailSection[] {
   const sections: DetailSection[] = [];
 
@@ -41,6 +76,7 @@ function buildDetailSections(rule: Rule, sourceZoneName: string, destZoneName: s
   for (const [label, value] of optionalFilters) {
     if (value) matchRows.push({ label, value, type: "mono" });
   }
+  matchRows.push(...domainMatchRows(rule));
   sections.push({ title: "Match Criteria", rows: matchRows });
 
   const metaRows: DetailRow[] = [

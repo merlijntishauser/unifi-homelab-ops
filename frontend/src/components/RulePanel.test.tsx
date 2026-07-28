@@ -77,6 +77,11 @@ function makeRule(overrides: Partial<Rule> = {}): Rule {
     source_address_group_members: [],
     destination_address_group: "",
     destination_address_group_members: [],
+    source_matching_target: "",
+    destination_matching_target: "",
+    destination_web_domains: [],
+    destination_web_matching_type: "",
+    destination_app_ids: [],
     connection_state_type: "",
     connection_logging: false,
     schedule: "",
@@ -375,6 +380,66 @@ describe("RulePanel", () => {
       fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
       expect(screen.getByText("Dst MACs")).toBeInTheDocument();
       expect(screen.getByText("11:22:33:44:55:66")).toBeInTheDocument();
+    });
+
+    it("shows destination web domains when set", () => {
+      renderPanel(makePair([makeRule({ destination_web_domains: ["example.com", "ntp.org"] })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.getByText("Dst Domains")).toBeInTheDocument();
+      expect(screen.getByText("example.com, ntp.org")).toBeInTheDocument();
+    });
+
+    it("notes the web matching type alongside the domains", () => {
+      renderPanel(makePair([makeRule({
+        destination_web_domains: ["example.com"],
+        destination_web_matching_type: "DOMAIN",
+      })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.getByText("matching: domain")).toBeInTheDocument();
+    });
+
+    it("shows destination app ids when set", () => {
+      renderPanel(makePair([makeRule({ destination_app_ids: ["4-6"] })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.getByText("Dst Apps")).toBeInTheDocument();
+      expect(screen.getByText("4-6")).toBeInTheDocument();
+    });
+
+    it("falls back to the matching target for criteria it cannot decode", () => {
+      renderPanel(makePair([makeRule({ destination_matching_target: "REGION" })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.getByText("Dst Match")).toBeInTheDocument();
+      expect(screen.getByText("REGION")).toBeInTheDocument();
+    });
+
+    it("does not show a matching row for the default ANY target", () => {
+      renderPanel(makePair([makeRule({ destination_matching_target: "ANY", source_matching_target: "ANY" })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.queryByText("Dst Match")).not.toBeInTheDocument();
+      expect(screen.queryByText("Src Match")).not.toBeInTheDocument();
+    });
+
+    it("prefers the decoded domains over the raw matching target", () => {
+      renderPanel(makePair([makeRule({
+        destination_matching_target: "WEB",
+        destination_web_domains: ["example.com"],
+      })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.getByText("Dst Domains")).toBeInTheDocument();
+      expect(screen.queryByText("Dst Match")).not.toBeInTheDocument();
+    });
+
+    it("shows the source matching target when narrowed", () => {
+      renderPanel(makePair([makeRule({ source_matching_target: "REGION" })]));
+
+      fireEvent.click(screen.getByRole("button", { name: /1\. Test Rule/ }));
+      expect(screen.getByText("Src Match")).toBeInTheDocument();
     });
 
     it("merges source address group into Src IPs with group name", () => {

@@ -18,7 +18,10 @@
     "source_zone_id": "zone-guest",
     "destination_zone_id": "zone-external",
     "protocol": "tcp",
-    "port_ranges": ["80", "443"],
+    "port_ranges": [
+      "80",
+      "443"
+    ],
     "index": 200
   },
   {
@@ -30,7 +33,9 @@
     "source_zone_id": "zone-guest",
     "destination_zone_id": "zone-external",
     "protocol": "udp",
-    "port_ranges": ["53"],
+    "port_ranges": [
+      "53"
+    ],
     "destination": {
       "port_group_id": "group-dns-ports",
       "address_group_id": "group-dns-servers"
@@ -76,5 +81,26 @@
     "source_zone_id": "zone-guest",
     "destination_zone_id": "zone-internal",
     "index": 400
+  },
+  {
+    "_id": "rule-domain",
+    "name": "IoT Domain Whitelist",
+    "description": "Allow IoT devices to reach vendor endpoints only",
+    "enabled": true,
+    "action": "ALLOW",
+    "source_zone_id": "zone-guest",
+    "destination_zone_id": "zone-external",
+    "protocol": "all",
+    "index": 250,
+    "destination": {
+      "zone_id": "zone-external",
+      "matching_target": "WEB",
+      "web_matching_type": "DOMAIN",
+      "web_domains": [
+        "updates.example.com",
+        "ntp.example.org",
+        "telemetry.vendor.io"
+      ]
+    }
   }
 ]

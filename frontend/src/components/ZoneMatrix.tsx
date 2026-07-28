@@ -91,6 +91,7 @@ export default function ZoneMatrix({ zones, zonePairs, onCellClick, onZoneClick 
                   return (
                     <MatrixCell
                       key={`${srcZone.id}-${dstZone.id}`}
+                      pairId={`${srcZone.id}-${dstZone.id}`}
                       actionLabel={summary?.actionLabel ?? null}
                       userRuleCount={summary?.userRuleCount ?? 0}
                       predefinedRuleCount={summary?.predefinedRuleCount ?? 0}

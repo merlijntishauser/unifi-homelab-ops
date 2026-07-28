@@ -117,6 +117,22 @@ test.describe("firewall module", () => {
     await expect(page.getByText("Protocol", { exact: true })).toBeVisible();
   });
 
+  test("a domain-restricted rule names its domains and is not graded unrestricted", async ({ page }) => {
+    // The mock controller serves an "IoT Domain Whitelist" policy: protocol
+    // all, no ports, narrowed to web domains. It must read as restricted --
+    // both in the detail rows and in the analyzer's findings.
+    await page.locator('[data-pair="zone-guest-zone-external"]').click();
+    await expect(page.getByText("Rules (")).toBeVisible();
+
+    await page.getByRole("button", { name: /^\d+\. IoT Domain Whitelist$/ }).click();
+
+    await expect(page.getByText("Dst Domains")).toBeVisible();
+    await expect(page.getByText("updates.example.com, ntp.example.org, telemetry.vendor.io")).toBeVisible();
+    await expect(page.getByText("matching: domain")).toBeVisible();
+
+    await expect(page.getByText(/allows all protocols and ports/)).toHaveCount(0);
+  });
+
   test("simulate returns verdict from real backend", async ({ page }) => {
     await clickRuleCell(page);
     await expect(page.getByText("Rules (")).toBeVisible();

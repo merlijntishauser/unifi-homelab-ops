@@ -8,6 +8,9 @@ interface MatrixCellProps {
   grade: string | null;
   onClick: () => void;
   isSelfPair: boolean;
+  /** "<srcZoneId>-<dstZoneId>", exposed as data-pair so a test can target one
+   *  cell. Kept separate from data-testid, which stays shared across cells. */
+  pairId?: string;
 }
 
 function getActionColor(actionLabel: ActionLabel | null): string {
@@ -46,11 +49,13 @@ export default function MatrixCell({
   grade,
   onClick,
   isSelfPair,
+  pairId,
 }: MatrixCellProps) {
   if (isSelfPair) {
     return (
       <div
         data-testid="matrix-cell"
+        data-pair={pairId}
         className="size-full flex items-center justify-center text-xs rounded-lg bg-ui-raised dark:bg-noc-raised/30 text-ui-text-dim dark:text-noc-text-dim"
       >
         &mdash;
@@ -65,6 +70,7 @@ export default function MatrixCell({
   return (
     <button type="button"
       data-testid="matrix-cell"
+      data-pair={pairId}
       onClick={onClick}
       className={`group relative size-full flex items-center justify-center text-xs font-medium rounded-lg border hover:ring-2 hover:ring-ub-blue/40 cursor-pointer transition-[color,background-color,border-color,box-shadow] ${color}`}
     >

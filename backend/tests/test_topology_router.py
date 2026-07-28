@@ -65,6 +65,34 @@ async def test_svg_invalid_projection_returns_400(client: AsyncClient) -> None:
 
 
 @pytest.mark.anyio
+async def test_svg_invalid_icon_set_returns_400(client: AsyncClient) -> None:
+    _login()
+    resp = await client.get("/api/topology/svg", params={"icon_set": "clipart"})
+    assert resp.status_code == 400
+    assert "Invalid icon set" in resp.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_svg_forwards_icon_set_and_echoes_it(client: AsyncClient) -> None:
+    _login()
+    with patch("app.routers.topology.get_topology_svg", return_value=STUB_SVG) as mock:
+        resp = await client.get("/api/topology/svg", params={"icon_set": "modern"})
+    assert resp.status_code == 200
+    assert mock.call_args.kwargs.get("icon_set") == "modern"
+    assert resp.json()["icon_set"] == "modern"
+
+
+@pytest.mark.anyio
+async def test_svg_icon_set_defaults_to_unifi(client: AsyncClient) -> None:
+    _login()
+    with patch("app.routers.topology.get_topology_svg", return_value=STUB_SVG) as mock:
+        resp = await client.get("/api/topology/svg")
+    assert resp.status_code == 200
+    assert mock.call_args.kwargs.get("icon_set") == "unifi"
+    assert resp.json()["icon_set"] == "unifi"
+
+
+@pytest.mark.anyio
 async def test_devices_requires_credentials(client: AsyncClient) -> None:
     resp = await client.get("/api/topology/devices")
     assert resp.status_code == 401

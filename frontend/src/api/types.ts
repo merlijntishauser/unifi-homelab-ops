@@ -184,9 +184,12 @@ export interface AppAuthStatus {
   authenticated: boolean;
 }
 
+export type IconSet = "unifi" | "isometric" | "modern";
+
 export interface TopologySvgResponse {
   svg: string;
   projection: string;
+  icon_set: IconSet;
 }
 
 export interface TopologyPort {

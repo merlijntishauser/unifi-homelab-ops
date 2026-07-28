@@ -97,6 +97,7 @@ class ZonePair(BaseModel):
 class TopologySvgResponse(BaseModel):
     svg: str
     projection: str
+    icon_set: str = "unifi"
 
 
 class NodePosition(BaseModel):

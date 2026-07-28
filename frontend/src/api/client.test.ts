@@ -317,12 +317,21 @@ describe("api client", () => {
   });
 
   describe("getTopologySvg", () => {
-    it("calls correct URL with color_mode and projection params", async () => {
-      mockFetch.mockResolvedValue(mockOkResponse({ svg: "<svg/>", projection: "isometric" }));
-      const result = await api.getTopologySvg("dark", "isometric");
+    it("calls correct URL with color_mode, projection and icon_set params", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ svg: "<svg/>", projection: "isometric", icon_set: "unifi" }));
+      const result = await api.getTopologySvg("dark", "isometric", "unifi");
       expect(result.svg).toBe("<svg/>");
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/topology/svg?color_mode=dark&projection=isometric",
+        "/api/topology/svg?color_mode=dark&projection=isometric&icon_set=unifi",
+        expect.objectContaining({}),
+      );
+    });
+
+    it("encodes the icon set", async () => {
+      mockFetch.mockResolvedValue(mockOkResponse({ svg: "<svg/>", projection: "isometric", icon_set: "modern" }));
+      await api.getTopologySvg("light", "orthogonal", "modern");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/topology/svg?color_mode=light&projection=orthogonal&icon_set=modern",
         expect.objectContaining({}),
       );
     });

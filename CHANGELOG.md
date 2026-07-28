@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Upgraded unifi-topology from 3.0.2 to 3.1.2.** No breaking changes; the new `FirewallPolicy` fields all default to empty. Two fixes land in the firewall analyzer without any code change here: `source_mac_addresses` is now populated against zone-based controllers (the parser read `mac_addresses`, but the controller sends `client_macs`), so MAC-restricted rules stop reading as unrestricted; and `destination_web_domains` / `destination_app_ids` / the `*_matching_target` pair are now available to teach the analyzer about domain-restricted rules
 
 ### Added
+- **Icon set chooser for the topology diagram**, in the diagram toolbar next to the projection toggle. Offers the three sets bundled by unifi-topology -- UniFi (the new default: original artwork covering every node type), Isometric, and Modern -- persisted in `localStorage` alongside the existing view and projection preferences, and applied to both projections. `GET /api/topology/svg` takes an `icon_set` parameter and echoes it back; an unknown value returns 400
+- **Isometric lighting** (`iso_lighting`) is now enabled for the isometric projection, shading node side faces against the tile fill
 - **Rule details name the domains and applications a rule is restricted to.** Expanding a rule in the firewall panel now shows a "Dst Domains" row (with the matching type beneath it) and a "Dst Apps" row. Criteria that are not decoded into a list -- regions, app categories -- fall back to showing the raw matching target, so a rule narrowed that way no longer displays as having no restriction at all
 
 ### Fixed

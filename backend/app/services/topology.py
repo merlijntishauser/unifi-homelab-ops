@@ -7,6 +7,7 @@ network topology diagrams as SVG via the unifi-topology library.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 import structlog
@@ -25,7 +26,12 @@ from unifi_topology.model import (
     extract_vpn_tunnels,
     extract_wan_info,
 )
-from unifi_topology.render import render_svg, render_svg_isometric, resolve_svg_themes
+from unifi_topology.render import (
+    SvgOptions,
+    render_svg,
+    render_svg_isometric,
+    resolve_svg_themes,
+)
 
 from app.config import UnifiCredentials
 from app.models import TopologyDevice, TopologyDevicesResponse, TopologyEdge, TopologyPort
@@ -35,6 +41,10 @@ from app.services.snoozed_devices import get_snoozed_macs
 log = structlog.get_logger()
 
 VALID_PROJECTIONS = ("orthogonal", "isometric")
+# Icon sets bundled by unifi-topology. "unifi" is original artwork covering every
+# node type; the others fall back to generic shapes for some devices.
+VALID_ICON_SETS = ("unifi", "isometric", "modern")
+DEFAULT_ICON_SET = "unifi"
 
 
 def _raw_device_lookup(raw_devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -139,10 +149,14 @@ def get_topology_svg(
     credentials: UnifiCredentials,
     color_mode: str = "dark",
     projection: str = "isometric",
+    icon_set: str = DEFAULT_ICON_SET,
 ) -> str:
     """Render the network topology as an SVG string."""
     if projection not in VALID_PROJECTIONS:
         msg = f"Invalid projection: {projection}. Valid: {', '.join(VALID_PROJECTIONS)}"
+        raise ValueError(msg)
+    if icon_set not in VALID_ICON_SETS:
+        msg = f"Invalid icon set: {icon_set}. Valid: {', '.join(VALID_ICON_SETS)}"
         raise ValueError(msg)
 
     theme_name = "unifi-dark" if color_mode == "dark" else "unifi"
@@ -171,7 +185,8 @@ def get_topology_svg(
     wan_info = extract_wan_info(gateway) if gateway else None
     vpn_tunnels = extract_vpn_tunnels(gateway) if gateway else []
 
-    theme = resolve_svg_themes(theme_name=theme_name)
+    # The bundled themes pick their own icon set; the caller's choice wins.
+    theme = replace(resolve_svg_themes(theme_name=theme_name), icon_set=icon_set)
 
     log.info(
         "topology_render",
@@ -183,6 +198,8 @@ def get_topology_svg(
         return render_svg_isometric(
             edges=edges, node_types=node_types, node_names=node_names, theme=theme,
             wan_info=wan_info, vpn_tunnels=vpn_tunnels,
+            # Shades the node side faces against the tile fill; isometric only.
+            options=SvgOptions(iso_lighting=True),
         )
     return render_svg(
         edges=edges, node_types=node_types, node_names=node_names, theme=theme,

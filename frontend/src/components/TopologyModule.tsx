@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { TopologyDevice, TopologyDevicesResponse, TopologySvgResponse } from "../api/types";
+import type { IconSet, TopologyDevice, TopologyDevicesResponse, TopologySvgResponse } from "../api/types";
 import { useAppContext } from "../hooks/useAppContext";
 import { useTopologySvg, useTopologyDevices, useTopologyPositions, useSaveTopologyPositions, useResetTopologyPositions } from "../hooks/queries";
 import { downloadSvg, downloadPng } from "../utils/export";
@@ -8,6 +8,14 @@ import DeviceMap from "./DeviceMap";
 import DevicePanel from "./DevicePanel";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ColorMode } from "@xyflow/react";
+
+/** Icon sets bundled by unifi-topology. "unifi" covers every node type with
+ *  original artwork; the others fall back to generic shapes for some devices. */
+const ICON_SETS = [
+  { value: "unifi", label: "UniFi icons" },
+  { value: "isometric", label: "Isometric icons" },
+  { value: "modern", label: "Modern icons" },
+] as const satisfies readonly { value: IconSet; label: string }[];
 
 function readStorage<T extends string>(key: string, fallback: T, valid: readonly T[]): T {
   try {
@@ -111,13 +119,18 @@ export default function TopologyModule() {
   const [projection, setProjection] = useState<"orthogonal" | "isometric">(() =>
     readStorage("topologyProjection", "isometric", ["orthogonal", "isometric"] as const),
   );
+  const [iconSet, setIconSet] = useState<IconSet>(() =>
+    readStorage("topologyIconSet", "unifi", ICON_SETS.map((s) => s.value)),
+  );
   const deepLinkDevice = useRef<string | null>(null);
   if (deepLinkDevice.current === null) {
     deepLinkDevice.current = new URLSearchParams(window.location.search).get("device");
   }
   const [selectedDevice, setSelectedDevice] = useState<TopologyDevice | null>(null);
 
-  const svgQuery = useTopologySvg(colorMode === "dark" ? "dark" : "light", projection, authed && subView === "diagram");
+  const svgQuery = useTopologySvg(
+    colorMode === "dark" ? "dark" : "light", projection, iconSet, authed && subView === "diagram",
+  );
   const devicesQuery = useTopologyDevices(authed);
 
   // Deep-link: ?device=mac -- resolve once device data is available
@@ -134,6 +147,11 @@ export default function TopologyModule() {
   const handleSubViewChange = useCallback((view: "map" | "diagram") => {
     setSubView(view);
     try { localStorage.setItem("topologySubView", view); } catch { /* noop */ }
+  }, []);
+
+  const handleIconSetChange = useCallback((next: IconSet) => {
+    setIconSet(next);
+    try { localStorage.setItem("topologyIconSet", next); } catch { /* noop */ }
   }, []);
 
   const handleProjectionChange = useCallback(() => {
@@ -186,6 +204,17 @@ export default function TopologyModule() {
         {subView === "diagram" && (
           <>
             <button type="button" onClick={handleProjectionChange} className={projection === "isometric" ? BTN_ACTIVE : BTN}>Isometric</button>
+            <select
+              value={iconSet}
+              onChange={(e) => handleIconSetChange(e.target.value as IconSet)}
+              aria-label="Icon set"
+              className={`${BTN} pr-7 appearance-none bg-[length:14px_14px] bg-[position:right_6px_center] bg-no-repeat`}
+              data-testid="icon-set-select"
+            >
+              {ICON_SETS.map((set) => (
+                <option key={set.value} value={set.value}>{set.label}</option>
+              ))}
+            </select>
             {svgQuery.data && (
               <>
                 <button type="button" onClick={() => downloadSvg(svgQuery.data.svg)} className={`${BTN} hidden md:flex`} aria-label="Download SVG">{dlIcon} SVG</button>

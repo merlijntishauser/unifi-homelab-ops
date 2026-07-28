@@ -227,6 +227,48 @@ describe("TopologyModule", () => {
     expect(isoBtn).toBeInTheDocument();
   });
 
+  it("defaults the icon set to unifi", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.getByTestId("icon-set-select")).toHaveValue("unifi");
+  });
+
+  it("offers every bundled icon set", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    const values = Array.from(
+      screen.getByTestId("icon-set-select").querySelectorAll("option"),
+    ).map((o) => o.getAttribute("value"));
+    expect(values).toEqual(["unifi", "isometric", "modern"]);
+  });
+
+  it("persists the chosen icon set", () => {
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    fireEvent.change(screen.getByTestId("icon-set-select"), { target: { value: "modern" } });
+    expect(screen.getByTestId("icon-set-select")).toHaveValue("modern");
+    expect(localStorage.getItem("topologyIconSet")).toBe("modern");
+  });
+
+  it("restores the icon set from storage", () => {
+    localStorage.setItem("topologyIconSet", "isometric");
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.getByTestId("icon-set-select")).toHaveValue("isometric");
+  });
+
+  it("falls back to unifi when storage holds an unknown set", () => {
+    localStorage.setItem("topologyIconSet", "bogus");
+    renderModule();
+    fireEvent.click(screen.getByRole("button", { name: "Diagram" }));
+    expect(screen.getByTestId("icon-set-select")).toHaveValue("unifi");
+  });
+
+  it("hides the icon set chooser in map view", () => {
+    renderModule();
+    expect(screen.queryByTestId("icon-set-select")).not.toBeInTheDocument();
+  });
+
   it("calls downloadSvg when Download SVG is clicked", () => {
     renderModule();
     fireEvent.click(screen.getByRole("button", { name: "Diagram" }));

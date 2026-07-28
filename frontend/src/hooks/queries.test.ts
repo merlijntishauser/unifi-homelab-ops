@@ -65,7 +65,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 describe("topology query hooks", () => {
   it("useTopologySvg does not fetch when disabled", () => {
-    const { result } = renderHook(() => useTopologySvg("dark", "isometric", false), { wrapper });
+    const { result } = renderHook(() => useTopologySvg("dark", "isometric", "unifi", false), { wrapper });
     expect(result.current.data).toBeUndefined();
     expect(result.current.isLoading).toBe(false);
   });

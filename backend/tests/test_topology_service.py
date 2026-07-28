@@ -132,6 +132,35 @@ class TestGetTopologySvg:
         with pytest.raises(ValueError, match="Invalid projection"):
             get_topology_svg(MOCK_CONFIG, projection="3d")
 
+    def test_invalid_icon_set_raises(self) -> None:
+        with pytest.raises(ValueError, match="Invalid icon set"):
+            get_topology_svg(MOCK_CONFIG, icon_set="clipart")
+
+    def test_icon_set_defaults_to_unifi(self) -> None:
+        mock_iso = MagicMock(return_value=STUB_SVG)
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, projection="isometric")
+        assert mock_iso.call_args.kwargs["theme"].icon_set == "unifi"
+
+    def test_icon_set_overrides_the_theme_default(self) -> None:
+        """The bundled unifi-dark theme selects "modern"; the caller's choice wins."""
+        mock_iso = MagicMock(return_value=STUB_SVG)
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, projection="isometric", icon_set="isometric")
+        assert mock_iso.call_args.kwargs["theme"].icon_set == "isometric"
+
+    def test_icon_set_applies_to_the_orthogonal_renderer_too(self) -> None:
+        mock_render = MagicMock(return_value=STUB_SVG)
+        with _patch_all(render_mock=mock_render):
+            get_topology_svg(MOCK_CONFIG, projection="orthogonal", icon_set="modern")
+        assert mock_render.call_args.kwargs["theme"].icon_set == "modern"
+
+    def test_isometric_render_enables_lighting(self) -> None:
+        mock_iso = MagicMock(return_value=STUB_SVG)
+        with _patch_all(iso_mock=mock_iso):
+            get_topology_svg(MOCK_CONFIG, projection="isometric")
+        assert mock_iso.call_args.kwargs["options"].iso_lighting is True
+
     def test_passes_only_unifi_true(self) -> None:
         with _patch_all():
             get_topology_svg(MOCK_CONFIG)

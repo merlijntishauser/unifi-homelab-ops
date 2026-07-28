@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **A domain-restricted allow no longer "shadows" every later rule.** `rule_shadows` predates the domain/app matching fields, so a rule narrowed to specific web domains read as match-everything and the analyzer reported any later rule as dead -- including a block-the-rest rule that absolutely executes for non-whitelisted traffic. Coverage now includes matching targets (where the controller's `ANY` reads as unconstrained), web domains, app ids, and the web matching type
+- **Shadow findings now say what the shadowing costs, graded by consequence.** A dead BLOCK (traffic you believe is blocked is accepted) is high; a dead ALLOW (whatever depended on it is unreachable) is medium; a same-action duplicate is low ("Redundant rule"). The rationale names every criterion the comparison models, states the rule runs first, and says what to do: move the later rule up or remove it
 - **Device metrics AI insights rendered markdown as literal text.** The prompt asks for bullet points, so the reply came back with `-` markers and `**bold**` -- shown verbatim in a plain paragraph. It now renders as markdown, matching how the Documentation module already treats model output
 - **AI insights are easier to read.** Body text moves from 12px to 13px, bullets get list spacing and accent markers so each finding scans as a discrete item, and inline code (the metric values the prompt asks the model to be specific about) uses the app's mono face and accent colour
 

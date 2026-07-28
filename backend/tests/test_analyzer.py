@@ -171,10 +171,78 @@ class TestAnalyzeZonePair:
         assert len(shadowed) == 1
         assert shadowed[0].rule_id == "r2"
 
-    def test_no_shadow_when_different_actions(self) -> None:
+    def test_allow_shadowing_a_block_is_high_severity(self) -> None:
+        """The dead rule is a BLOCK: traffic the operator believes is blocked
+        is accepted. (This test was previously named "no_shadow_when_different
+        _actions" while asserting the opposite.)"""
         rules = [
             _rule(rule_id="r1", action="ALLOW", protocol="all", port_ranges=[], index=100),
             _rule(rule_id="r2", action="BLOCK", protocol="tcp", port_ranges=["80"], index=200, connection_logging=True),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        finding = next(f for f in result.findings if f.id == "shadowed-rule")
+        assert finding.severity == "high"
+        assert "protects nothing" in finding.description
+
+    def test_block_shadowing_an_allow_is_medium_severity(self) -> None:
+        """The dead rule is an ALLOW: a loud outage, not a silent gap."""
+        rules = [
+            _rule(rule_id="r1", action="BLOCK", protocol="all", port_ranges=[], index=100, connection_logging=True),
+            _rule(rule_id="r2", action="ALLOW", protocol="tcp", port_ranges=["443"], index=200),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        finding = next(f for f in result.findings if f.id == "shadowed-rule")
+        assert finding.severity == "medium"
+        assert "unreachable" in finding.description
+
+    def test_same_action_shadow_is_low_severity_redundancy(self) -> None:
+        rules = [
+            _rule(rule_id="r1", action="ALLOW", protocol="all", port_ranges=[], index=100),
+            _rule(rule_id="r2", action="ALLOW", protocol="tcp", port_ranges=["80"], index=200),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        finding = next(f for f in result.findings if f.id == "shadowed-rule")
+        assert finding.severity == "low"
+        assert finding.title == "Redundant rule"
+
+    def test_domain_restricted_allow_does_not_shadow_a_block(self) -> None:
+        """The e2e mock scenario, previously a false positive: a domain
+        whitelist matches only its domains, so traffic to anything else falls
+        through to the block -- which therefore absolutely executes."""
+        rules = [
+            _rule(
+                rule_id="r1", name="IoT Domain Whitelist", action="ALLOW",
+                protocol="all", port_ranges=[], index=100,
+                destination_matching_target="WEB",
+                destination_web_matching_type="DOMAIN",
+                destination_web_domains=["updates.example.com"],
+            ),
+            _rule(rule_id="r2", name="Block Rest", action="BLOCK", protocol="all",
+                  port_ranges=[], index=200, connection_logging=True),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        assert not any(f.id == "shadowed-rule" for f in result.findings)
+
+    def test_unconstrained_allow_still_shadows_a_domain_restricted_rule(self) -> None:
+        """The guard must not break the true-positive direction."""
+        rules = [
+            _rule(rule_id="r1", action="ALLOW", protocol="all", port_ranges=[], index=100),
+            _rule(
+                rule_id="r2", action="ALLOW", protocol="all", port_ranges=[], index=200,
+                destination_matching_target="WEB",
+                destination_web_domains=["updates.example.com"],
+            ),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        assert any(f.id == "shadowed-rule" for f in result.findings)
+
+    def test_matching_target_any_is_unconstrained_for_shadowing(self) -> None:
+        """The controller writes ANY for un-narrowed rules; it must cover,
+        not compare as a literal that never equals an empty field."""
+        rules = [
+            _rule(rule_id="r1", action="ALLOW", protocol="all", port_ranges=[], index=100,
+                  source_matching_target="ANY", destination_matching_target="ANY"),
+            _rule(rule_id="r2", action="ALLOW", protocol="tcp", port_ranges=["80"], index=200),
         ]
         result = analyze_zone_pair(rules, "LAN", "WAN")
         assert any(f.id == "shadowed-rule" for f in result.findings)

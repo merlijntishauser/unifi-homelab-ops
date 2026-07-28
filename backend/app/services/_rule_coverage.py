@@ -96,6 +96,23 @@ def _constraint_value_covers(earlier: str, later: str) -> bool:
     return e == l_val
 
 
+def _matching_target_covers(earlier: str, later: str) -> bool:
+    """Return True if earlier's matching target covers later's.
+
+    Unlike other scalar constraints, "ANY" and empty both mean unconstrained
+    here -- the controller writes "ANY" for a rule with no domain/app/region
+    narrowing, so treating it as a literal value would make an unconstrained
+    rule fail to cover anything.
+    """
+    e = _normalize_text(earlier)
+    l_val = _normalize_text(later)
+    if e in ("", "any"):
+        return True
+    if l_val in ("", "any"):
+        return False
+    return e == l_val
+
+
 def protocol_covers(earlier: Rule, later: Rule) -> bool:
     """Return True if earlier's protocol covers later's ('all' covers any)."""
     ep = earlier.protocol.lower()
@@ -119,6 +136,11 @@ def rule_shadows(earlier: Rule, later: Rule) -> bool:
         )
         and _constraint_value_covers(earlier.source_network_id, later.source_network_id)
         and _constraint_value_covers(earlier.destination_network_id, later.destination_network_id)
+        and _matching_target_covers(earlier.source_matching_target, later.source_matching_target)
+        and _matching_target_covers(earlier.destination_matching_target, later.destination_matching_target)
+        and _constraint_list_covers(earlier.destination_web_domains, later.destination_web_domains)
+        and _constraint_list_covers(earlier.destination_app_ids, later.destination_app_ids)
+        and _constraint_value_covers(earlier.destination_web_matching_type, later.destination_web_matching_type)
         and _constraint_value_covers(earlier.connection_state_type, later.connection_state_type)
         and _constraint_value_covers(earlier.schedule, later.schedule)
         and _constraint_value_covers(earlier.match_ip_sec, later.match_ip_sec)

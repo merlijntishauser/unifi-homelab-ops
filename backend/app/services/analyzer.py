@@ -150,11 +150,9 @@ def _check_allow_all_external(rule: Rule, src_name: str) -> Finding | None:
 def _check_allow_all_protocols_ports(rule: Rule) -> Finding | None:
     """Flag an ALLOW rule that constrains neither service nor endpoint.
 
-    A rule narrowed to specific hosts, MACs, networks, or address groups is a
-    deliberate exception, not an unrestricted allow -- the same guard
-    `_check_allow_all_external` already applies. Note this still cannot see
-    domain/app matching: that is not parsed upstream, so a domain-restricted
-    rule is indistinguishable from a wide-open one here.
+    A rule narrowed to specific hosts, MACs, networks, address groups, or
+    domain/app matching criteria is a deliberate exception, not an
+    unrestricted allow -- the same guard `_check_allow_all_external` applies.
     """
     if (
         rule.enabled
@@ -375,6 +373,53 @@ def _check_predefined_rules(rules: list[Rule]) -> list[Finding]:
     ]
 
 
+def _shadow_finding(earlier: Rule, later: Rule) -> Finding:
+    """Grade a shadow by its consequence, not just its mechanism.
+
+    "Will never match" means three different things depending on which action
+    swallows which: a dead BLOCK silently admits traffic the operator believes
+    is blocked (a security gap), a dead ALLOW breaks whatever depended on it
+    (an outage, but a loud one), and a same-action duplicate merely clutters.
+    """
+    earlier_blocks = earlier.action in _BLOCK_ACTIONS
+    later_blocks = later.action in _BLOCK_ACTIONS
+    if later_blocks and not earlier_blocks:
+        severity = "high"
+        title = "Block rule never takes effect"
+        consequence = (
+            f"Traffic it is meant to block is accepted by '{earlier.name}' first, "
+            "so this block protects nothing."
+        )
+    elif earlier_blocks and not later_blocks:
+        severity = "medium"
+        title = "Allow rule never takes effect"
+        consequence = (
+            f"Traffic it is meant to admit is dropped by '{earlier.name}' first, "
+            "so whatever depends on this allow is unreachable through this zone pair."
+        )
+    else:
+        severity = "low"
+        title = "Redundant rule"
+        consequence = f"It duplicates the effect of '{earlier.name}' and can be removed."
+    return Finding(
+        id="shadowed-rule",
+        severity=severity,
+        title=title,
+        description=(
+            f"Rule '{later.name}' is shadowed by earlier rule '{earlier.name}' "
+            f"({earlier.action}) and will never match. {consequence}"
+        ),
+        rationale=(
+            f"Across every criterion this analysis models (protocol, ports, IPs, MACs, "
+            f"address groups, networks, connection state, schedule, IPSec, and domain/app "
+            f"matching), '{earlier.name}' at index {earlier.index} matches all traffic "
+            f"that '{later.name}' at index {later.index} would match, and it runs first. "
+            f"Move '{later.name}' above '{earlier.name}' or remove it."
+        ),
+        rule_id=later.id,
+    )
+
+
 def _check_shadowed(rules: list[Rule]) -> list[Finding]:
     findings: list[Finding] = []
     enabled_rules = [r for r in rules if r.enabled]
@@ -385,23 +430,7 @@ def _check_shadowed(rules: list[Rule]) -> list[Finding]:
             continue
         for earlier in sorted_rules[:i]:
             if rule_shadows(earlier, later):
-                findings.append(
-                    Finding(
-                        id="shadowed-rule",
-                        severity="medium",
-                        title="Shadowed rule",
-                        description=(
-                            f"Rule '{later.name}' is shadowed by earlier rule '{earlier.name}' "
-                            f"({earlier.action}) and will never match."
-                        ),
-                        rationale=(
-                            f"Rule '{earlier.name}' at index {earlier.index} matches all traffic that "
-                            f"'{later.name}' at index {later.index} would match. "
-                            "The later rule will never execute."
-                        ),
-                        rule_id=later.id,
-                    )
-                )
+                findings.append(_shadow_finding(earlier, later))
                 break
     return findings
 

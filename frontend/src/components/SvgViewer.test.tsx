@@ -113,6 +113,55 @@ describe("SvgViewer", () => {
     expect(parseInt(zoomLabel.textContent ?? "0")).toBeLessThan(100);
   });
 
+  it("registers the wheel listener as non-passive so preventDefault works", () => {
+    // React attaches onWheel passively, where preventDefault() is a no-op that
+    // logs an error and lets the page scroll behind the diagram.
+    // React registers its own passive wheel listener too, so assert that a
+    // non-passive one exists rather than inspecting whichever came first.
+    const addSpy = vi.spyOn(HTMLElement.prototype, "addEventListener");
+    render(<SvgViewer svgContent={STUB_SVG} />);
+    const nonPassiveWheel = addSpy.mock.calls.filter(
+      ([type, , options]) => type === "wheel"
+        && typeof options === "object" && options !== null && options.passive === false,
+    );
+    expect(nonPassiveWheel).toHaveLength(1);
+    addSpy.mockRestore();
+  });
+
+  // jsdom does not enforce passive semantics, so this asserts the handler calls
+  // preventDefault at all; the registration test above covers passivity.
+  it("calls preventDefault on wheel", () => {
+    render(<SvgViewer svgContent={STUB_SVG} />);
+    const viewer = screen.getByTestId("svg-viewer");
+    vi.spyOn(viewer, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0 } as DOMRect);
+
+    const event = new WheelEvent("wheel", { deltaY: -100, clientX: 400, clientY: 300, cancelable: true, bubbles: true });
+    viewer.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("accumulates rapid wheel events instead of compounding a stale zoom", () => {
+    // Each event previously read zoom from the render closure, so a burst
+    // arriving before a re-render all computed from the same starting value.
+    render(<SvgViewer svgContent={STUB_SVG} />);
+    const viewer = screen.getByTestId("svg-viewer");
+    vi.spyOn(viewer, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0 } as DOMRect);
+
+    for (let i = 0; i < 3; i++) {
+      fireEvent.wheel(viewer, { deltaY: -100, clientX: 0, clientY: 0 });
+    }
+    // 1.1^3 = 1.331 -> 133%. A stale closure would land on 110%.
+    expect(screen.getByLabelText("Reset zoom")).toHaveTextContent("133%");
+  });
+
+  it("removes the wheel listener on unmount", () => {
+    const removeSpy = vi.spyOn(HTMLElement.prototype, "removeEventListener");
+    const { unmount } = render(<SvgViewer svgContent={STUB_SVG} />);
+    unmount();
+    expect(removeSpy.mock.calls.some(([type]) => type === "wheel")).toBe(true);
+    removeSpy.mockRestore();
+  });
+
   it("handles wheel event when containerRef has no bounding rect", () => {
     render(<SvgViewer svgContent={STUB_SVG} />);
     const viewer = screen.getByTestId("svg-viewer");

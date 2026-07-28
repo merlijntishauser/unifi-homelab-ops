@@ -435,6 +435,53 @@ def _check_shadowed(rules: list[Rule]) -> list[Finding]:
     return findings
 
 
+def _overlap_finding(earlier: Rule, later: Rule) -> Finding:
+    """Grade an overlap by its shape.
+
+    When the later, broader rule covers everything the earlier rule matches,
+    the earlier rule is a specific exception sitting above a general rule --
+    the standard way to express precedence (allow these domains, block the
+    rest; block SSH, allow the other ports). Nothing is dead or ambiguous, so
+    that shape is a low-severity awareness note. A criss-cross overlap, where
+    neither rule contains the other, keeps medium: the overlap region wins or
+    loses on ordering alone, which is easy to get wrong by accident.
+    """
+    if rule_shadows(later, earlier):
+        return Finding(
+            id="overlapping-allow-block",
+            severity="low",
+            title="Exception rule ahead of a broader rule",
+            description=(
+                f"Rule '{earlier.name}' ({earlier.action}) carves an exception out of the "
+                f"broader '{later.name}' ({later.action}): it matches a subset of the same "
+                f"traffic and runs first."
+            ),
+            rationale=(
+                f"A specific rule ordered above a general one with the opposite action is the "
+                f"standard way to express precedence -- '{later.name}' still handles all "
+                f"traffic outside the exception. Flagged for awareness only: confirm the "
+                f"exception is intended."
+            ),
+            rule_id=later.id,
+        )
+    return Finding(
+        id="overlapping-allow-block",
+        severity="medium",
+        title="Overlapping allow/block rules",
+        description=(
+            f"Rule '{later.name}' ({later.action}) partially overlaps with "
+            f"earlier rule '{earlier.name}' ({earlier.action})."
+        ),
+        rationale=(
+            f"These rules have different actions and overlapping port ranges, and neither "
+            f"fully contains the other. For the overlapping traffic the earlier rule "
+            f"({earlier.action}) wins on ordering alone. Review whether the intended "
+            f"behavior requires this ordering."
+        ),
+        rule_id=later.id,
+    )
+
+
 def _check_overlapping(rules: list[Rule]) -> list[Finding]:
     """Flag rules with different actions but overlapping port ranges (not full shadows)."""
     findings: list[Finding] = []
@@ -451,23 +498,7 @@ def _check_overlapping(rules: list[Rule]) -> list[Finding]:
             earlier_dst = destination_port_constraints(earlier)
             later_dst = destination_port_constraints(later)
             if port_ranges_overlap(earlier_dst, later_dst):
-                findings.append(
-                    Finding(
-                        id="overlapping-allow-block",
-                        severity="medium",
-                        title="Overlapping allow/block rules",
-                        description=(
-                            f"Rule '{later.name}' ({later.action}) partially overlaps with "
-                            f"earlier rule '{earlier.name}' ({earlier.action})."
-                        ),
-                        rationale=(
-                            f"These rules have different actions but overlapping port ranges. "
-                            f"The earlier rule ({earlier.action}) takes precedence for overlapping traffic. "
-                            f"Review whether the intended behavior requires this ordering."
-                        ),
-                        rule_id=later.id,
-                    )
-                )
+                findings.append(_overlap_finding(earlier, later))
                 break
     return findings
 

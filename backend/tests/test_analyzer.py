@@ -736,6 +736,53 @@ class TestOverlappingAllowBlock:
         assert any(f.id == "shadowed-rule" for f in result.findings)
         assert not any(f.id == "overlapping-allow-block" for f in result.findings)
 
+    def test_domain_carve_out_is_low_severity(self) -> None:
+        """Allow specific domains, block the rest: the canonical whitelist.
+
+        Nothing is dead (the block handles all non-whitelisted traffic) and
+        nothing is ambiguous (the exception is a strict subset), so a medium
+        "review this ordering" every time would punish the correct pattern.
+        """
+        rules = [
+            _rule(
+                rule_id="r1", name="IoT Domain Whitelist", action="ALLOW",
+                protocol="all", port_ranges=[], index=100,
+                destination_matching_target="WEB",
+                destination_web_matching_type="DOMAIN",
+                destination_web_domains=["updates.example.com"],
+            ),
+            _rule(rule_id="r2", name="Block Rest", action="BLOCK", protocol="all",
+                  port_ranges=[], index=200, connection_logging=True),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        finding = next(f for f in result.findings if f.id == "overlapping-allow-block")
+        assert finding.severity == "low"
+        assert finding.title == "Exception rule ahead of a broader rule"
+        assert "carves an exception" in finding.description
+
+    def test_port_carve_out_is_low_severity(self) -> None:
+        """Allow tcp/443, then block every tcp port: same exception shape."""
+        rules = [
+            _rule(rule_id="r1", action="ALLOW", protocol="tcp", port_ranges=["443"], index=100),
+            _rule(rule_id="r2", action="BLOCK", protocol="tcp", port_ranges=[], index=200,
+                  connection_logging=True),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        finding = next(f for f in result.findings if f.id == "overlapping-allow-block")
+        assert finding.severity == "low"
+
+    def test_block_exception_above_broader_allow_is_also_a_carve_out(self) -> None:
+        """Block SSH, allow the other ports: the same pattern with actions
+        reversed -- the ordering is the only way to express it."""
+        rules = [
+            _rule(rule_id="r1", action="BLOCK", protocol="tcp", port_ranges=["22"], index=100,
+                  connection_logging=True),
+            _rule(rule_id="r2", action="ALLOW", protocol="tcp", port_ranges=[], index=200),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "WAN")
+        finding = next(f for f in result.findings if f.id == "overlapping-allow-block")
+        assert finding.severity == "low"
+
     def test_severity_is_medium(self) -> None:
         rules = [
             _rule(

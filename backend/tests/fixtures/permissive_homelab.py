@@ -34,11 +34,13 @@ RULES: list[dict[str, object]] = [
     },
 ]
 
-# Each zone pair has 1 rule generating allow-all-protocols-ports + no-connection-state
-# Score per pair: 100 - 15 - 15 = 70 = grade C
+# Each zone pair has 1 rule generating allow-all-protocols-ports + no-connection-state.
+# no-connection-state is one low-severity finding per pair (hardening advice), not a
+# high-severity one per rule.
+# Score per pair: 100 - 15 - 2 = 83 = grade B
 EXPECTED_FINDINGS: list[str] = ["allow-all-protocols-ports", "no-connection-state"]
-EXPECTED_GRADE_MIN = "C"
-EXPECTED_GRADE_MAX = "C"
+EXPECTED_GRADE_MIN = "B"
+EXPECTED_GRADE_MAX = "B"
 
 EXPECTED_SIMULATIONS: list[dict[str, object]] = [
     {

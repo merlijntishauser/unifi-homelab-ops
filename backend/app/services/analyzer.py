@@ -34,6 +34,7 @@ class Finding:
     description: str
     rationale: str = ""
     rule_id: str | None = None
+    rule_ids: list[str] = field(default_factory=list)
     source: str = "static"
 
 
@@ -217,26 +218,47 @@ def _check_disabled_block(rule: Rule) -> Finding | None:
     return None
 
 
-def _check_no_connection_state(rule: Rule) -> Finding | None:
-    if (
-        rule.enabled
+def _check_no_connection_state(rules: list[Rule]) -> list[Finding]:
+    """Report stateless ALLOW rules once per zone pair, not once per rule.
+
+    Reported per rule at high severity this drowned out everything else: it
+    fires on every ALLOW rule that does not set a connection state, so a pair
+    of five well-scoped rules scored 0/F on this finding alone, and a rule
+    pinned to one host scored the same as a wide-open one. It is hardening
+    advice ("consider restricting to new connections"), not a vulnerability,
+    and the advice is identical for every rule -- so it is one low-severity
+    finding listing the rules it applies to.
+    """
+    affected = [
+        rule
+        for rule in rules
+        if rule.enabled
         and rule.action == "ALLOW"
+        and not rule.predefined
         and not rule.connection_state_type
         and not _is_return_traffic(rule)
-    ):
-        return Finding(
+    ]
+    if not affected:
+        return []
+
+    names = ", ".join(f"'{rule.name}'" for rule in affected)
+    return [
+        Finding(
             id="no-connection-state",
-            severity="high",
-            title="Allow rule without connection state tracking",
-            description=f"Rule '{rule.name}' allows traffic without connection state tracking.",
+            severity="low",
+            title="Allow rules without connection state tracking",
+            description=(
+                f"{len(affected)} allow rule{'s' if len(affected) > 1 else ''} "
+                f"do not set connection state tracking: {names}."
+            ),
             rationale=(
-                "Without connection state tracking, this rule accepts both new and established "
+                "Without connection state tracking, these rules accept both new and established "
                 "connections. Consider restricting to 'new' connections with separate "
                 "established/related return rules for tighter control."
             ),
-            rule_id=rule.id,
+            rule_ids=[rule.id for rule in affected],
         )
-    return None
+    ]
 
 
 _BROAD_ADDRESSES = {"0.0.0.0/0", "::/0", "any"}
@@ -456,7 +478,6 @@ def analyze_zone_pair(
             for check in (
                 _check_disabled_block,
                 _check_wide_port_range,
-                _check_no_connection_state,
                 _check_broad_address_group,
                 _check_missing_block_logging,
                 _check_schedule_dependent_allow,
@@ -465,6 +486,7 @@ def analyze_zone_pair(
                 if finding is not None:
                     findings.append(finding)
 
+        findings.extend(_check_no_connection_state(rules))
         findings.extend(_check_shadowed(rules))
         findings.extend(_check_overlapping(rules))
 

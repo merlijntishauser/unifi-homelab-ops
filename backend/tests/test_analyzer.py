@@ -496,7 +496,7 @@ class TestAnalyzeZonePair:
         rules = [_rule(name="Allow All Inbound", protocol="all", port_ranges=[])]
         result = analyze_zone_pair(rules, "External", "Internal")
         assert [f.id for f in result.findings] == ["allow-external-to-internal", "no-connection-state"]
-        assert result.score == 70
+        assert result.score == 83
 
     def test_findings_have_rationale(self) -> None:
         """All findings from the analyzer should have a non-empty rationale."""
@@ -532,16 +532,58 @@ class TestNoConnectionState:
         result = analyze_zone_pair(rules, "LAN", "DMZ")
         assert not any(f.id == "no-connection-state" for f in result.findings)
 
+    def test_reported_once_per_pair_not_once_per_rule(self) -> None:
+        """Per-rule reporting let this one finding dominate the whole score."""
+        rules = [
+            _rule(rule_id="a", name="A", protocol="tcp", port_ranges=["443"]),
+            _rule(rule_id="b", name="B", protocol="udp", port_ranges=["53"]),
+            _rule(rule_id="c", name="C", protocol="tcp", port_ranges=["22"]),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "DMZ")
+        matches = [f for f in result.findings if f.id == "no-connection-state"]
+        assert len(matches) == 1
+
+    def test_lists_every_affected_rule(self) -> None:
+        rules = [
+            _rule(rule_id="a", name="Web", protocol="tcp", port_ranges=["443"]),
+            _rule(rule_id="b", name="DNS", protocol="udp", port_ranges=["53"]),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "DMZ")
+        finding = next(f for f in result.findings if f.id == "no-connection-state")
+        assert finding.rule_ids == ["a", "b"]
+        assert "'Web'" in finding.description
+        assert "'DNS'" in finding.description
+
+    def test_excludes_rules_that_do_set_state(self) -> None:
+        rules = [
+            _rule(rule_id="a", name="Stateless", protocol="tcp", port_ranges=["443"]),
+            _rule(rule_id="b", name="Stateful", protocol="tcp", port_ranges=["22"], connection_state_type="new"),
+        ]
+        result = analyze_zone_pair(rules, "LAN", "DMZ")
+        finding = next(f for f in result.findings if f.id == "no-connection-state")
+        assert finding.rule_ids == ["a"]
+
+    def test_a_tight_ruleset_does_not_collapse_the_score(self) -> None:
+        """Five well-scoped allow rules previously scored 0/F on this finding alone."""
+        rules = [
+            _rule(rule_id=f"r{i}", name=f"R{i}", protocol="tcp", port_ranges=[str(440 + i)])
+            for i in range(5)
+        ]
+        result = analyze_zone_pair(rules, "LAN", "DMZ")
+        assert result.score >= 90
+        assert result.grade == "A"
+
     def test_disabled_rule_not_flagged(self) -> None:
         rules = [_rule(enabled=False, action="ALLOW", protocol="tcp", port_ranges=["443"])]
         result = analyze_zone_pair(rules, "LAN", "DMZ")
         assert not any(f.id == "no-connection-state" for f in result.findings)
 
-    def test_severity_is_high(self) -> None:
+    def test_severity_is_low(self) -> None:
+        """Hardening advice, not a vulnerability: it must not dominate the score."""
         rules = [_rule(action="ALLOW", protocol="tcp", port_ranges=["443"])]
         result = analyze_zone_pair(rules, "LAN", "DMZ")
         finding = next(f for f in result.findings if f.id == "no-connection-state")
-        assert finding.severity == "high"
+        assert finding.severity == "low"
 
 
 class TestOverlappingAllowBlock:

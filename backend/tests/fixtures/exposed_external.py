@@ -20,8 +20,8 @@ RULES: list[dict[str, object]] = [
 
 # _check_allow_external_to_internal fires (src=External, dst=Internal)
 # _check_no_connection_state fires (no connection_state_type)
-# Score: 100 - 15 - 15 = 70 = grade C
+# Score: 100 - 15 - 2 = 83 = grade B (no-connection-state is low severity)
 EXPECTED_FINDINGS: list[str] = ["allow-external-to-internal", "no-connection-state"]
-EXPECTED_GRADE = "C"
+EXPECTED_GRADE = "B"
 
 EXPECTED_SIMULATIONS: list[dict[str, object]] = []

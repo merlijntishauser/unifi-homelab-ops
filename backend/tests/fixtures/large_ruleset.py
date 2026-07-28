@@ -144,7 +144,8 @@ ZONE_PAIR_TESTS: list[dict[str, Any]] = [
         "src_zone_id": "zone-iot",
         "dst_zone_id": "zone-wan",
         "expected_findings": ["allow-all-protocols-ports", "no-connection-state"],
-        "expected_grade": "C",
+        # 100 - 15 (allow-all, high) - 2 (no-connection-state, low) = 83
+        "expected_grade": "B",
     },
     {
         "src_zone_id": "zone-guest",

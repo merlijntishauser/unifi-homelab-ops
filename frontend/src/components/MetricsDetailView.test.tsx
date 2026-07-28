@@ -299,6 +299,31 @@ describe("MetricsDetailView", () => {
         "No anomalies detected in the last 24h.",
       );
     });
+
+    it("offers a way to analyze again once a result is showing", async () => {
+      await renderWithInsight(INSIGHT);
+      expect(screen.getByRole("button", { name: "Analyze again" })).toBeInTheDocument();
+    });
+
+    it("re-running replaces the previous insight", async () => {
+      const analyze = vi
+        .fn()
+        .mockResolvedValueOnce({ insight: "- First pass" })
+        .mockResolvedValueOnce({ insight: "- Second pass" });
+      vi.doMock("../api/client", () => ({ api: { analyzeDeviceMetrics: analyze } }));
+      vi.resetModules();
+      const { default: Fresh } = await import("./MetricsDetailView");
+      render(<Fresh device={makeDevice()} history={[]} notifications={[]} onBack={vi.fn()} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /Analyze Device/ }));
+      await screen.findByText("First pass");
+
+      fireEvent.click(screen.getByRole("button", { name: "Analyze again" }));
+      await screen.findByText("Second pass");
+
+      expect(analyze).toHaveBeenCalledTimes(2);
+      expect(screen.queryByText("First pass")).not.toBeInTheDocument();
+    });
   });
 
   // --- Notifications ---

@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Device metrics AI insights rendered markdown as literal text.** The prompt asks for bullet points, so the reply came back with `-` markers and `**bold**` -- shown verbatim in a plain paragraph. It now renders as markdown, matching how the Documentation module already treats model output
 - **AI insights are easier to read.** Body text moves from 12px to 13px, bullets get list spacing and accent markers so each finding scans as a discrete item, and inline code (the metric values the prompt asks the model to be specific about) uses the app's mono face and accent colour
 
+### Added
+- **Re-run a device AI analysis without leaving the page.** Once a result is showing, the card header offers "Analyze again" -- previously the Analyze button was replaced by its own output, so a fresh read meant navigating away and back
+
 ## [1.5.1] - 2026-07-28
 
 ### Fixed

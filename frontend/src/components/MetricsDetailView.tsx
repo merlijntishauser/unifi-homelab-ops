@@ -6,6 +6,7 @@ import MetricsChart from "./MetricsChart";
 import type { ChartDatum } from "./MetricsChart";
 import { formatRelativeTime } from "../utils/format";
 import { useAppContext } from "../hooks/useAppContext";
+import Tooltip from "./Tooltip";
 
 interface MetricsDetailViewProps {
   device: MetricsSnapshot;
@@ -194,11 +195,28 @@ function AiInsightsCard({ aiConfigured, aiInsight, aiLoading, onAnalyze }: {
     <div className="rounded-lg border border-ui-border dark:border-noc-border bg-ui-surface dark:bg-noc-surface p-4 flex flex-col">
       <div className="flex items-baseline justify-between mb-3">
         <span className="text-sm font-medium text-ui-text-secondary dark:text-noc-text-secondary">AI Insights</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-ui-text-dim dark:text-noc-text-dim">
-          <path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22" />
-          <path d="M12 2a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93" />
-          <circle cx="12" cy="14" r="1" />
-        </svg>
+        {/* One thing in this slot at a time: the mark identifies the card until
+            there is a result, then the slot becomes the way to get a fresh one. */}
+        {aiInsight && !aiLoading ? (
+          <button type="button"
+            onClick={onAnalyze}
+            aria-label="Analyze again"
+            data-testid="ai-reanalyze"
+            className="group relative -my-1 -mr-1 p-1 rounded text-ui-text-dim dark:text-noc-text-dim hover:text-ub-blue dark:hover:text-ub-blue cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ub-blue/40"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <path d="M21 3v6h-6" />
+            </svg>
+            <Tooltip text="Analyze again" align="right" />
+          </button>
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-ui-text-dim dark:text-noc-text-dim">
+            <path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22" />
+            <path d="M12 2a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93" />
+            <circle cx="12" cy="14" r="1" />
+          </svg>
+        )}
       </div>
       <div className="flex-1 flex flex-col justify-center">
         {aiLoading ? (

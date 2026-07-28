@@ -248,6 +248,59 @@ describe("MetricsDetailView", () => {
     expect(screen.getByRole("button", { name: /Analyze Device/ })).toBeInTheDocument();
   });
 
+  describe("AI insight markdown", () => {
+    const INSIGHT = [
+      "## Summary",
+      "",
+      "- **CPU** spiked to `87%` at 03:00",
+      "- Memory steady at 81% -- normal for UniFi",
+      "",
+      "Everything else looks *healthy*.",
+    ].join("\n");
+
+    async function renderWithInsight(markdown: string) {
+      const analyze = vi.fn().mockResolvedValue({ insight: markdown });
+      vi.doMock("../api/client", () => ({ api: { analyzeDeviceMetrics: analyze } }));
+      vi.resetModules();
+      const { default: Fresh } = await import("./MetricsDetailView");
+      render(<Fresh device={makeDevice()} history={[]} notifications={[]} onBack={vi.fn()} />);
+      fireEvent.click(screen.getByRole("button", { name: /Analyze Device/ }));
+      await screen.findByTestId("ai-insight-body");
+    }
+
+    it("renders bullets as a list, not literal dashes", async () => {
+      await renderWithInsight(INSIGHT);
+      const body = screen.getByTestId("ai-insight-body");
+      expect(body.querySelectorAll("li")).toHaveLength(2);
+      // The raw marker must not survive into the visible text.
+      expect(body.textContent).not.toContain("- **CPU**");
+    });
+
+    it("renders emphasis as markup rather than asterisks", async () => {
+      await renderWithInsight(INSIGHT);
+      const body = screen.getByTestId("ai-insight-body");
+      expect(body.querySelector("strong")?.textContent).toBe("CPU");
+      expect(body.querySelector("em")?.textContent).toBe("healthy");
+      expect(body.textContent).not.toContain("**");
+      expect(body.textContent).not.toContain("*healthy*");
+    });
+
+    it("renders headings and inline code", async () => {
+      await renderWithInsight(INSIGHT);
+      const body = screen.getByTestId("ai-insight-body");
+      expect(body.querySelector("h2")?.textContent).toBe("Summary");
+      expect(body.querySelector("code")?.textContent).toBe("87%");
+      expect(body.textContent).not.toContain("##");
+    });
+
+    it("renders a plain-text insight unchanged", async () => {
+      await renderWithInsight("No anomalies detected in the last 24h.");
+      expect(screen.getByTestId("ai-insight-body")).toHaveTextContent(
+        "No anomalies detected in the last 24h.",
+      );
+    });
+  });
+
   // --- Notifications ---
 
   it("renders notifications with severity strip and timestamp", () => {

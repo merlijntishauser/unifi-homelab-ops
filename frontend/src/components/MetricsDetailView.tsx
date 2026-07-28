@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { MetricsSnapshot, MetricsHistoryPoint, AppNotification } from "../api/types";
 import MetricsChart from "./MetricsChart";
 import type { ChartDatum } from "./MetricsChart";
@@ -147,6 +149,41 @@ function InfoRow({ label, value, mono }: { label: string; value: string; mono?: 
 
 // --- AI Insights card ---
 
+/**
+ * The model answers in markdown (the prompt asks for 3-5 bullet points), so it
+ * was rendering `-` and `**` literally in a plain <p>.
+ *
+ * Styling is explicit rather than `prose`: @tailwindcss/typography is not
+ * installed, so those classes do nothing here. Findings are numeric by design
+ * ("be specific with numbers"), so emphasis and inline code carry the app's
+ * mono/accent treatment and each bullet is spaced to read as a discrete finding.
+ */
+function AiInsightBody({ markdown }: { markdown: string }) {
+  return (
+    <div
+      data-testid="ai-insight-body"
+      className={[
+        "text-[13px] leading-relaxed text-ui-text-secondary dark:text-noc-text-secondary",
+        "[&>*+*]:mt-2.5",
+        "[&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-2 [&_li]:marker:text-ub-blue [&_li]:pl-0.5",
+        "[&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:space-y-2 [&_ol]:marker:text-ub-blue",
+        "[&_strong]:font-semibold [&_strong]:text-ui-text [&_strong]:dark:text-noc-text",
+        "[&_em]:italic",
+        "[&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-[13px]",
+        "[&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold",
+        "[&_h1]:text-ui-text [&_h1]:dark:text-noc-text",
+        "[&_h2]:text-ui-text [&_h2]:dark:text-noc-text",
+        "[&_h3]:text-ui-text [&_h3]:dark:text-noc-text",
+        "[&_code]:font-mono [&_code]:text-xs [&_code]:text-ub-blue",
+        "[&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded",
+        "[&_a]:text-ub-blue [&_a]:underline",
+      ].join(" ")}
+    >
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+    </div>
+  );
+}
+
 function AiInsightsCard({ aiConfigured, aiInsight, aiLoading, onAnalyze }: {
   aiConfigured: boolean;
   aiInsight: string | null;
@@ -170,7 +207,7 @@ function AiInsightsCard({ aiConfigured, aiInsight, aiLoading, onAnalyze }: {
             <p className="text-xs text-ui-text-secondary dark:text-noc-text-secondary">Analyzing 24h metrics…</p>
           </div>
         ) : aiInsight ? (
-          <p className="text-xs text-ui-text dark:text-noc-text-secondary leading-relaxed whitespace-pre-line">{aiInsight}</p>
+          <AiInsightBody markdown={aiInsight} />
         ) : !aiConfigured ? (
           <p className="text-xs text-ui-text-dim dark:text-noc-text-dim">Configure an AI provider in Settings to enable device insights.</p>
         ) : (

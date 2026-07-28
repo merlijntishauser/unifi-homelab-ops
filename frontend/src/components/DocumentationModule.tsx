@@ -225,7 +225,7 @@ function SectionCard({ section, expanded, onToggle, isDark }: SectionCardProps) 
       {expanded && (
         <div className="px-4 pb-4 border-t border-ui-border dark:border-noc-border">
           <SectionActions section={section} diagramRef={contentRef} />
-          <div ref={contentRef} className="doc-prose prose prose-sm dark:prose-invert max-w-none mt-3 text-ui-text-secondary dark:text-noc-text-secondary [&_h1]:text-ui-text [&_h1]:dark:text-noc-text [&_h2]:text-ui-text [&_h2]:dark:text-noc-text [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:pt-6 [&_h2]:border-t [&_h2]:border-ui-border/50 [&_h2]:dark:border-noc-border/50 [&_h3]:text-ui-text [&_h3]:dark:text-noc-text [&_h3]:mt-6 [&_h3]:mb-2 [&_h4]:mt-3 [&_h4]:mb-1 [&_strong]:text-ui-text [&_strong]:dark:text-noc-text [&_code]:text-ub-blue [&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono">
+          <div ref={contentRef} className="doc-prose mt-3 text-ui-text-secondary dark:text-noc-text-secondary [&_h1]:text-ui-text [&_h1]:dark:text-noc-text [&_h2]:text-ui-text [&_h2]:dark:text-noc-text [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:pt-6 [&_h2]:border-t [&_h2]:border-ui-border/50 [&_h2]:dark:border-noc-border/50 [&_h3]:text-ui-text [&_h3]:dark:text-noc-text [&_h3]:mt-6 [&_h3]:mb-2 [&_h4]:mt-3 [&_h4]:mb-1 [&_strong]:text-ui-text [&_strong]:dark:text-noc-text [&_code]:text-ub-blue [&_code]:bg-ui-raised [&_code]:dark:bg-noc-raised [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
               code({ className, children }) {
                 if (className === "language-mermaid") {

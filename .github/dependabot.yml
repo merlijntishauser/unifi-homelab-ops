@@ -23,9 +23,12 @@ updates:
       # breaks. Upstream is targeting TS >=7.1, not 7.0:
       # https://github.com/typescript-eslint/typescript-eslint/issues/10940
       #
-      # Lift this once typescript-eslint ships TS 7 support -- deleting the
-      # entry is enough, there is no matching `@dependabot ignore` state to
-      # unwind (see PR #62, which this replaced).
+      # Lift this once typescript-eslint ships TS 7 support: deleting the entry
+      # is enough. The narrower `[>= 7.a, < 8]` condition that PR #62's
+      # `@dependabot ignore` comment stored has been cleared with
+      # `@dependabot unignore typescript`, so this rule is the only one left --
+      # confirmed with `@dependabot show typescript ignore conditions`, which
+      # is worth re-running before assuming the same next time.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
     groups:

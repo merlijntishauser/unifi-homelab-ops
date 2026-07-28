@@ -12,6 +12,7 @@ import httpx
 import pytest
 
 from app.services._ai_provider import (
+    ANTHROPIC_MAX_TOKENS,
     AiProviderResponseError,
     call_anthropic,
     call_openai,
@@ -107,10 +108,13 @@ class TestCallAnthropic:
         assert call_anthropic(BASE, "k", "m", "sys", "user") == "hi"
 
     def test_no_text_block_reports_what_arrived(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # stop_reason is end_turn, not max_tokens: a truncated reply is caught
+        # earlier by the token-limit guard, so this exercises the genuinely
+        # odd case -- the model finished but emitted no text block at all.
         _mock_post(
             monkeypatch,
             _resp(
-                {"content": [{"type": "thinking", "thinking": "..."}], "stop_reason": "max_tokens"}
+                {"content": [{"type": "thinking", "thinking": "..."}], "stop_reason": "end_turn"}
             ),
         )
         with pytest.raises(AiProviderResponseError) as excinfo:
@@ -118,7 +122,7 @@ class TestCallAnthropic:
         # The message must name the block types and why it stopped, or the
         # next person debugging this learns nothing from the log line.
         assert "thinking" in str(excinfo.value)
-        assert "max_tokens" in str(excinfo.value)
+        assert "end_turn" in str(excinfo.value)
 
     def test_skips_non_dict_blocks(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A malformed entry in the list must not abort the whole read."""
@@ -144,3 +148,75 @@ class TestCallAnthropic:
         _mock_post(monkeypatch, _resp(text="upstream timeout"))
         with pytest.raises(AiProviderResponseError):
             call_anthropic(BASE, "k", "m", "sys", "user")
+
+
+class TestTruncationIsNamed:
+    """A reply cut off at the token limit is invalid JSON. Reported as a budget
+    problem, not left to surface as "Failed to parse AI response"."""
+
+    def test_anthropic_max_tokens_stop_reason(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _mock_post(
+            monkeypatch,
+            _resp(
+                {
+                    "content": [{"type": "text", "text": '[{"id": "partial"'}],
+                    "stop_reason": "max_tokens",
+                }
+            ),
+        )
+        with pytest.raises(AiProviderResponseError) as excinfo:
+            call_anthropic(BASE, "k", "m", "sys", "user")
+        msg = str(excinfo.value)
+        assert "token limit" in msg
+        assert "cut off" in msg
+
+    def test_openai_length_finish_reason(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _mock_post(
+            monkeypatch,
+            _resp(
+                {
+                    "choices": [
+                        {"finish_reason": "length", "message": {"content": '[{"id": "partial"'}}
+                    ]
+                }
+            ),
+        )
+        with pytest.raises(AiProviderResponseError) as excinfo:
+            call_openai(BASE, "k", "m", "sys", "user")
+        assert "token limit" in str(excinfo.value)
+
+    def test_normal_stop_reason_is_not_flagged(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """end_turn must pass through -- this guard must not break working calls."""
+        _mock_post(
+            monkeypatch,
+            _resp({"content": [{"type": "text", "text": "[]"}], "stop_reason": "end_turn"}),
+        )
+        assert call_anthropic(BASE, "k", "m", "sys", "user") == "[]"
+
+    def test_missing_stop_reason_is_not_flagged(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Providers that omit the field entirely still work."""
+        _mock_post(monkeypatch, _resp({"choices": [{"message": {"content": "[]"}}]}))
+        assert call_openai(BASE, "k", "m", "sys", "user") == "[]"
+
+    def test_non_json_body_does_not_break_the_reason_lookup(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _mock_post(monkeypatch, _resp(text="not json"))
+        with pytest.raises(AiProviderResponseError) as excinfo:
+            call_openai(BASE, "k", "m", "sys", "user")
+        assert "non-JSON" in str(excinfo.value)
+
+
+class TestTokenBudget:
+    def test_anthropic_sends_the_raised_budget(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """4096 was spent on thinking before the findings array finished."""
+        captured: dict[str, object] = {}
+
+        def fake_post(*_args: object, **kwargs: object) -> httpx.Response:
+            captured.update(kwargs.get("json") or {})  # type: ignore[arg-type]
+            return _resp({"content": [{"type": "text", "text": "[]"}]})
+
+        monkeypatch.setattr(httpx, "post", fake_post)
+        call_anthropic(BASE, "k", "m", "sys", "user")
+        assert captured["max_tokens"] == ANTHROPIC_MAX_TOKENS
+        assert ANTHROPIC_MAX_TOKENS > 4096

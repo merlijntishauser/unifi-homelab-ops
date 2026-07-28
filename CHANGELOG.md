@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.1] - 2026-07-28
 
 ### Fixed
 - **AI analysis failed with "Unexpected error during AI analysis" against Anthropic.** The client read the reply as `content[0]["text"]`, but `content` is a list of typed blocks and text is not guaranteed to be first -- current Claude models emit a `thinking` block ahead of it, so the index raised `KeyError` the moment the model reasoned before answering. The text block is now selected by type

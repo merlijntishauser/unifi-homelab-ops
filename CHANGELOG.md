@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.0] - 2026-07-28
 
 ### Changed
 - **Upgraded unifi-topology from 3.0.2 to 3.1.2.** No breaking changes; the new `FirewallPolicy` fields all default to empty. Two fixes land in the firewall analyzer without any code change here: `source_mac_addresses` is now populated against zone-based controllers (the parser read `mac_addresses`, but the controller sends `client_macs`), so MAC-restricted rules stop reading as unrestricted; and `destination_web_domains` / `destination_app_ids` / the `*_matching_target` pair are now available to teach the analyzer about domain-restricted rules
@@ -309,7 +309,8 @@ device metrics monitoring, and unified site health assessment for UniFi networks
 - Trivy security scanning in CI
 - Alembic database migrations
 
-[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/merlijntishauser/unifi-homelab-ops/compare/v1.2.0...v1.3.0

@@ -165,7 +165,7 @@ jobs:
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
           fi
-      - uses: github/codeql-action/upload-sarif@v4
+      - uses: github/codeql-action/upload-sarif@v4.37.4
         if: always() && github.event_name != 'pull_request' && steps.trivy_sarif.outputs.present == 'true'
         with:
           sarif_file: trivy-results-${{ matrix.variant }}.sarif

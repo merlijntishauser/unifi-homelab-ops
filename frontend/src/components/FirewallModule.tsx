@@ -24,10 +24,10 @@ export default function FirewallModule() {
     zonePairs, hasHiddenZones, hasDisabledRules,
   } = ctx;
 
-  const deepLinkPair = useRef<string | null>(null);
-  if (deepLinkPair.current === null) {
-    deepLinkPair.current = new URLSearchParams(window.location.search).get("pair");
-  }
+  // Read once at mount: a lazy useState initialiser keeps the URL read out of
+  // the render path, so the ref is only ever mutated from the effect below.
+  const [initialDeepLinkPair] = useState(() => new URLSearchParams(window.location.search).get("pair"));
+  const deepLinkPair = useRef<string | null>(initialDeepLinkPair);
   const [selectedPairKey, setSelectedPairKey] = useState<SelectedPairKey | null>(null);
   const [focusZoneIds, setFocusZoneIds] = useState<string[] | null>(null);
 

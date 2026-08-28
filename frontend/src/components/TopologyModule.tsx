@@ -135,10 +135,10 @@ export default function TopologyModule() {
   const [showGrid, setShowGrid] = useState<boolean>(() =>
     readStorage("topologyShowGrid", "on", ["on", "off"] as const) === "on",
   );
-  const deepLinkDevice = useRef<string | null>(null);
-  if (deepLinkDevice.current === null) {
-    deepLinkDevice.current = new URLSearchParams(window.location.search).get("device");
-  }
+  // Read once at mount: a lazy useState initialiser keeps the URL read out of
+  // the render path, so the ref is only ever mutated from the effect below.
+  const [initialDeepLinkDevice] = useState(() => new URLSearchParams(window.location.search).get("device"));
+  const deepLinkDevice = useRef<string | null>(initialDeepLinkDevice);
   const [selectedDevice, setSelectedDevice] = useState<TopologyDevice | null>(null);
 
   const svgQuery = useTopologySvg(

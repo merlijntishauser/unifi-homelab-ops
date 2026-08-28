@@ -38,7 +38,15 @@ COPY backend/alembic ./alembic
 
 FROM python:3.14-slim AS runtime
 
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+# The runtime only ever executes the pre-built venv, so pip is dead weight.
+# It also carries a vendored SBOM (msgpack, setuptools) that Trivy reports as
+# HIGH findings against the base image; dropping pip clears both.
+RUN apt-get update && apt-get upgrade -y \
+  && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /usr/local/lib/python3.*/site-packages/pip \
+            /usr/local/lib/python3.*/site-packages/pip-*.dist-info \
+            /usr/local/lib/python3.*/ensurepip \
+            /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.*
 
 WORKDIR /app/backend
 

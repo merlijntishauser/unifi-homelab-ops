@@ -49,9 +49,16 @@ ENV FRONTEND_DIST_DIR=/app/frontend/dist
 ENV SUPPRESS_HEALTHCHECK_ACCESS_LOGS=true
 ENV SHOW_STARTUP_BANNER=true
 
+# The runtime only ever executes the pre-built venv, so pip is dead weight.
+# It also carries a vendored SBOM (msgpack, setuptools) that Trivy reports as
+# HIGH findings against the base image; dropping pip clears both.
 RUN apk upgrade --no-cache \
   && addgroup -S appuser \
-  && adduser -S -G appuser appuser
+  && adduser -S -G appuser appuser \
+  && rm -rf /usr/local/lib/python3.*/site-packages/pip \
+            /usr/local/lib/python3.*/site-packages/pip-*.dist-info \
+            /usr/local/lib/python3.*/ensurepip \
+            /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.*
 
 COPY --from=backend-build --chown=appuser:appuser /app/backend/.venv /app/backend/.venv
 COPY --from=backend-build --chown=appuser:appuser /app/backend/app /app/backend/app

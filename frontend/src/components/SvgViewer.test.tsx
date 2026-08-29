@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, createEvent } from "@testing-library/react";
 import SvgViewer from "./SvgViewer";
 
 const STUB_SVG = '<svg data-testid="test-svg"><rect width="100" height="50"/></svg>';
@@ -135,8 +135,11 @@ describe("SvgViewer", () => {
     const viewer = screen.getByTestId("svg-viewer");
     vi.spyOn(viewer, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0 } as DOMRect);
 
-    const event = new WheelEvent("wheel", { deltaY: -100, clientX: 400, clientY: 300, cancelable: true, bubbles: true });
-    viewer.dispatchEvent(event);
+    // createEvent + fireEvent keeps a reference to the event to assert on, while
+    // still dispatching inside act() -- a bare dispatchEvent updates state
+    // outside act and warns.
+    const event = createEvent.wheel(viewer, { deltaY: -100, clientX: 400, clientY: 300, cancelable: true });
+    fireEvent(viewer, event);
     expect(event.defaultPrevented).toBe(true);
   });
 

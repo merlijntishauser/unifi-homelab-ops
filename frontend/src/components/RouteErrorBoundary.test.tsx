@@ -54,6 +54,9 @@ describe("RouteErrorBoundary", () => {
           },
           element: <div>never</div>,
           errorElement: <RouteErrorBoundary />,
+          // The loader makes the initial navigation async, and react-router
+          // warns when it has no fallback to render while it resolves.
+          hydrateFallbackElement: <div>loading</div>,
         },
       ],
       { initialEntries: ["/"] },

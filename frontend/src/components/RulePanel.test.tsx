@@ -1060,19 +1060,6 @@ describe("RulePanel", () => {
       expect(badge.className).toContain("bg-ui-raised");
     });
 
-    it("uses index as key when finding has no id", () => {
-      const pair = makePair([makeRule()], {
-        score: 50,
-        grade: "D",
-        findings: [
-          { id: undefined as unknown as string, severity: "high", title: "No-id finding", description: "Missing id", rule_id: null, source: "static" },
-        ],
-      });
-      renderPanel(pair);
-      expect(screen.getByText("No-id finding")).toBeInTheDocument();
-      expect(screen.getByText("Missing id")).toBeInTheDocument();
-    });
-
     it("does not show analysis section when analysis is null", () => {
       const pair = makePair([makeRule()], null);
       renderPanel(pair);

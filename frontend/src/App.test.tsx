@@ -952,7 +952,6 @@ describe("App", () => {
   });
 
   it("debounces zone filter save to server after toggle", async () => {
-    vi.useFakeTimers();
     authedDefaults();
     mockGetZones.mockResolvedValue(testZones);
     mockGetZonePairs.mockResolvedValue([]);
@@ -961,9 +960,14 @@ describe("App", () => {
 
     renderApp();
 
-    await vi.waitFor(() => {
+    // Let the app settle on real timers first: RTL's waitFor does not detect
+    // vitest's fake timers, and installing them up front leaves every update
+    // from the initial load unacted. Only the debounce below needs them.
+    await waitFor(() => {
       expect(screen.getByLabelText("External")).toBeInTheDocument();
     });
+
+    vi.useFakeTimers();
 
     await act(async () => {
       fireEvent.click(screen.getByLabelText("External"));
